@@ -32,8 +32,17 @@ steps:
       make
       sudo make install
       cd ..
-      curl -s -o cmake.sh https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3-Linux-x86_64.sh
-      sh ./cmake.sh
+      version=3.14
+      build=3
+      mkdir temp
+      cd temp
+      wget https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3.tar.gz
+      tar -xzvf cmake-3.14.3.tar.gz
+      cd cmake-3.14.3/
+      ./bootstrap
+      make
+      sudo make install
+      cmake --version
     condition: eq(variables['Agent.OS'], 'Linux')
     displayName: 'Install build dependencies (Linux)'
 
