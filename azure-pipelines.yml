@@ -150,6 +150,7 @@ jobs:
 
   steps:
     - bash: |
+        git checkout master
         git remote add github https://github.com/shurunxuan/CosmosEngine.git
         git push github
       displayName: 'Push to GitHub'
