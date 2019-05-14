@@ -63,12 +63,9 @@ steps:
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Download Vulkan (macOS)'
 
-
-
   - bash: |
       cd vulkan-sdk/*
       cd macOS
-      ls -al $HOME
       export VULKAN_SDK=$(pwd)
       export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json
       echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
@@ -121,7 +118,11 @@ steps:
   - task: PowerShell@2
     inputs:
       targetType: 'inline'
-      script: '.\\vulkan-sdk.exe /S | Out-Null'
+      script: '.\\vulkan-sdk.exe /S | Out-Null
+      
+      echo "##vso[task.setvariable variable=VULKAN_SDK;]$ENV:VULKAN_SDK"
+
+      echo "##vso[task.setvariable variable=VK_ICD_FILENAMES;]$ENV:VK_ICD_FILENAMES"'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install Vulkan (Windows)'
 
