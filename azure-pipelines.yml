@@ -52,11 +52,14 @@ steps:
 
   - bash: |
       echo $SHELL
-      curl -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+      echo "Downloading vulkan-sdk"
+      curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+      echo "Unzipping vulkan-sdk"
       mkdir vulkan-sdk
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
+      ls $HOME
       echo -n "export VULKAN_SDK=" >> $HOME/.bashrc
       pwd >> $HOME/.bashrc
       echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bashrc
@@ -97,11 +100,13 @@ steps:
         
         $output = "vulkan-sdk.exe"
         
+        echo "Downloading vulkan-sdk"
+
         Invoke-WebRequest $url -OutFile $output
         
-        echo "vulkan-sdk.exe downloaded"
+        echo "Installing vulkan-sdk"
 
-        .\\vulkan-sdk.exe /S'
+        .\\vulkan-sdk.exe /S | Out-Null'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install Vulkan (Windows)'
 
