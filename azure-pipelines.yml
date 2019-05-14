@@ -120,6 +120,8 @@ steps:
       targetType: 'inline'
       script: '.\\vulkan-sdk.exe /S | Out-Null
       
+      echo $ENV:VULKAN_SDK
+
       echo "##vso[task.setvariable variable=VULKAN_SDK;]$ENV:VULKAN_SDK"
 
       echo "##vso[task.setvariable variable=VK_ICD_FILENAMES;]$ENV:VK_ICD_FILENAMES"'
