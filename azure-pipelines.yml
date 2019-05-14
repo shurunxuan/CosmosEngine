@@ -56,9 +56,14 @@ steps:
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install build dependencies (macOS)'
 
-  - bash: curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+  - bash: |
+      curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+      mkdir vulkan-sdk
+      tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Download Vulkan (macOS)'
+
+
 
   - bash: |
       mkdir vulkan-sdk
@@ -71,6 +76,8 @@ steps:
       echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bash_profile
       echo "$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $HOME/.bash_profile
       source $HOME/.bash_profile
+      echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
+      echo '##vso[task.setvariable variable=VK_ICD_FILENAMES;]'$VK_ICD_FILENAMES
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install Vulkan (macOS)'
 
@@ -83,6 +90,8 @@ steps:
         
         .\\bootstrap-vcpkg.bat
         
+        echo "##vso[task.setvariable variable=VCPKG_ROOT;]$pwd.Path"
+
         cd ..'
       errorActionPreference: 'silentlyContinue'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
@@ -99,13 +108,20 @@ steps:
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install build dependencies (Windows)'
 
-  - task: DownloadFile@1
+  - task: PowerShell@2
     inputs:
-      FileUrl: 'https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true'
-      DestinationFolder: '$(System.DefaultWorkingDirectory)'
-      requireAuthentication: false
+      targetType: 'inline'
+      script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
+        
+        $output = "vulkan-sdk.exe"
+        
+        echo "Downloading vulkan-sdk"
+
+        Invoke-WebRequest $url -OutFile $output
+        
+        dir'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Download Vulkan-sdk (Windows)'
+    displayName: 'Download Vulkan (Windows)'
 
   - task: PowerShell@2
     inputs:
