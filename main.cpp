@@ -15,49 +15,48 @@
 #include "Compiler.h"
 
 int main() {
+	const auto enumerate_instance_version =
+		reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
-    auto enumerate_instance_version =
-            (PFN_vkEnumerateInstanceVersion)vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion");
+	uint32_t instance_version = VK_API_VERSION_1_0;
 
-    uint32_t instance_version = VK_API_VERSION_1_0;
+	if (enumerate_instance_version != nullptr) {
+		enumerate_instance_version(&instance_version);
+	}
 
-    if (enumerate_instance_version != nullptr) {
-        enumerate_instance_version(&instance_version);
-    }
+	const uint32_t vulkan_major = VK_VERSION_MAJOR(instance_version);
+	const uint32_t vulkan_minor = VK_VERSION_MINOR(instance_version);
+	const uint32_t vulkan_patch = VK_VERSION_PATCH(VK_HEADER_VERSION);
 
-    const uint32_t vulkan_major = VK_VERSION_MAJOR(instance_version);
-    const uint32_t vulkan_minor = VK_VERSION_MINOR(instance_version);
-    const uint32_t vulkan_patch = VK_VERSION_PATCH(VK_HEADER_VERSION);
-
-    std::cout << "Vulkan Instance Version: "
-              << vulkan_major << "."
-              << vulkan_minor << "."
-              << vulkan_patch << std::endl;
+	std::cout << "Vulkan Instance Version: "
+		<< vulkan_major << "."
+		<< vulkan_minor << "."
+		<< vulkan_patch << std::endl;
 
 
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	uint32_t extensionCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    std::cout << extensionCount << " extensions supported" << std::endl;
+	std::cout << extensionCount << " extensions supported" << std::endl;
 
-    std::cout << CompilerString() << std::endl;
+	std::cout << CompilerString() << std::endl;
 
-    glm::mat4 matrix;
-    glm::vec4 vec;
-    auto test = matrix * vec;
+	glm::mat4 matrix;
+	glm::vec4 vec;
+	auto test = matrix * vec;
 
-    glfwInit();
+	glfwInit();
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1366, 768, "Cosmos Engine", nullptr, nullptr);
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	GLFWwindow* window = glfwCreateWindow(1366, 768, "Cosmos Engine", nullptr, nullptr);
 
-    while(!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-    }
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
+	}
 
-    glfwDestroyWindow(window);
+	glfwDestroyWindow(window);
 
-    glfwTerminate();
+	glfwTerminate();
 
-    return 0;
+	return 0;
 }
