@@ -42,8 +42,11 @@ steps:
   - task: CmdLine@2
     inputs:
       script: 'git clone https://github.com/Microsoft/vcpkg.git
+
               cd vcpkg
+
               bootstrap-vcpkg.bat
+
               cd ..'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install vcpkg (Windows)'
@@ -51,9 +54,11 @@ steps:
   - task: CmdLine@2
     inputs:
       script: 'cd vcpkg
+
               vcpkg.exe upgrade --no-dry-run
+
               vcpkg.exe install glfw3:x64-windows glm:x64-windows'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install build dependencies (Windows)'
-
+    
 
