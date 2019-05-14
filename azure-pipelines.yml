@@ -53,6 +53,7 @@ steps:
   - bash: |
       echo $SHELL
       curl -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+      mkdir vulkan-sdk
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
@@ -98,7 +99,9 @@ steps:
         
         Invoke-WebRequest $url -OutFile $output
         
-        .\\vulkan-sdk.exe'
+        echo "vulkan-sdk.exe downloaded"
+
+        .\\vulkan-sdk.exe /S'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install Vulkan (Windows)'
 
