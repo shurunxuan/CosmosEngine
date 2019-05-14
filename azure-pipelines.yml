@@ -151,15 +151,6 @@ steps:
     condition: not(eq(variables['Agent.OS'], 'Windows_NT'))
     displayName: 'Build Project (Linux & macOS)'
 
-  - task: NuGetCommand@2
-    inputs:
-      command: 'restore'
-      restoreSolution: 'build/CosmosEngine.sln'
-      feedsToUse: 'select'
-      versioningScheme: 'off'
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Restore NuGet Packages (Windows)'
-
   - task: VSBuild@1
     inputs:
       solution: 'build\\CosmosEngine.sln'
