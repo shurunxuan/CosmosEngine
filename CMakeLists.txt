@@ -4,6 +4,10 @@ set(PROJECT_NAME CosmosEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+if (DEFINED ENV{VCPKG_ROOT})
+	message("Found vcpkg, using vcpkg toolchain file")
+	set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+endif()
 
 project(${PROJECT_NAME})
 
