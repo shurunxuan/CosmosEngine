@@ -52,7 +52,7 @@ steps:
 
   - bash: |
       echo $SHELL
-      wget https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/mac/vulkan-sdk.tar.gz
+      curl -L -O https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
@@ -92,13 +92,11 @@ steps:
   - task: PowerShell@2
     inputs:
       targetType: 'inline'
-      script: '$url = "https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/windows/vulkan-sdk.exe"
+      script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
         
         $output = "vulkan-sdk.exe"
         
-        $wc = New-Object System.Net.WebClient
-        
-        $wc.DownloadFile($url, $output)
+        Invoke-WebRequest $url -OutFile $output
         
         .\\vulkan-sdk.exe'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
