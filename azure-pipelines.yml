@@ -144,13 +144,3 @@ jobs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'Windows'
         publishLocation: 'Container'
-
-- job: MirrorRepository
-  pool: Hosted Ubuntu 1604
-
-  steps:
-    - bash: |
-        git checkout master
-        git remote add github https://github.com/shurunxuan/CosmosEngine.git
-        git push github
-      displayName: 'Push to GitHub'
