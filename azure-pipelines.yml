@@ -38,9 +38,31 @@ steps:
     condition: eq(variables['Agent.OS'], 'Linux')
     displayName: 'Build GLFW from source (Linux)'
 
+  - bash: |
+      wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+      sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
+      sudo apt update
+      sudo apt install vulkan-sdk
+    condition: eq(variables['Agent.OS'], 'Linux')
+    displayName: 'Install Vulkan (Linux)'
+
   - bash: brew install glfw glm --HEAD
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install build dependencies (macOS)'
+
+  - bash: |
+      echo $SHELL
+      wget https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/mac/vulkan-sdk.tar.gz
+      tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
+      cd vulkan-sdk/*
+      cd macOS
+      echo -n "export VULKAN_SDK=" >> $HOME/.bashrc
+      pwd >> $HOME/.bashrc
+      echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bashrc
+      echo "$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $HOME/.bashrc
+      source $HOME/.bashrc
+    condition: eq(variables['Agent.OS'], 'Darwin')
+    displayName: 'Install Vulkan (macOS)'
 
   - task: PowerShell@2
     inputs:
@@ -56,16 +78,32 @@ steps:
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install vcpkg (Windows)'
 
-  - task: CmdLine@2
+  - task: PowerShell@2
     inputs:
+      targetType: 'inline'
       script: 'cd vcpkg
 
-              vcpkg.exe upgrade --no-dry-run
+              .\\vcpkg.exe upgrade --no-dry-run
 
-              vcpkg.exe install glfw3:x64-windows glm:x64-windows'
+              .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install build dependencies (Windows)'
-  
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: '$url = "https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/windows/vulkan-sdk.exe"
+        
+        $output = "vulkan-sdk.exe"
+        
+        $wc = New-Object System.Net.WebClient
+        
+        $wc.DownloadFile($url, $output)
+        
+        .\\vulkan-sdk.exe'
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+    displayName: 'Install Vulkan (Windows)'
+
   - task: CMake@1
     inputs:
       cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
