@@ -63,6 +63,6 @@ steps:
   
   - task: CMake@1
     inputs:
-      cmakeArgs: 
+      cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
     displayName: 'CMake'
 
