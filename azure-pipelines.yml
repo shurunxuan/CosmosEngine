@@ -33,15 +33,23 @@ steps:
       sudo make install
       cd ..
     condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: 'Build GLFW from source'
+    displayName: 'Build GLFW from source (Linux)'
 
   - bash: brew install glfw glm --HEAD
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install build dependencies (macOS)'
 
   - powershell: |
-      vcpkg update
-      vcpkg upgrade --no-dry-run
-      vcpkg install glfw3:x64-windows glm:x64-windows
+      git clone https://github.com/Microsoft/vcpkg.git
+      cd vcpkg
+      .\bootstrap-vcpkg.bat
+      cd ..
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+    displayName: 'Install vcpkg (Windows)'
+
+  - powershell: |
+      cd vcpkg
+      .\vcpkg.exe upgrade --no-dry-run
+      .\vcpkg.exe install glfw3:x64-windows glm:x64-windows
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install build dependencies (Windows)'
