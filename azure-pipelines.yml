@@ -46,7 +46,9 @@ steps:
     condition: eq(variables['Agent.OS'], 'Linux')
     displayName: 'Install Vulkan (Linux)'
 
-  - bash: brew install glfw glm --HEAD
+  - bash: |
+      brew install glfw --HEAD
+      brew install glm
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install build dependencies (macOS)'
 
@@ -59,7 +61,7 @@ steps:
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
-      ls $HOME
+      pwd
       echo -n "export VULKAN_SDK=" >> $HOME/.bashrc
       pwd >> $HOME/.bashrc
       echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bashrc
