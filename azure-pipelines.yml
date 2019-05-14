@@ -60,5 +60,9 @@ steps:
               vcpkg.exe install glfw3:x64-windows glm:x64-windows'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install build dependencies (Windows)'
-    
+  
+  - task: CMake@1
+    inputs:
+      cmakeArgs: 
+    displayName: 'CMake'
 
