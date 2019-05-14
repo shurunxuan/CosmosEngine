@@ -3,161 +3,151 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- master
 
-strategy:
-  matrix:
-    # linux:
-    #   imageName: "ubuntu-16.04"
-    #   jobName: "Build Ubuntu"
-    mac:
-      imageName: "macos-10.13"
-      jobName: "Build macOS"
-    windows:
-      imageName: "windows-2019"
-      jobName: "Build Windows"
-  maxParallel: 3
 
-pool:
-  vmImage: $(imageName)
+jobs:
+- job: macOS
+  pool: Hosted macOS
 
-steps:
+  steps:
+    - bash: |
+        brew install glfw --HEAD
+        brew install glm
+      displayName: 'Install build dependencies'
 
-  - bash: |
-      sudo apt install build-essential libevent-pthreads-2.0.5 doxygen xorg-dev libglu1-mesa-dev libglm-dev
-      git clone https://github.com/glfw/glfw.git
-      cd glfw
-      cmake .
-      make
-      sudo make install
-      cd ..
-      version=3.14
-      build=3
-      mkdir temp
-      cd temp
-      wget https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3.tar.gz
-      tar -xzvf cmake-3.14.3.tar.gz
-      cd cmake-3.14.3/
-      ./bootstrap
-      make
-      sudo make install
-      cmake --version
-    condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: 'Install build dependencies (Linux)'
+    - bash: |
+        curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+        mkdir vulkan-sdk
+        tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
+      displayName: 'Download Vulkan'
 
-  - bash: |
-      wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-      sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
-    condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: 'Download Vulkan (Linux)'
+    - bash: |
+        cd vulkan-sdk/*
+        cd macOS
+        export VULKAN_SDK=$(pwd)
+        export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json
+        echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
+        echo '##vso[task.setvariable variable=VK_ICD_FILENAMES;]'$VK_ICD_FILENAMES
+      displayName: 'Install Vulkan'
 
-  - bash: |
-      sudo apt update
-      sudo apt install vulkan-sdk
-    condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: 'Install Vulkan (Linux)'
+    - task: CMake@1
+      inputs:
+        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+      displayName: 'CMake Generate'
 
-  - bash: |
-      brew install glfw --HEAD
-      brew install glm
-    condition: eq(variables['Agent.OS'], 'Darwin')
-    displayName: 'Install build dependencies (macOS)'
+    - bash: |
+        cd build
+        make
+      displayName: 'Build Project'
 
-  - bash: |
-      curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
-      mkdir vulkan-sdk
-      tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
-    condition: eq(variables['Agent.OS'], 'Darwin')
-    displayName: 'Download Vulkan (macOS)'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'build/bin'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+      displayName: 'Copy Binaries'
 
-  - bash: |
-      cd vulkan-sdk/*
-      cd macOS
-      export VULKAN_SDK=$(pwd)
-      export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json
-      echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
-      echo '##vso[task.setvariable variable=VK_ICD_FILENAMES;]'$VK_ICD_FILENAMES
-    condition: eq(variables['Agent.OS'], 'Darwin')
-    displayName: 'Install Vulkan (macOS)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'macOS'
+        publishLocation: 'Container'
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: 'git clone https://github.com/Microsoft/vcpkg.git
+- job: Windows
+  pool: Hosted Windows 2019 with VS 2019
+
+  steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'git clone https://github.com/Microsoft/vcpkg.git
+          
+          cd vcpkg
+          
+          .\\bootstrap-vcpkg.bat
+          
+          echo "##vso[task.setvariable variable=VCPKG_ROOT;]$pwd"
+
+          cd ..'
+        errorActionPreference: 'silentlyContinue'
+      displayName: 'Install vcpkg'
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'cd $ENV:VCPKG_ROOT
+
+                .\\vcpkg.exe upgrade --no-dry-run
+
+                .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows'
+      displayName: 'Install build dependencies'
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
+          
+          $output = "vulkan-sdk.exe"
+          
+          echo "Downloading vulkan-sdk"
+
+          Invoke-WebRequest $url -OutFile $output
+          
+          dir'
+      displayName: 'Download Vulkan'
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'echo "Installing..."
         
-        cd vcpkg
+        .\\vulkan-sdk.exe /S | Out-Null
+
+        c:
+
+        cd c:\\VulkanSDK\\*
         
-        .\\bootstrap-vcpkg.bat
-        
-        echo "##vso[task.setvariable variable=VCPKG_ROOT;]$pwd"
+        echo "Vulkan installed at: $pwd"
 
-        cd ..'
-      errorActionPreference: 'silentlyContinue'
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Install vcpkg (Windows)'
+        echo "##vso[task.setvariable variable=VULKAN_SDK;]$pwd"'
+      displayName: 'Install Vulkan'
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: 'cd $ENV:VCPKG_ROOT
+    - task: CMake@1
+      inputs:
+        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+      displayName: 'CMake Generate'
 
-              .\\vcpkg.exe upgrade --no-dry-run
+    - task: VSBuild@1
+      inputs:
+        solution: 'build\\CosmosEngine.sln'
+        vsVersion: 'latest'
+        platform: 'x64'
+        configuration: 'release'
+        maximumCpuCount: true
+      displayName: 'Build Project'
 
-              .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows'
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Install build dependencies (Windows)'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'build/bin/Release/'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+      displayName: 'Copy Binaries'
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
-        
-        $output = "vulkan-sdk.exe"
-        
-        echo "Downloading vulkan-sdk"
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'Windows'
+        publishLocation: 'Container'
 
-        Invoke-WebRequest $url -OutFile $output
-        
-        dir'
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Download Vulkan (Windows)'
+- job: MirrorRepository
+  pool: Hosted Ubuntu 1604
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: 'echo "Installing..."
-      
-      .\\vulkan-sdk.exe /S | Out-Null
-
-      c:
-
-      cd c:\\VulkanSDK\\*
-      
-      echo "Vulkan installed at: $pwd"
-
-      echo "##vso[task.setvariable variable=VULKAN_SDK;]$pwd"'
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Install Vulkan (Windows)'
-
-  - task: CMake@1
-    inputs:
-      cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
-    displayName: 'CMake Generate'
-
-  - bash: |
-      cd build
-      make
-    condition: not(eq(variables['Agent.OS'], 'Windows_NT'))
-    displayName: 'Build Project (Linux & macOS)'
-
-  - task: VSBuild@1
-    inputs:
-      solution: 'build\\CosmosEngine.sln'
-      vsVersion: 'latest'
-      platform: 'x64'
-      configuration: 'release'
-      maximumCpuCount: true
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    displayName: 'Build Project (Windows)'
-
+  steps:
+    - bash: |
+        git remote add github https://github.com/shurunxuan/CosmosEngine.git
+        git push github
+      displayName: 'Push to GitHub'
