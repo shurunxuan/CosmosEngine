@@ -10,10 +10,13 @@ strategy:
   matrix:
     linux:
       imageName: "ubuntu-16.04"
+      jobName: "Build Ubuntu"
     mac:
       imageName: "macos-10.13"
+      jobName: "Build macOS"
     windows:
       imageName: "windows-2019"
+      jobName: "Build Windows"
   maxParallel: 3
 
 pool:
@@ -39,15 +42,17 @@ steps:
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install build dependencies (macOS)'
 
-  - task: CmdLine@2
+  - task: PowerShell@2
     inputs:
+      targetType: 'inline'
       script: 'git clone https://github.com/Microsoft/vcpkg.git
-
-              cd vcpkg
-
-              bootstrap-vcpkg.bat
-
-              cd ..'
+        
+        cd vcpkg
+        
+        .\\bootstrap-vcpkg.bat
+        
+        cd ..'
+      errorActionPreference: 'silentlyContinue'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install vcpkg (Windows)'
 
@@ -64,5 +69,5 @@ steps:
   - task: CMake@1
     inputs:
       cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
-    displayName: 'CMake'
+    displayName: 'CMake Generate'
 
