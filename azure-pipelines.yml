@@ -52,7 +52,7 @@ steps:
 
   - bash: |
       echo $SHELL
-      curl -L -O https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+      curl -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
