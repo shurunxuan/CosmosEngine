@@ -32,8 +32,7 @@ steps:
       make
       sudo make install
       cd ..
-      sudo apt purge cmake
-      wget -qO https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3-Linux-x86_64.sh
+      wget -qO - https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3-Linux-x86_64.sh
       sh ./cmake-3.14.3-Linux-x86_64.sh
     condition: eq(variables['Agent.OS'], 'Linux')
     displayName: 'Install build dependencies (Linux)'
@@ -147,6 +146,7 @@ steps:
     inputs:
       solution: 'build/CosmosEngine.sln'
       msbuildArchitecture: 'x64'
+      configuration: Release
       clean: true
       maximumCpuCount: true
     condition: eq(variables['Agent.OS'], 'Windows_NT')
