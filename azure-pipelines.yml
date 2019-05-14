@@ -61,12 +61,12 @@ steps:
       tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
       cd vulkan-sdk/*
       cd macOS
-      pwd
-      echo -n "export VULKAN_SDK=" >> $HOME/.bashrc
-      pwd >> $HOME/.bashrc
-      echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bashrc
-      echo "$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $HOME/.bashrc
-      source $HOME/.bashrc
+      ls -al $HOME
+      echo -n "export VULKAN_SDK=" >> $HOME/.bash_profile
+      pwd >> $HOME/.bash_profile
+      echo -n "export VK_ICD_FILENAMES=" >> $HOME/.bash_profile
+      echo "$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $HOME/.bash_profile
+      source $HOME/.bash_profile
     condition: eq(variables['Agent.OS'], 'Darwin')
     displayName: 'Install Vulkan (macOS)'
 
