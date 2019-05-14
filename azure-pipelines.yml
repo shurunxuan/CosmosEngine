@@ -121,12 +121,14 @@ steps:
       script: 'echo "Installing..."
       
       .\\vulkan-sdk.exe /S | Out-Null
+
+      c:
+
+      cd c:\\VulkanSDK\\*
       
-      echo "Vulkan installed at: $ENV:VULKAN_SDK"
+      echo "Vulkan installed at: $pwd"
 
-      echo "##vso[task.setvariable variable=VULKAN_SDK;]$ENV:VULKAN_SDK"
-
-      echo "##vso[task.setvariable variable=VK_ICD_FILENAMES;]$ENV:VK_ICD_FILENAMES"'
+      echo "##vso[task.setvariable variable=VULKAN_SDK;]$pwd"'
     condition: eq(variables['Agent.OS'], 'Windows_NT')
     displayName: 'Install Vulkan (Windows)'
 
