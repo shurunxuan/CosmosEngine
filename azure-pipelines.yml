@@ -83,6 +83,8 @@ jobs:
 
                 .\\vcpkg.exe upgrade --no-dry-run
 
+                .\\vcpkg.exe integrate install
+
                 .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows'
       displayName: 'Install build dependencies'
 
