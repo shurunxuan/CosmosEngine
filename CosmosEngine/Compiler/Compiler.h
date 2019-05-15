@@ -5,8 +5,8 @@
 
 #include "../Export.h"
 
-std::string CompilerName();
-std::string CompilerVersion();
-std::string CompilerString();
+std::string ENGINE_API CompilerName();
+std::string ENGINE_API CompilerVersion();
+std::string ENGINE_API CompilerString();
 
 #endif // COSMOSENGINE_COMPILER_H

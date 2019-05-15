@@ -7,6 +7,6 @@
 
 #include "../Export.h"
 
-int CosmosEngine(int argc, char** argv);
+int ENGINE_API CosmosEngine(int argc, char** argv);
 
 #endif //COSMOSENGINE_APP_H
