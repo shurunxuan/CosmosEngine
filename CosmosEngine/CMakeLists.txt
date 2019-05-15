@@ -3,8 +3,8 @@ set(ENGINE_NAME ${PROJECT_NAME})
 project(${PROJECT_NAME})
 
 find_package(vulkan REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 add_compile_definitions(ENGINE_EXPORTS)
 
