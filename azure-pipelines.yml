@@ -6,6 +6,56 @@
 
 
 jobs:
+- job: Linux
+  pool: Default
+
+  steps:
+    - bash: |
+        sudo apt install build-essential libevent-pthreads-2.0.5 doxygen xorg-dev libglu1-mesa-dev libglm-dev
+        git clone https://github.com/glfw/glfw.git
+        cd glfw
+        cmake .
+        make
+        sudo make install
+        cd ..
+      displayName: 'Install build dependencies'
+
+    - bash: |
+        wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
+      displayName: 'Download Vulkan'
+
+    - bash: |
+        sudo apt update
+        sudo apt install vulkan-sdk
+      displayName: 'Install Vulkan'
+
+    - task: CMake@1
+      inputs:
+        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+      displayName: 'CMake Generate'
+
+    - bash: |
+        cd build
+        make
+      displayName: 'Build Project'
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'build/bin'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+      displayName: 'Copy Binaries'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'Linux'
+        publishLocation: 'Container'
+      displayName: 'Publish Build Artifacts'
+
 - job: macOS
   pool: 
     vmImage: 'macOS-10.14'
@@ -55,6 +105,7 @@ jobs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'macOS'
         publishLocation: 'Container'
+      displayName: 'Publish Build Artifacts'
 
 - job: Windows
   pool: 
@@ -146,3 +197,4 @@ jobs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'Windows'
         publishLocation: 'Container'
+      displayName: 'Publish Build Artifacts'
