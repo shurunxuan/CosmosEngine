@@ -120,7 +120,7 @@ jobs:
 
     - task: CMake@1
       inputs:
-        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake
       displayName: 'CMake Generate'
 
     - task: VSBuild@1
