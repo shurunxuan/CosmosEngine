@@ -125,7 +125,7 @@ jobs:
 
     - task: VSBuild@1
       inputs:
-        solution: 'build\\CosmosEngine.sln'
+        solution: 'build\\*.sln'
         vsVersion: 'latest'
         platform: 'x64'
         configuration: 'release'
