@@ -3,7 +3,7 @@ set(ENGINE_NAME ${PROJECT_NAME})
 
 project(${PROJECT_NAME})
 
-find_package(vulkan REQUIRED)
+find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
