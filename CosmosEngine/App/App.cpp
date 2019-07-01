@@ -126,13 +126,6 @@ void CEApp::initVulkan()
 
 	std::cout << extensionCount << " extensions supported" << std::endl;
 
-	std::cout << "required extensions:" << std::endl;
-
-	for (unsigned int i = 0; i < glfwExtensionCount; ++i)
-	{
-		std::cout << "\t" << glfwExtensions[i] << std::endl;
-	}
-
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
@@ -140,6 +133,20 @@ void CEApp::initVulkan()
 	std::cout << "available extensions:" << std::endl;
 
 	for (const auto& extension : extensions) {
-		std::cout << "\t" << extension.extensionName << std::endl;
+		std::cout << "  ";
+		bool required = false;
+		for (unsigned int i = 0; i < glfwExtensionCount; ++i)
+		{
+			if (strcmp(extension.extensionName, glfwExtensions[i]) == 0)
+			{
+				required = true;
+				break;
+			}
+		}
+		if (required)
+			std::cout << "* ";
+		else
+			std::cout << "  ";
+		std::cout << extension.extensionName << std::endl;
 	}
 }
