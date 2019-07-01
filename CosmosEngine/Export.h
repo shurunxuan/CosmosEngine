@@ -29,10 +29,8 @@
 //#ifdef ENGINE_DLL // defined if ENGINE is compiled as a DLL
 #ifdef ENGINE_EXPORTS // defined if we are building the ENGINE DLL (instead of using it)
 #define ENGINE_API COSMOS_ENGINE_DLL_EXPORT
-#define EXPORT "EXPORTED"
 #else
 #define ENGINE_API COSMOS_ENGINE_DLL_IMPORT
-#define EXPORT "NOT EXPORTED"
 #endif // ENGINE_DLL_EXPORTS
 #define ENGINE_LOCAL COSMOS_ENGINE_DLL_LOCAL
 //#else // ENGINE_DLL is not defined: this means ENGINE is a static lib.

@@ -4,8 +4,7 @@
 
 #include "App.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -15,51 +14,124 @@
 #include <iostream>
 
 #include "../Compiler/Compiler.h"
+#include <vector>
+
+CEApp* App = nullptr;
 
 int CosmosEngine(int argc, char** argv)
 {
-    const auto enumerate_instance_version =
-            reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+	App->Initialize(1366, 768);
+	App->Loop();
+	App->DeInitialize();
 
-    uint32_t instance_version = VK_API_VERSION_1_0;
+	return 0;
+}
 
-    if (enumerate_instance_version != nullptr) {
-        enumerate_instance_version(&instance_version);
-    }
+CEApp::CEApp()
+{
+	App = this;
+	window = nullptr;
+}
 
-    const uint32_t vulkan_major = VK_VERSION_MAJOR(instance_version);
-    const uint32_t vulkan_minor = VK_VERSION_MINOR(instance_version);
-    const uint32_t vulkan_patch = VK_VERSION_PATCH(VK_HEADER_VERSION);
+CEApp::~CEApp()
+{
+}
 
-    std::cout << "Vulkan Instance Version: "
-              << vulkan_major << "."
-              << vulkan_minor << "."
-              << vulkan_patch << std::endl;
+bool CEApp::Initialize(int screenWidth, int screenHeight)
+{
+	const auto enumerate_instance_version =
+		reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+
+	uint32_t instance_version = VK_API_VERSION_1_0;
+
+	if (enumerate_instance_version != nullptr) {
+		enumerate_instance_version(&instance_version);
+	}
+
+	const uint32_t vulkan_major = VK_VERSION_MAJOR(instance_version);
+	const uint32_t vulkan_minor = VK_VERSION_MINOR(instance_version);
+	const uint32_t vulkan_patch = VK_VERSION_PATCH(VK_HEADER_VERSION);
+
+	std::cout << "Vulkan Instance Version: "
+		<< vulkan_major << "."
+		<< vulkan_minor << "."
+		<< vulkan_patch << std::endl;
+
+	std::cout << CompilerString() << std::endl;
+
+	glm::mat4 matrix;
+	glm::vec4 vec;
+	auto test = matrix * vec;
+
+	glfwInit();
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	window = glfwCreateWindow(screenWidth, screenHeight, "Cosmos Engine", nullptr, nullptr);
+
+	initVulkan();
+
+	Init();
+
+	return true;
+}
+
+void CEApp::Loop()
+{
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
+	}
+}
+
+void CEApp::DeInitialize()
+{
+	DeInit();
+
+	vkDestroyInstance(vulkanInstance, nullptr);
+
+	glfwDestroyWindow(window);
+
+	glfwTerminate();
+}
+
+void CEApp::initVulkan()
+{
+	// Create vulkan instance
+	VkApplicationInfo appInfo = {};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = "Hello Triangle";
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.pEngineName = "No Engine";
+	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.apiVersion = VK_API_VERSION_1_0;
+
+	VkInstanceCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	createInfo.pApplicationInfo = &appInfo;
+
+	uint32_t glfwExtensionCount = 0;
+
+	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+	createInfo.enabledExtensionCount = glfwExtensionCount;
+	createInfo.ppEnabledExtensionNames = glfwExtensions;
+	createInfo.enabledLayerCount = 0;
+
+	VkResult result = vkCreateInstance(&createInfo, nullptr, &vulkanInstance);
 
 
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    std::cout << extensionCount << " extensions supported" << std::endl;
+	uint32_t extensionCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    std::cout << CompilerString() << std::endl;
+	std::cout << extensionCount << " extensions supported" << std::endl;
 
-    glm::mat4 matrix;
-    glm::vec4 vec;
-    auto test = matrix * vec;
+	std::vector<VkExtensionProperties> extensions(extensionCount);
 
-    glfwInit();
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1366, 768, "Cosmos Engine", nullptr, nullptr);
+	std::cout << "available extensions:" << std::endl;
 
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
-
-    return 0;
+	for (const auto& extension : extensions) {
+		std::cout << "\t" << extension.extensionName << std::endl;
+	}
 }

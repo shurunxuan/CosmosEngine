@@ -3,6 +3,9 @@
 //
 
 #include "CosmosEngine/App/App.h"
+#include "TestGameApp/TestGameApp.h"
+
+TestGameApp GameApp;
 
 int main(int argc, char** argv) {
     return CosmosEngine(argc, argv);
