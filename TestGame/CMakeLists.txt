@@ -2,8 +2,16 @@ set(PROJECT_NAME TestGame)
 
 project(${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME} main.cpp)
-add_executable(${PROJECT_NAME} TestGameApp/TestGameApp.h TestGameApp/TestGameApp.cpp)
+set(SOURCE_FILES
+        main.cpp
+        TestGameApp/TestGameApp.cpp
+        )
+
+set(HEADER_FILES
+        TestGameApp/TestGameApp.h
+        )
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ..)
 

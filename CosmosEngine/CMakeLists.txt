@@ -9,7 +9,16 @@ find_package(glm REQUIRED)
 
 add_compile_definitions(ENGINE_EXPORTS)
 
-add_library(${PROJECT_NAME} SHARED App/App.h App/App.cpp)
-add_library(${PROJECT_NAME} SHARED Compiler/Compiler.h Compiler/Compiler.cpp)
+set(SOURCE_FILES
+        App/App.cpp
+        Compiler/Compiler.cpp
+        )
+
+set(HEADER_FILES
+        App/App.h
+        Compiler/Compiler.h
+        )
+
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm)
