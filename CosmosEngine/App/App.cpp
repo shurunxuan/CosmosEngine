@@ -116,14 +116,22 @@ void CEApp::initVulkan()
 	createInfo.ppEnabledExtensionNames = glfwExtensions;
 	createInfo.enabledLayerCount = 0;
 
-	VkResult result = vkCreateInstance(&createInfo, nullptr, &vulkanInstance);
+	if (vkCreateInstance(&createInfo, nullptr, &vulkanInstance) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create instance!");
+	}
 
-
-
+	// Enumerate extensions
 	uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
 	std::cout << extensionCount << " extensions supported" << std::endl;
+
+	std::cout << "required extensions:" << std::endl;
+
+	for (unsigned int i = 0; i < glfwExtensionCount; ++i)
+	{
+		std::cout << "\t" << glfwExtensions[i] << std::endl;
+	}
 
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 
