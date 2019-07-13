@@ -28,10 +28,12 @@ namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 
 typedef sinks::asynchronous_sink<sinks::text_ostream_backend> TextSink;
-typedef sinks::asynchronous_sink<sinks::debug_output_backend> DebugSink;
-
 boost::shared_ptr<TextSink> text_sink;
+
+#ifdef _WIN32
+typedef sinks::asynchronous_sink<sinks::debug_output_backend> DebugSink;
 boost::shared_ptr<DebugSink> debug_sink;
+#endif
 
 void MessageFormatter(logging::record_view const& rec, logging::formatting_ostream& stream)
 {
@@ -61,26 +63,24 @@ void TextFormatter(logging::record_view const& rec, logging::formatting_ostream&
     MessageFormatter(rec, stream);
 }
 
+#ifdef _WIN32
 void DebugFormatter(logging::record_view const& rec, logging::formatting_ostream& stream)
 {
     stream << "APPLICATION LOGGING: ";
     MessageFormatter(rec, stream);
     stream << std::endl;
 }
+#endif
 
 void InitLogger()
 {
     // Construct the sink
     text_sink = boost::make_shared<TextSink>();
 
-    debug_sink = boost::make_shared<DebugSink>();
-
     logging::add_common_attributes();
 
     // Set formatter
     text_sink->set_formatter(&TextFormatter);
-
-    debug_sink->set_formatter(&DebugFormatter);
 
     // Add a stream to write log to
     text_sink->locked_backend()->add_stream(
@@ -88,13 +88,19 @@ void InitLogger()
     text_sink->locked_backend()->add_stream(
             boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 
+    // Register the sink in the logging core
+    logging::core::get()->add_sink(text_sink);
+
+#ifdef _WIN32
+    debug_sink = boost::make_shared<DebugSink>();
+    debug_sink->set_formatter(&DebugFormatter);
+
     // Set the special filter to the frontend
     // in order to skip the sink when no debugger is available
     debug_sink->set_filter(expr::is_debugger_present());
 
-    // Register the sink in the logging core
-    logging::core::get()->add_sink(text_sink);
     logging::core::get()->add_sink(debug_sink);
+#endif
 }
 
 void StopLogger()
@@ -112,7 +118,7 @@ void StopLogger()
 
     text_sink.reset();
 
-
+#ifdef _WIN32
     core->remove_sink(debug_sink);
 
     debug_sink->stop();
@@ -120,4 +126,5 @@ void StopLogger()
     debug_sink->flush();
 
     debug_sink.reset();
+#endif
 }
