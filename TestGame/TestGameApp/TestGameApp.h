@@ -1,16 +1,18 @@
 #ifndef TESTGAMEAPP_H
 #define TESTGAMEAPP_H
+
 #include "CosmosEngine/App/App.h"
 
 class TestGameApp :
-	public CEApp
+        public CEApp
 {
 public:
+    TestGameApp();
+    ~TestGameApp();
 
-	~TestGameApp();
+    bool StartUp(unsigned int screenWidth, unsigned int screenHeight) override;
 
-	void Init() override;
-	void DeInit() override;
+    void Shutdown() override;
 
 };
 

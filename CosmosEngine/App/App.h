@@ -6,58 +6,45 @@
 #define COSMOSENGINE_APP_H
 
 #include "../Export.h"
-
-#include <vulkan/vulkan.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "../Rendering/RenderingBackend.h"
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
 
 class ENGINE_API CEApp
 {
 public:
-	CEApp();
-	~CEApp();
+    CEApp();
 
-	CEApp(const CEApp&) = delete;
-	CEApp(CEApp&&) = delete;
+    ~CEApp();
 
-	CEApp& operator=(const CEApp&) = delete;
-	CEApp& operator=(CEApp&&) = delete;
+    CEApp(const CEApp&) = delete;
 
-	/**
-	 * @brief Actual initialization of the app
-	 *
-	 * @param screenWidth Screen width
-	 * @param screenHeight Screen height
-	 * @return true if initialization succeeded, or false
-	 */
-	virtual bool Initialize(int screenWidth, int screenHeight);
+    CEApp(CEApp&&) = delete;
 
-	/**
-	 * @brief Initialize of the game logic
-	 *
-	 */
-	virtual void Init() = 0;
+    CEApp& operator=(const CEApp&) = delete;
 
-	/**
-	 * @brief The game loop. Called in function DSEngine
-	 *
-	 * @todo Add/change return type or parameters as needed
-	 */
-	void Loop();
+    CEApp& operator=(CEApp&&) = delete;
 
-	virtual void DeInitialize();
+    /**
+     * @brief Actual initialization of the app
+     *
+     * @param screenWidth Screen width
+     * @param screenHeight Screen height
+     * @return true if initialization succeeded, or false
+     */
+    virtual bool StartUp(unsigned int screenWidth, unsigned int screenHeight);
+    /**
+     * @brief The game loop. Called in function DSEngine
+     *
+     * @todo Add/change return type or parameters as needed
+     */
+    void Loop();
 
-	virtual void DeInit() = 0;
+    virtual void Shutdown();
 
 private:
 
-	void initVulkan();
-
-	GLFWwindow* window;
-
-	VkInstance vulkanInstance;
+    RenderingBackend* renderingBackend;
 };
 
 #endif //COSMOSENGINE_APP_H
