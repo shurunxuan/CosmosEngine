@@ -27,9 +27,7 @@ set(HEADER_FILES
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
-if (WIN32)
-    add_definitions( -DBOOST_ALL_NO_LIB )
-    add_definitions( -DBOOST_ALL_DYN_LINK )
-endif()
+add_definitions( -DBOOST_ALL_NO_LIB )
+add_definitions( -DBOOST_ALL_DYN_LINK )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES})
