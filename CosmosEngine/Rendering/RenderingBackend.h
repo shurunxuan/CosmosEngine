@@ -32,7 +32,7 @@ public:
 
     virtual void DeInit() = 0;
 
-private:
+protected:
 
     GLFWwindow* window;
 };

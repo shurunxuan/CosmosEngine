@@ -9,6 +9,7 @@
 
 #include "../RenderingBackend.h"
 
+#include <optional>
 #include <boost/container/vector.hpp>
 
 #include <vulkan/vulkan.h>
@@ -16,6 +17,14 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
+
+struct ENGINE_LOCAL QueueFamilyIndices
+{
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
+
+    bool isComplete();
+};
 
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
@@ -38,9 +47,15 @@ private:
 
     bool checkValidationLayerSupport();
 
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
+    int rateDeviceSuitability(VkPhysicalDevice device);
+
     void pickPhysicalDevice();
 
     void createLogicalDevice();
+
+    void createSurface();
 
     VkInstance vulkanInstance{};
 
@@ -51,6 +66,10 @@ private:
     VkDevice device;
 
     VkQueue graphicsQueue;
+
+    VkQueue presentQueue;
+
+    VkSurfaceKHR surface;
 };
 
 
