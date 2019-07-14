@@ -40,11 +40,17 @@ private:
 
     void pickPhysicalDevice();
 
+    void createLogicalDevice();
+
     VkInstance vulkanInstance{};
 
     VkDebugUtilsMessengerEXT debugMessenger;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+    VkDevice device;
+
+    VkQueue graphicsQueue;
 };
 
 
