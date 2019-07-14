@@ -2,7 +2,7 @@
 #include "TestGameApp.h"
 
 TestGameApp::TestGameApp()
-    : CEApp()
+        : CEApp()
 {
 
 }

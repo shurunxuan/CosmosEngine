@@ -33,6 +33,7 @@ public:
      * @return true if initialization succeeded, or false
      */
     virtual bool StartUp(unsigned int screenWidth, unsigned int screenHeight);
+
     /**
      * @brief The game loop. Called in function DSEngine
      *

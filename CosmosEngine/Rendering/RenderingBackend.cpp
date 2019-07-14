@@ -15,7 +15,7 @@ RenderingBackend::~RenderingBackend()
 
 }
 
-bool RenderingBackend::Init(unsigned int screenWidth, unsigned int screenHeight)
+bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 {
     LOG_INFO << "Initializing Rendering Backend";
 
@@ -24,23 +24,23 @@ bool RenderingBackend::Init(unsigned int screenWidth, unsigned int screenHeight)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(screenWidth, screenHeight, "Cosmos Engine", nullptr, nullptr);
 
-    StartUp();
+    Init();
 
     return true;
 }
 
-void RenderingBackend::DeInit()
+void RenderingBackend::Shutdown()
 {
-    Shutdown();
+    DeInit();
 
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
-void RenderingBackend::Loop()
+void RenderingBackend::Update()
 {
     glfwPollEvents();
-    Update();
+    Render();
 }
 
 bool RenderingBackend::ShouldTerminate()

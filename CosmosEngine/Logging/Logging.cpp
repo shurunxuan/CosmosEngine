@@ -64,12 +64,14 @@ void TextFormatter(logging::record_view const& rec, logging::formatting_ostream&
 }
 
 #ifdef _WIN32
+
 void DebugFormatter(logging::record_view const& rec, logging::formatting_ostream& stream)
 {
     stream << "APPLICATION LOGGING: ";
     MessageFormatter(rec, stream);
     stream << std::endl;
 }
+
 #endif
 
 void InitLogger()

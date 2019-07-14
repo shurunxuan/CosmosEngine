@@ -7,6 +7,7 @@
 
 TestGameApp GameApp;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     return CosmosEngine(argc, argv);
 }

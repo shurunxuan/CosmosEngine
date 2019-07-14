@@ -8,6 +8,7 @@ class TestGameApp :
 {
 public:
     TestGameApp();
+
     ~TestGameApp();
 
     bool StartUp(unsigned int screenWidth, unsigned int screenHeight) override;

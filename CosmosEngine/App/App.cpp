@@ -40,16 +40,16 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     LOG_INFO << "Platform: " << BOOST_PLATFORM;
     LOG_INFO << "Compiler: " << BOOST_COMPILER;
-    
+
     LOG_INFO << "Boost Version: "
              << BOOST_VERSION / 100000 << "."
              << BOOST_VERSION / 100 % 1000 << "."
              << BOOST_VERSION % 100;
-    
+
     // TODO: Choose Rendering Backend
     renderingBackend = new VulkanBackend();
 
-    renderingBackend->Init(screenWidth, screenHeight);
+    renderingBackend->StartUp(screenWidth, screenHeight);
 
     return true;
 }
@@ -58,13 +58,13 @@ void CEApp::Loop()
 {
     while (!renderingBackend->ShouldTerminate())
     {
-        renderingBackend->Loop();
+        renderingBackend->Update();
     }
 }
 
 void CEApp::Shutdown()
 {
-    renderingBackend->DeInit();
+    renderingBackend->Shutdown();
 }
 
 

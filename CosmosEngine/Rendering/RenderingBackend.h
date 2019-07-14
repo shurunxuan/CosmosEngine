@@ -6,7 +6,9 @@
 #define COSMOSENGINE_RENDERINGBACKEND_H
 
 #include "../Export.h"
+
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
 
 class ENGINE_API RenderingBackend
@@ -16,17 +18,19 @@ public:
 
     virtual ~RenderingBackend();
 
-    bool Init(unsigned int screenWidth, unsigned int screenHeight);
-    void Loop();
-    void DeInit();
+    bool StartUp(unsigned int screenWidth, unsigned int screenHeight);
+
+    void Update();
+
+    void Shutdown();
 
     bool ShouldTerminate();
 
-    virtual bool StartUp() = 0;
+    virtual bool Init() = 0;
 
-    virtual void Update() = 0;
+    virtual void Render() = 0;
 
-    virtual void Shutdown() = 0;
+    virtual void DeInit() = 0;
 
 private:
 

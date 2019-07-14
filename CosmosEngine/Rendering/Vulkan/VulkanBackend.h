@@ -9,6 +9,8 @@
 
 #include "../RenderingBackend.h"
 
+#include <boost/container/vector.hpp>
+
 #include <vulkan/vulkan.h>
 
 #define GLFW_INCLUDE_VULKAN
@@ -23,17 +25,20 @@ public:
 
     ~VulkanBackend() final;
 
-    bool StartUp() override;
+    bool Init() override;
 
-    void Update() override;
+    void Render() override;
 
-    void Shutdown() override;
+    void DeInit() override;
 
 private:
-    void initVulkan();
-
+    void createInstance();
+    void setupDebugMessenger();
+    bool checkValidationLayerSupport();
 
     VkInstance vulkanInstance{};
+
+    VkDebugUtilsMessengerEXT debugMessenger;
 };
 
 
