@@ -22,7 +22,9 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(GLSL_VALIDATOR "${VULKAN_LIBRARY_PATH}/../bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set(GLSL_VALIDATOR "${VULKAN_LIBRARY_PATH}/../bin/glslangValidator")
+    find_file(GLSL_VALIDATOR
+            glslangValidator
+            HINTS ${VULKAN_LIBRARY_PATH}/../../)
 endif ()
 
 get_filename_component(GLSL_VALIDATOR ${GLSL_VALIDATOR} REALPATH)
