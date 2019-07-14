@@ -26,6 +26,12 @@ struct ENGINE_LOCAL QueueFamilyIndices
     bool isComplete();
 };
 
+struct ENGINE_LOCAL SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    boost::container::vector<VkSurfaceFormatKHR> formats;
+    boost::container::vector<VkPresentModeKHR> presentModes;
+};
+
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
@@ -49,6 +55,8 @@ private:
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+
     int rateDeviceSuitability(VkPhysicalDevice device);
 
     void pickPhysicalDevice();
@@ -56,6 +64,8 @@ private:
     void createLogicalDevice();
 
     void createSurface();
+
+    void createSwapChain();
 
     VkInstance vulkanInstance{};
 
@@ -70,6 +80,13 @@ private:
     VkQueue presentQueue;
 
     VkSurfaceKHR surface;
+
+    VkSwapchainKHR swapChain;
+
+    boost::container::vector<VkImage> swapChainImages;
+
+    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainExtent;
 };
 
 

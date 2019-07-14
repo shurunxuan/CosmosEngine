@@ -35,6 +35,10 @@ public:
 protected:
 
     GLFWwindow* window;
+
+    unsigned int width;
+
+    unsigned int height;
 };
 
 

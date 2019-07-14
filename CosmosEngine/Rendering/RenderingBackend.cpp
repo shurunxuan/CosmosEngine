@@ -19,6 +19,9 @@ bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeig
 {
     LOG_INFO << "Initializing Rendering Backend";
 
+    width = screenWidth;
+    height = screenHeight;
+
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
