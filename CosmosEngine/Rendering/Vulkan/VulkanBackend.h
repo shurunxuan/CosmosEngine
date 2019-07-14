@@ -33,12 +33,18 @@ public:
 
 private:
     void createInstance();
+
     void setupDebugMessenger();
+
     bool checkValidationLayerSupport();
+
+    void pickPhysicalDevice();
 
     VkInstance vulkanInstance{};
 
     VkDebugUtilsMessengerEXT debugMessenger;
+
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 };
 
 

@@ -5,12 +5,21 @@
 #include "VulkanBackend.h"
 #include "../../Logging/Logging.h"
 
+#include <optional>
+
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value();
+    }
+};
 
 const boost::container::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
 };
 
-const bool enableValidationLayers =
+bool enableValidationLayers =
 #ifdef NDEBUG
         false;
 #else
@@ -122,6 +131,7 @@ bool VulkanBackend::Init()
 
     createInstance();
     setupDebugMessenger();
+    pickPhysicalDevice();
 
     return true;
 }
@@ -161,7 +171,8 @@ void VulkanBackend::createInstance()
 {
     if (enableValidationLayers && !checkValidationLayerSupport())
     {
-        throw std::runtime_error("Validation layers requested, but not available!");
+        LOG_WARNING << "Validation layers requested, but not available! Disabling validation layers.";
+        enableValidationLayers = false;
     }
 
     // Create vulkan instance
@@ -182,16 +193,20 @@ void VulkanBackend::createInstance()
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-    if (enableValidationLayers) {
+    if (enableValidationLayers)
+    {
         populateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
-    } else {
+    }
+    else
+    {
         createInfo.pNext = nullptr;
     }
 
     if (vkCreateInstance(&createInfo, nullptr, &vulkanInstance) != VK_SUCCESS)
     {
-        throw std::runtime_error("Failed to create instance!");
+        LOG_FATAL << "Failed to create vulkan instance!";
+        throw std::runtime_error("Failed to create vulkan instance!");
     }
 
     // Enumerate extensions
@@ -245,6 +260,7 @@ void VulkanBackend::setupDebugMessenger()
 
     if (CreateDebugUtilsMessengerEXT(vulkanInstance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
     {
+        LOG_FATAL << "Failed to set up debug messenger!";
         throw std::runtime_error("Failed to set up debug messenger!");
     }
 }
@@ -289,4 +305,127 @@ bool VulkanBackend::checkValidationLayerSupport()
     }
 
     return true;
+}
+
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+    QueueFamilyIndices indices;
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+    int i = 0;
+    for (const auto& queueFamily : queueFamilies) {
+        if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.graphicsFamily = i;
+        }
+
+        if (indices.isComplete()) {
+            break;
+        }
+
+        i++;
+    }
+
+    return indices;
+}
+
+int rateDeviceSuitability(VkPhysicalDevice device)
+{
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+    LOG_INFO << "Device " << deviceProperties.deviceID << ": ";
+    LOG_INFO << "\tName: " << deviceProperties.deviceName;
+    switch (deviceProperties.deviceType)
+    {
+
+        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_OTHER";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_CPU:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_CPU";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_RANGE_SIZE:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_RANGE_SIZE";
+            break;
+        case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
+            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM";
+            break;
+    }
+
+    int score = 0;
+
+    QueueFamilyIndices indices = findQueueFamilies(device);
+    if (!indices.isComplete())
+    {
+        return -1;
+    }
+
+    // Discrete GPUs have a significant performance advantage
+    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    {
+        score += 1000;
+    }
+    else
+    {
+        score += 1;
+    }
+
+    // TODO: Choose device with capabilities and features
+
+    return score;
+}
+
+void VulkanBackend::pickPhysicalDevice()
+{
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
+
+    if (deviceCount == 0)
+    {
+        LOG_FATAL << "Failed to find GPUs with Vulkan support!";
+        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, devices.data());
+
+    // Use an ordered map to automatically sort candidates by increasing score
+    std::multimap<int, VkPhysicalDevice> candidates;
+
+    for (const auto& device : devices)
+    {
+        int score = rateDeviceSuitability(device);
+        candidates.insert(std::make_pair(score, device));
+    }
+
+    // Check if the best candidate is suitable at all
+    if (candidates.rbegin()->first > 0)
+    {
+        physicalDevice = candidates.rbegin()->second;
+    }
+    else
+    {
+        LOG_FATAL << "Failed to find a suitable GPU!";
+        throw std::runtime_error("Failed to find a suitable GPU!");
+    }
+
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+    LOG_INFO << "Device " << deviceProperties.deviceName << " is chosen as physical device.";
 }
