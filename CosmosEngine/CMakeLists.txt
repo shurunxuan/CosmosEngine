@@ -3,7 +3,6 @@ set(ENGINE_NAME ${PROJECT_NAME})
 
 project(${PROJECT_NAME})
 
-find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
@@ -29,5 +28,42 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
 add_definitions(-DBOOST_ALL_NO_LIB)
 add_definitions(-DBOOST_ALL_DYN_LINK)
+
+# Shaders (SPIR-V)
+
+# Delete last compilation folder
+file(REMOVE_RECURSE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/)
+
+# Get all glsl shaders
+file(GLOB_RECURSE GLSL_SHADERS
+        "Rendering/Shaders/*.frag"
+        "Rendering/Shaders/*.vert"
+        )
+
+
+foreach(GLSL ${GLSL_SHADERS})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    file(RELATIVE_PATH REL_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/Rendering/Shaders/ ${GLSL})
+    set(SPIRV "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_FILE_NAME}.spv")
+    if (${REL_FILE_NAME} STREQUAL ${FILE_NAME})
+        set(REL_PATH ".")
+    else()
+        get_filename_component(REL_PATH ${REL_FILE_NAME} DIRECTORY)
+    endif ()
+
+    add_custom_command(
+            OUTPUT ${SPIRV}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_PATH}/"
+            COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+            DEPENDS ${GLSL})
+    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+
+add_custom_target(
+        Shaders
+        DEPENDS ${SPIRV_BINARY_FILES}
+)
+
+add_dependencies(${PROJECT_NAME} Shaders)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES})

@@ -46,6 +46,7 @@ public:
 
     void DeInit() override;
 
+    boost::container::vector<char> loadShader(const boost::container::string& filename) override;
 private:
     void createInstance();
 
@@ -67,6 +68,14 @@ private:
 
     void createSwapChain();
 
+    void createImageViews();
+
+    void createRenderPass();
+
+    void createGraphicsPipeline();
+
+    VkShaderModule createShaderModule(const boost::container::vector<char>& code);
+
     VkInstance vulkanInstance{};
 
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -85,8 +94,17 @@ private:
 
     boost::container::vector<VkImage> swapChainImages;
 
+    boost::container::vector<VkImageView> swapChainImageViews;
+
     VkFormat swapChainImageFormat;
+
     VkExtent2D swapChainExtent;
+
+    VkRenderPass renderPass;
+
+    VkPipelineLayout pipelineLayout;
+
+    VkPipeline graphicsPipeline;
 };
 
 

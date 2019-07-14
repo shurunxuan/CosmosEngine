@@ -10,7 +10,8 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
-
+#include <boost/container/vector.hpp>
+#include <boost/container/string.hpp>
 class ENGINE_API RenderingBackend
 {
 public:
@@ -31,6 +32,8 @@ public:
     virtual void Render() = 0;
 
     virtual void DeInit() = 0;
+
+    virtual boost::container::vector<char> loadShader(const boost::container::string& filename) = 0;
 
 protected:
 
