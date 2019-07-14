@@ -74,6 +74,14 @@ private:
 
     void createGraphicsPipeline();
 
+    void createFramebuffers();
+
+    void createCommandPool();
+
+    void createCommandBuffers();
+
+    void createSyncObjects();
+
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
     VkInstance vulkanInstance{};
@@ -105,6 +113,20 @@ private:
     VkPipelineLayout pipelineLayout;
 
     VkPipeline graphicsPipeline;
+
+    boost::container::vector<VkFramebuffer> swapChainFramebuffers;
+
+    VkCommandPool commandPool;
+
+    boost::container::vector<VkCommandBuffer> commandBuffers;
+
+    boost::container::vector<VkSemaphore> imageAvailableSemaphores;
+
+    boost::container::vector<VkSemaphore> renderFinishedSemaphores;
+
+    boost::container::vector<VkFence> inFlightFences;
+
+    size_t currentFrame = 0;
 };
 
 
