@@ -37,6 +37,8 @@ bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeig
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
+    glfwGetFramebufferSize(window, &width, &height);
+
     Init();
 
     return true;

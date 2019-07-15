@@ -1204,9 +1204,7 @@ void VulkanBackend::recreateSwapChain()
 {
     while (width == 0 || height == 0)
     {
-        int newWidth = 0;
-        int newHeight = 0;
-        glfwGetFramebufferSize(window, &newWidth, &newHeight);
+        glfwGetFramebufferSize(window, &width, &height);
         glfwWaitEvents();
     }
 

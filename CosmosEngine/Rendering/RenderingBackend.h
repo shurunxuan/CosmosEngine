@@ -40,9 +40,9 @@ protected:
 
     GLFWwindow* window;
 
-    unsigned int width;
+    int width;
 
-    unsigned int height;
+    int height;
 
     bool framebufferResized = false;
 };
