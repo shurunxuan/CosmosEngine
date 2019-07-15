@@ -10,6 +10,7 @@
 #define COSMOS_ENGINE_DLL_IMPORT __declspec(dllimport)
 #define COSMOS_ENGINE_DLL_EXPORT __declspec(dllexport)
 #define COSMOS_ENGINE_DLL_LOCAL
+#pragma warning(disable : 4251)
 #else
 #if __GNUC__ >= 4
 #define COSMOS_ENGINE_DLL_IMPORT __attribute__ ((visibility ("default")))
