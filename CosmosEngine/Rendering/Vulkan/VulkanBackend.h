@@ -66,6 +66,8 @@ private:
 
     void createSurface();
 
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
     void createSwapChain();
 
     void createImageViews();
@@ -81,6 +83,10 @@ private:
     void createCommandBuffers();
 
     void createSyncObjects();
+
+    void recreateSwapChain();
+
+    void cleanupSwapChain();
 
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
@@ -127,6 +133,8 @@ private:
     boost::container::vector<VkFence> inFlightFences;
 
     size_t currentFrame = 0;
+
+
 };
 
 

@@ -36,12 +36,15 @@ public:
     virtual boost::container::vector<char> loadShader(const boost::container::string& filename) = 0;
 
 protected:
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
     GLFWwindow* window;
 
     unsigned int width;
 
     unsigned int height;
+
+    bool framebufferResized = false;
 };
 
 

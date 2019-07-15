@@ -15,6 +15,14 @@ RenderingBackend::~RenderingBackend()
 
 }
 
+void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto backend = reinterpret_cast<RenderingBackend*>(glfwGetWindowUserPointer(window));
+    backend->framebufferResized = true;
+    backend->width = width;
+    backend->height = height;
+    LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
+}
+
 bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 {
     LOG_INFO << "Initializing Rendering Backend";
@@ -26,6 +34,8 @@ bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeig
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(screenWidth, screenHeight, "Cosmos Engine", nullptr, nullptr);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
     Init();
 
@@ -38,6 +48,8 @@ void RenderingBackend::Shutdown()
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    LOG_INFO << "Rendering Backend Shutdown Completed.";
 }
 
 void RenderingBackend::Update()
