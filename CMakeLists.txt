@@ -9,6 +9,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_compile_definitions(__SOLUTION_DIR__="${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Find glslangValidator
 find_package(Vulkan REQUIRED)
 
 get_filename_component(VULKAN_LIBRARY_PATH ${Vulkan_LIBRARY} DIRECTORY)
@@ -35,11 +36,41 @@ else ()
     message(SEND_ERROR "GLSL Validator Not Found!")
 endif ()
 
+# Operating System Specification
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     #	set(CMAKE_MACOSX_RPATH 1)
     set(MACOS_CREATE_BUNDLE FALSE)
 endif ()
 
+# SPRIV-Cross
+include(ExternalProject)
+find_package(Git REQUIRED)
+
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+ExternalProject_Add(
+        SPIRV-Cross
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+        UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+        LOG_DOWNLOAD ON
+        CMAKE_ARGS -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+)
+
+set(
+        SPRIV_CROSS_LIBRARIES
+        spirv-cross-c
+        spirv-cross-core
+        spirv-cross-cpp
+        spirv-cross-glsl
+        spirv-cross-hlsl
+        spirv-cross-msl
+        spirv-cross-reflect
+        spirv-cross-util
+)
+
+# Engine and Game
 add_subdirectory(CosmosEngine)
 add_subdirectory(TestGame)
 

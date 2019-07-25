@@ -5,6 +5,7 @@ project(${PROJECT_NAME})
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -15,14 +16,21 @@ add_compile_definitions(ENGINE_EXPORTS)
 set(SOURCE_FILES
         App/App.cpp
         Rendering/RenderingBackend.cpp
+#        Rendering/ReflectionalShader.cpp
         Rendering/Vulkan/VulkanBackend.cpp
-        Logging/Logging.cpp)
+        Logging/Logging.cpp
+#        Rendering/Vulkan/ReflectionalSpirV.cpp
+        )
 
 set(HEADER_FILES
+        Export.h
         App/App.h
         Rendering/RenderingBackend.h
+#        Rendering/ReflectionalShader.h
         Rendering/Vulkan/VulkanBackend.h
-        Logging/Logging.h)
+        Logging/Logging.h
+#        Rendering/Vulkan/ReflectionalSpirV.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -41,13 +49,13 @@ file(GLOB_RECURSE GLSL_SHADERS
         )
 
 
-foreach(GLSL ${GLSL_SHADERS})
+foreach (GLSL ${GLSL_SHADERS})
     get_filename_component(FILE_NAME ${GLSL} NAME)
     file(RELATIVE_PATH REL_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/Rendering/Shaders/ ${GLSL})
     set(SPIRV "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_FILE_NAME}.spv")
     if (${REL_FILE_NAME} STREQUAL ${FILE_NAME})
         set(REL_PATH ".")
-    else()
+    else ()
         get_filename_component(REL_PATH ${REL_FILE_NAME} DIRECTORY)
     endif ()
 
@@ -57,13 +65,13 @@ foreach(GLSL ${GLSL_SHADERS})
             COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
             DEPENDS ${GLSL})
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-endforeach(GLSL)
+endforeach (GLSL)
 
 add_custom_target(
         Shaders
         DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-add_dependencies(${PROJECT_NAME} Shaders)
+add_dependencies(${PROJECT_NAME} Shaders SPIRV-Cross)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES} ${SPRIV_CROSS_LIBRARIES})

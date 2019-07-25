@@ -11,12 +11,13 @@
 
 #include <optional>
 #include <boost/container/vector.hpp>
-
+#include <boost/array.hpp>
 #include <vulkan/vulkan.h>
 
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 struct ENGINE_LOCAL QueueFamilyIndices
 {
@@ -26,10 +27,62 @@ struct ENGINE_LOCAL QueueFamilyIndices
     bool isComplete();
 };
 
-struct ENGINE_LOCAL SwapChainSupportDetails {
+struct ENGINE_LOCAL SwapChainSupportDetails
+{
     VkSurfaceCapabilitiesKHR capabilities;
     boost::container::vector<VkSurfaceFormatKHR> formats;
     boost::container::vector<VkPresentModeKHR> presentModes;
+};
+
+struct Vertex
+{
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static VkVertexInputBindingDescription getBindingDescription()
+    {
+        VkVertexInputBindingDescription bindingDescription = {};
+
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static boost::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+    {
+        boost::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
+const std::vector<Vertex> vertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f,  0.5f},  {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f},  {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+        0, 1, 2, 2, 3, 0
+};
+
+struct UniformBufferObject {
+    glm::mat4x4 model;
+    glm::mat4x4 view;
+    glm::mat4x4 proj;
 };
 
 class ENGINE_API VulkanBackend final
@@ -47,6 +100,12 @@ public:
     void DeInit() override;
 
     boost::container::vector<char> loadShader(const boost::container::string& filename) override;
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                      VkDeviceMemory& bufferMemory);
+
+    size_t GetSwapChainImageCount();
+
 private:
     void createInstance();
 
@@ -74,6 +133,8 @@ private:
 
     void createRenderPass();
 
+    void createDescriptorSetLayout();
+
     void createGraphicsPipeline();
 
     void createFramebuffers();
@@ -88,7 +149,21 @@ private:
 
     void cleanupSwapChain();
 
+    void createVertexBuffer();
+
+    void createIndexBuffer();
+
+    void createUniformBuffers();
+
+    void createDescriptorPool();
+
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+    void createDescriptorSets();
+
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     VkInstance vulkanInstance{};
 
@@ -116,6 +191,8 @@ private:
 
     VkRenderPass renderPass;
 
+    VkDescriptorSetLayout descriptorSetLayout;
+
     VkPipelineLayout pipelineLayout;
 
     VkPipeline graphicsPipeline;
@@ -134,8 +211,23 @@ private:
 
     size_t currentFrame = 0;
 
+    VkBuffer vertexBuffer;
 
+    VkDeviceMemory vertexBufferMemory;
+
+    VkBuffer indexBuffer;
+
+    VkDeviceMemory indexBufferMemory;
+
+    boost::container::vector<VkBuffer> uniformBuffers;
+
+    boost::container::vector<VkDeviceMemory> uniformBuffersMemory;
+
+    VkDescriptorPool descriptorPool;
+
+    boost::container::vector<VkDescriptorSet> descriptorSets;
 };
 
+extern ENGINE_LOCAL VulkanBackend* vulkanBackend;
 
 #endif //COSMOSENGINE_VULKANBACKEND_H
