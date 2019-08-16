@@ -51,24 +51,23 @@ include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
 ExternalProject_Add(
-        SPIRV-Cross
-        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+        SPIRV-Headers
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
         UPDATE_COMMAND ${GIT_EXECUTABLE} pull
         LOG_DOWNLOAD ON
-        CMAKE_ARGS -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
 
-set(
-        SPRIV_CROSS_LIBRARIES
-        spirv-cross-c
-        spirv-cross-core
-        spirv-cross-cpp
-        spirv-cross-glsl
-        spirv-cross-hlsl
-        spirv-cross-msl
-        spirv-cross-reflect
-        spirv-cross-util
+ExternalProject_Add(
+        MathFu
+        GIT_REPOSITORY https://github.com/google/mathfu.git
+        UPDATE_COMMAND ${GIT_EXECUTABLE} pull --recurse-submodules
+        LOG_DOWNLOAD ON
+        CMAKE_ARGS -Dmathfu_build_tests=OFF -Dmathfu_build_benchmarks=OFF
+        INSTALL_COMMAND ""
 )
+
+include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/include)
 
 # Engine and Game
 add_subdirectory(CosmosEngine)

@@ -5,7 +5,7 @@ project(${PROJECT_NAME})
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(assimp REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -16,20 +16,30 @@ add_compile_definitions(ENGINE_EXPORTS)
 set(SOURCE_FILES
         App/App.cpp
         Rendering/RenderingBackend.cpp
-#        Rendering/ReflectionalShader.cpp
+        Rendering/Vulkan/SPRIV_Reflect/spirv_reflect.c
+        #        Rendering/ReflectionalShader.cpp
         Rendering/Vulkan/VulkanBackend.cpp
         Logging/Logging.cpp
-#        Rendering/Vulkan/ReflectionalSpirV.cpp
+        #        Rendering/Vulkan/ReflectionalSpirV.cpp
+#        Core/Component.cpp
+#        Core/Object.cpp
+#        Core/Transform.cpp
+#        Core/Scene.cpp
         )
 
 set(HEADER_FILES
         Export.h
         App/App.h
         Rendering/RenderingBackend.h
-#        Rendering/ReflectionalShader.h
+        Rendering/Vulkan/SPRIV_Reflect/spirv_reflect.h
+        #        Rendering/ReflectionalShader.h
         Rendering/Vulkan/VulkanBackend.h
         Logging/Logging.h
-#        Rendering/Vulkan/ReflectionalSpirV.h
+        #        Rendering/Vulkan/ReflectionalSpirV.h
+#        Core/Component.h
+#        Core/Object.h
+#        Core/Transform.h
+#        Core/Scene.h
         )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
@@ -72,6 +82,10 @@ add_custom_target(
         DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-add_dependencies(${PROJECT_NAME} Shaders SPIRV-Cross)
+add_dependencies(${PROJECT_NAME} Shaders SPIRV-Headers MathFu)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES} ${SPRIV_CROSS_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES} ${ASSIMP_LIBRARY})
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
+endif ()
