@@ -68,6 +68,9 @@ ExternalProject_Add(
 )
 
 include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/include)
+include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/vectorial/include)
+#include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/googletest/googletest/include)
+#include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/fplutil/libfplutil/include)
 
 # Engine and Game
 add_subdirectory(CosmosEngine)
