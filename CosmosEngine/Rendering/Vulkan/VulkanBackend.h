@@ -17,10 +17,8 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
-//#include <glm/glm.hpp>
-#include "mathfu/vector.h"
-#include "mathfu/matrix.h"
-#include "mathfu/glsl_mappings.h"
+#include <glm/glm.hpp>
+
 struct ENGINE_LOCAL QueueFamilyIndices
 {
     std::optional<uint32_t> graphicsFamily;
@@ -38,8 +36,8 @@ struct ENGINE_LOCAL SwapChainSupportDetails
 
 struct Vertex
 {
-    mathfu::vec2 pos;
-    mathfu::vec3 color;
+    glm::vec2 pos;
+    glm::vec3 color;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -82,9 +80,9 @@ const std::vector<uint16_t> indices = {
 };
 
 struct UniformBufferObject {
-    mathfu::mat4 model;
-    mathfu::mat4 view;
-    mathfu::mat4 proj;
+    glm::mat4x4 model;
+    glm::mat4x4 view;
+    glm::mat4x4 proj;
 };
 
 class ENGINE_API VulkanBackend final

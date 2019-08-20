@@ -58,20 +58,6 @@ ExternalProject_Add(
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
 
-ExternalProject_Add(
-        MathFu
-        GIT_REPOSITORY https://github.com/google/mathfu.git
-        UPDATE_COMMAND ${GIT_EXECUTABLE} pull --recurse-submodules
-        LOG_DOWNLOAD ON
-        CMAKE_ARGS -Dmathfu_build_tests=OFF -Dmathfu_build_benchmarks=OFF
-        INSTALL_COMMAND ""
-)
-
-include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/include)
-include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/vectorial/include)
-#include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/googletest/googletest/include)
-#include_directories(${CMAKE_BINARY_DIR}/MathFu-prefix/src/MathFu/dependencies/fplutil/libfplutil/include)
-
 # Engine and Game
 add_subdirectory(CosmosEngine)
 add_subdirectory(TestGame)
