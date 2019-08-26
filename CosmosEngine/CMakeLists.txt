@@ -5,7 +5,6 @@ project(${PROJECT_NAME})
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
