@@ -120,7 +120,9 @@ jobs:
         targetType: 'inline'
         script: 'git clone https://github.com/Microsoft/vcpkg.git
 
-          git checkout 77c3e0aa
+          git fetch origin pull/7592/head:glfw3fix
+
+          git checkout glfw3fix
           
           cd vcpkg
           
