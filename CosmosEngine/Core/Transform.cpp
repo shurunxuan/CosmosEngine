@@ -12,7 +12,7 @@ Transform::Transform(Object* owner)
 {
     localTranslation = {0.0f, 0.0f, 0.0f};
     localScale = {1.0f, 1.0f, 1.0f};
-    localRotation = glm::identity<glm::quat>();
+    localRotation = glm::quat_identity<float, glm::defaultp>();
 
     parent = nullptr;
 
