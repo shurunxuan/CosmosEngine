@@ -119,12 +119,12 @@ jobs:
       inputs:
         targetType: 'inline'
         script: 'git clone https://github.com/Microsoft/vcpkg.git
+          
+          cd vcpkg
 
           git fetch origin pull/7592/head:glfw3fix
 
           git checkout glfw3fix
-          
-          cd vcpkg
           
           .\\bootstrap-vcpkg.bat
           
