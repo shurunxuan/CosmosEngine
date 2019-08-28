@@ -5,7 +5,6 @@ project(${PROJECT_NAME})
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS log REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -21,6 +20,10 @@ set(SOURCE_FILES
         Rendering/Vulkan/VulkanBackend.cpp
         Logging/Logging.cpp
 #        Rendering/Vulkan/ReflectionalSpirV.cpp
+        Core/Object.cpp
+        Core/Component.cpp
+        Core/Transform.cpp
+#        Core/Scene.cpp
         )
 
 set(HEADER_FILES
@@ -32,6 +35,10 @@ set(HEADER_FILES
         Rendering/Vulkan/VulkanBackend.h
         Logging/Logging.h
 #        Rendering/Vulkan/ReflectionalSpirV.h
+        Core/Object.h
+        Core/Component.h
+        Core/Transform.h
+#        Core/Scene.h
         )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
