@@ -11,6 +11,7 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
 add_compile_definitions(ENGINE_EXPORTS)
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 
 set(SOURCE_FILES
         App/App.cpp
