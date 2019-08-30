@@ -21,7 +21,7 @@ public:
 
     bool StartUp(unsigned int screenWidth, unsigned int screenHeight);
 
-    void Update();
+    void Update(float deltaTime, float totalTime);
 
     void Shutdown();
 
@@ -29,7 +29,7 @@ public:
 
     virtual bool Init() = 0;
 
-    virtual void Render() = 0;
+    virtual void Render(float deltaTime, float totalTime) = 0;
 
     virtual void DeInit() = 0;
 

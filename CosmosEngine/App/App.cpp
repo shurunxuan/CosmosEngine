@@ -51,6 +51,12 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     renderingBackend->StartUp(screenWidth, screenHeight);
 
+
+    startTime = boost::chrono::high_resolution_clock::now();
+    currentTime = startTime;
+    lastTime = startTime;
+    deltaTime = currentTime - lastTime;
+    totalTime = currentTime - startTime;
     return true;
 }
 
@@ -58,7 +64,15 @@ void CEApp::Loop()
 {
     while (!renderingBackend->ShouldTerminate())
     {
-        renderingBackend->Update();
+        lastTime = currentTime;
+
+        // TODO: This is actually Scene::Update, don't forget to remove it
+        App->Update(deltaTime.count(), totalTime.count());
+        renderingBackend->Update(deltaTime.count(), totalTime.count());
+
+        currentTime = boost::chrono::high_resolution_clock::now();
+        deltaTime = currentTime - lastTime;
+        totalTime = currentTime - startTime;
     }
 }
 

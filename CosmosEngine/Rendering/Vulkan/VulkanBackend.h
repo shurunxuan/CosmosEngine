@@ -36,7 +36,7 @@ struct ENGINE_LOCAL SwapChainSupportDetails
 
 struct Vertex
 {
-    glm::vec2 pos;
+    glm::vec3 pos;
     glm::vec3 color;
 
     static VkVertexInputBindingDescription getBindingDescription()
@@ -56,7 +56,7 @@ struct Vertex
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
         attributeDescriptions[1].binding = 0;
@@ -69,17 +69,18 @@ struct Vertex
 };
 
 const std::vector<Vertex> vertices = {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f,  0.5f},  {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f},  {1.0f, 1.0f, 1.0f}}
+        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f,  0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f,  0.0f, 0.5f},  {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.0f, 0.5f},  {1.0f, 1.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
-        0, 1, 2, 2, 3, 0
+        0, 2, 1, 2, 0, 3, 0, 1, 2, 2, 3, 0
 };
 
-struct UniformBufferObject {
+struct UniformBufferObject
+{
     glm::mat4x4 model;
     glm::mat4x4 view;
     glm::mat4x4 proj;
@@ -95,14 +96,14 @@ public:
 
     bool Init() override;
 
-    void Render() override;
+    void Render(float deltaTime, float totalTime) override;
 
     void DeInit() override;
 
-    boost::container::vector<char> loadShader(const boost::container::string& filename) override;
+    boost::container::vector<char> loadShader(const boost::container::string &filename) override;
 
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                      VkDeviceMemory& bufferMemory);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                      VkDeviceMemory &bufferMemory);
 
     size_t GetSwapChainImageCount();
 
@@ -125,7 +126,7 @@ private:
 
     void createSurface();
 
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
     void createSwapChain();
 
@@ -161,7 +162,7 @@ private:
 
     void createDescriptorSets();
 
-    VkShaderModule createShaderModule(const boost::container::vector<char>& code);
+    VkShaderModule createShaderModule(const boost::container::vector<char> &code);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
@@ -228,6 +229,6 @@ private:
     boost::container::vector<VkDescriptorSet> descriptorSets;
 };
 
-extern ENGINE_LOCAL VulkanBackend* vulkanBackend;
+extern ENGINE_LOCAL VulkanBackend *vulkanBackend;
 
 #endif //COSMOSENGINE_VULKANBACKEND_H

@@ -4,6 +4,7 @@
 
 #include "VulkanBackend.h"
 #include "../../Logging/Logging.h"
+#include "../../App/App.h"
 
 #include <set>
 #include <algorithm>
@@ -225,7 +226,7 @@ void VulkanBackend::DeInit()
     LOG_INFO << "Vulkan Rendering Backend Shutdown Completed.";
 }
 
-void VulkanBackend::Render()
+void VulkanBackend::Render(float deltaTime, float totalTime)
 {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
@@ -245,14 +246,11 @@ void VulkanBackend::Render()
     }
 
     // Update uniform buffer
-    static auto startTime = boost::chrono::high_resolution_clock::now();
-
-    auto currentTime = boost::chrono::high_resolution_clock::now();
-    float time = boost::chrono::duration<float, boost::chrono::seconds::period>(currentTime - startTime).count();
-
     UniformBufferObject ubo = {};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//    ((TestGameApp*)App)->testObject->transform->GetGlobalWorldMatrix();
+//    ubo.model = glm::rotate(glm::mat4(1.0f), totalTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = App->testObject->transform->GetGlobalWorldMatrix();
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f,
                                 10.0f);
     ubo.proj[1][1] *= -1;

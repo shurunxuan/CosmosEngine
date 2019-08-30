@@ -7,6 +7,8 @@
 
 #include "../Export.h"
 #include "../Rendering/RenderingBackend.h"
+#include "../Core/Object.h"
+#include <boost/chrono.hpp>
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
 
@@ -43,9 +45,21 @@ public:
 
     virtual void Shutdown();
 
+    virtual void Update(float deltaTime, float totalTime) = 0;
+
+    Object* testObject;
+
 private:
 
     RenderingBackend* renderingBackend;
+
+    boost::chrono::high_resolution_clock::time_point startTime;
+    boost::chrono::high_resolution_clock::time_point currentTime;
+    boost::chrono::high_resolution_clock::time_point lastTime;
+    boost::chrono::duration<float, boost::chrono::seconds::period> deltaTime;
+    boost::chrono::duration<float, boost::chrono::seconds::period> totalTime;
 };
+
+extern ENGINE_API CEApp* App;
 
 #endif //COSMOSENGINE_APP_H

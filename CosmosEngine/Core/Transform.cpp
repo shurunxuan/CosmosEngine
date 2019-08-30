@@ -234,9 +234,9 @@ glm::vec3 Transform::Up()
 
 void Transform::UpdateWorldMat()
 {
-    const glm::mat4x4 t = glm::translate(glm::mat4x4(), localTranslation);
+    const glm::mat4x4 t = glm::translate(glm::mat4x4(1.0f), localTranslation);
     const glm::mat4x4 r = glm::toMat4(localRotation);
-    const glm::mat4x4 s = glm::scale(glm::mat4x4(), localScale);
+    const glm::mat4x4 s = glm::scale(glm::mat4x4(1.0f), localScale);
 
     const glm::mat4x4 w = s * r * t;
     localWorldMatrix = w;

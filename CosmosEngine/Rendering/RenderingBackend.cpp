@@ -54,10 +54,10 @@ void RenderingBackend::Shutdown()
     LOG_INFO << "Rendering Backend Shutdown Completed.";
 }
 
-void RenderingBackend::Update()
+void RenderingBackend::Update(float deltaTime, float totalTime)
 {
     glfwPollEvents();
-    Render();
+    Render(deltaTime, totalTime);
 }
 
 bool RenderingBackend::ShouldTerminate()
