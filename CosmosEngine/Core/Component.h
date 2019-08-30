@@ -14,11 +14,14 @@
 #define GAMEENGINE_COMPONENT_H
 
 #define BOOST_ALLOW_DEPRECATED_HEADERS
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/random_generator.hpp>
 
 #include "../Export.h"
+
 class Object;
+
 /**
  * @brief The component class that will be attached to an object
  *
@@ -32,6 +35,7 @@ public:
      * @param owner The object that the component is attached to
      */
     explicit Component(Object* owner);
+
     /**
      * @brief Destroy the Component object
      *
@@ -43,6 +47,7 @@ public:
      *
      */
     virtual void Start() = 0;
+
     /**
      * @brief Will be called when the object updates
      *
@@ -78,9 +83,6 @@ private:
      */
     boost::uuids::uuid id;
 };
-
-
-
 
 
 #endif //GAMEENGINE_COMPONENT_H

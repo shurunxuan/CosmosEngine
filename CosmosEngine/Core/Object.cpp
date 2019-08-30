@@ -4,8 +4,10 @@
 
 #include "Object.h"
 
-void Object::Update(float deltaTime, float totalTime) {
-    for (Component *component : components) {
+void Object::Update(float deltaTime, float totalTime)
+{
+    for (Component* component : components)
+    {
         if (component->isActive)
             component->Update(deltaTime, totalTime);
     }
@@ -15,31 +17,38 @@ void Object::Update(float deltaTime, float totalTime) {
 //    return owner;
 //}
 
-Object::Object(Scene *scene)
-        : id(boost::uuids::random_generator()()), name("Object"), owner(scene), isHidden(false) {
+Object::Object(Scene* scene)
+        : id(boost::uuids::random_generator()()), name("Object"), owner(scene), isHidden(false)
+{
     transform = AddComponent<Transform>();
 }
 
-Object::Object(Scene *scene, boost::container::string name)
-        : id(boost::uuids::random_generator()()), name(name), owner(scene), isHidden(false) {
+Object::Object(Scene* scene, boost::container::string name)
+        : id(boost::uuids::random_generator()()), name(name), owner(scene), isHidden(false)
+{
     transform = AddComponent<Transform>();
 }
 
-Object::~Object() {
-    for (Component *component : components) {
+Object::~Object()
+{
+    for (Component* component : components)
+    {
         delete component;
     }
     components.clear();
 }
 
-boost::uuids::uuid Object::GetInstanceID() const {
+boost::uuids::uuid Object::GetInstanceID() const
+{
     return id;
 }
 
-bool operator==(const Object &v1, const Object &v2) {
+bool operator==(const Object& v1, const Object& v2)
+{
     return v1.id == v2.id;
 }
 
-bool operator!=(const Object &v1, const Object &v2) {
+bool operator!=(const Object& v1, const Object& v2)
+{
     return v1.id != v2.id;
 }

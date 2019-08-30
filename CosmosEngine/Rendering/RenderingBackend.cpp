@@ -16,7 +16,8 @@ RenderingBackend::~RenderingBackend()
 
 }
 
-void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
     auto backend = reinterpret_cast<RenderingBackend*>(glfwGetWindowUserPointer(window));
     backend->framebufferResized = true;
     backend->width = width;

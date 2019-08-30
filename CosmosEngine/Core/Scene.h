@@ -45,6 +45,7 @@ public:
      *
      */
     Scene();
+
     /**
      * @brief Destroy the Scene
      *
@@ -73,6 +74,7 @@ public:
      * @return Object* The pointer of the added object
      */
     Object* AddObject(boost::container::string name = "GameObject");
+
     /**
      * @brief Instantiate a new object from a current object
      *
@@ -82,6 +84,7 @@ public:
      * @todo THIS DOES NOTHING! DON'T FORGET TO IMPLEMENT THIS
      */
     Object* Instantiate(Object* obj);
+
     /**
      * @brief Destroy an object in the scene graph
      *

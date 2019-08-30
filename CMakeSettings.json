@@ -10,7 +10,9 @@
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "cmakeToolchain": "${env.VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
       "variables": [],
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe"
     },
@@ -24,7 +26,9 @@
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "cmakeToolchain": "${env.VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
       "variables": [],
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe"
     }

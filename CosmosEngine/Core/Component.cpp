@@ -5,9 +5,7 @@
 #include "Component.h"
 
 Component::Component(Object* owner)
-        : isActive(true)
-        , object(owner)
-        , id(boost::uuids::random_generator()())
+        : isActive(true), object(owner), id(boost::uuids::random_generator()())
 {
 }
 

@@ -17,10 +17,10 @@ set(SOURCE_FILES
         App/App.cpp
         Rendering/RenderingBackend.cpp
         Rendering/Vulkan/SPRIV_Reflect/spirv_reflect.c
-#        Rendering/ReflectionalShader.cpp
+        #        Rendering/ReflectionalShader.cpp
         Rendering/Vulkan/VulkanBackend.cpp
         Logging/Logging.cpp
-#        Rendering/Vulkan/ReflectionalSpirV.cpp
+        #        Rendering/Vulkan/ReflectionalSpirV.cpp
         Core/Object.cpp
         Core/Component.cpp
         Core/Transform.cpp
@@ -32,11 +32,11 @@ set(HEADER_FILES
         Export.h
         App/App.h
         Rendering/RenderingBackend.h
-                Rendering/Vulkan/SPRIV_Reflect/spirv_reflect.h
-#        Rendering/ReflectionalShader.h
+        Rendering/Vulkan/SPRIV_Reflect/spirv_reflect.h
+        #        Rendering/ReflectionalShader.h
         Rendering/Vulkan/VulkanBackend.h
         Logging/Logging.h
-#        Rendering/Vulkan/ReflectionalSpirV.h
+        #        Rendering/Vulkan/ReflectionalSpirV.h
         Core/Object.h
         Core/Component.h
         Core/Transform.h

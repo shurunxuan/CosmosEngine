@@ -68,32 +68,46 @@ class ENGINE_API ReflectionalShader
 {
 public:
     ReflectionalShader();
+
     virtual ~ReflectionalShader() = 0;
 
     // Initialization method (since we can't invoke derived class
     // overrides in the base class constructor)
     virtual bool LoadShaderFile(const boost::container::string& shaderFile) = 0;
 
-    bool IsShaderValid() { return shaderValid; }
+    bool IsShaderValid()
+    { return shaderValid; }
 
     // Activating the shader and copying data
     void SetShader();
+
     virtual void CopyAllBufferData() = 0;
+
     virtual void CopyBufferData(unsigned int index) = 0;
+
     virtual void CopyBufferData(const boost::container::string& bufferName) = 0;
 
     // Sets arbitrary shader data
     bool SetData(const boost::container::string& name, const void* data, unsigned int size);
 
     bool SetInt(const boost::container::string& name, int data);
+
     bool SetFloat(const boost::container::string& name, float data);
+
     bool SetFloat2(const boost::container::string& name, const float data[2]);
+
     bool SetFloat2(const boost::container::string& name, const Eigen::Vector2f& data);
+
     bool SetFloat3(const boost::container::string& name, const float data[3]);
+
     bool SetFloat3(const boost::container::string& name, const Eigen::Vector3f& data);
+
     bool SetFloat4(const boost::container::string& name, const float data[4]);
+
     bool SetFloat4(const boost::container::string& name, const Eigen::Vector4f& data);
+
     bool SetMatrix4x4(const boost::container::string& name, const float data[16]);
+
     bool SetMatrix4x4(const boost::container::string& name, const Eigen::Matrix4f& data);
 
     // Setting shader resources
@@ -114,8 +128,11 @@ public:
 
     // Get data about constant buffers
     unsigned int GetBufferCount();
+
     unsigned int GetBufferSize(unsigned int index);
+
     const ReflectionalConstantBuffer* GetBufferInfo(const boost::container::string& name);
+
     const ReflectionalConstantBuffer* GetBufferInfo(unsigned int index);
 
 protected:
@@ -141,9 +158,12 @@ protected:
     virtual void SetShaderAndCBs() = 0;
 
     virtual void CleanUp();
+
     virtual void ReleaseConstantBuffer(size_t index) = 0;
+
     // Helpers for finding data by name
     ReflectionalShaderVariable* FindVariable(const boost::container::string& name, int size);
+
     ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name);
 };
 

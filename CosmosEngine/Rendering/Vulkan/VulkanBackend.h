@@ -100,10 +100,10 @@ public:
 
     void DeInit() override;
 
-    boost::container::vector<char> loadShader(const boost::container::string &filename) override;
+    boost::container::vector<char> loadShader(const boost::container::string& filename) override;
 
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                      VkDeviceMemory &bufferMemory);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                      VkDeviceMemory& bufferMemory);
 
     size_t GetSwapChainImageCount();
 
@@ -126,7 +126,7 @@ private:
 
     void createSurface();
 
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     void createSwapChain();
 
@@ -162,7 +162,7 @@ private:
 
     void createDescriptorSets();
 
-    VkShaderModule createShaderModule(const boost::container::vector<char> &code);
+    VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
@@ -229,6 +229,6 @@ private:
     boost::container::vector<VkDescriptorSet> descriptorSets;
 };
 
-extern ENGINE_LOCAL VulkanBackend *vulkanBackend;
+extern ENGINE_LOCAL VulkanBackend* vulkanBackend;
 
 #endif //COSMOSENGINE_VULKANBACKEND_H

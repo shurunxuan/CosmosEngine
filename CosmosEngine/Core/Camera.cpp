@@ -4,7 +4,7 @@
 
 #include "Camera.h"
 
-Camera::Camera(Scene *owner, boost::container::string name)
+Camera::Camera(Scene* owner, boost::container::string name)
         : Object(owner, name)
 {
     //skybox = nullptr;

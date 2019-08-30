@@ -81,7 +81,7 @@ public:
      *
      * @param fov Field of view
      */
-     void SetFov(float fov);
+    void SetFov(float fov);
 
     /**
     * @brief Set the near plane

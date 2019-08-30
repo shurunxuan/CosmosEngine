@@ -17,6 +17,7 @@
 #include <typeinfo>
 
 #define BOOST_ALLOW_DEPRECATED_HEADERS
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/container/list.hpp>
@@ -41,6 +42,7 @@ public:
      * @param scene The scene that owns the object
      */
     Object(Scene* scene);
+
     /**
      * @brief Construct a new Object with a name
      *
@@ -48,6 +50,7 @@ public:
      * @param name The name of the object
      */
     Object(Scene* scene, boost::container::string name);
+
     /**
      * @brief Destroy the Object
      *
@@ -69,7 +72,7 @@ public:
      *
      * @todo We should consider if we want to use RTTI and dynamic_cast for this.
      */
-    template <class T>
+    template<class T>
     T* GetComponent();
 
     /**
@@ -78,7 +81,7 @@ public:
      * @tparam T The type of the component
      * @return boost::container::list<T*> A list of pointers point to the components
      */
-    template <class T>
+    template<class T>
     boost::container::list<T*> GetComponents();
 
     /**
@@ -87,7 +90,7 @@ public:
      * @tparam T The type of the component
      * @return T* The pointer of the added component
      */
-    template <class T>
+    template<class T>
     T* AddComponent();
 
     /**
@@ -98,7 +101,7 @@ public:
      * @tparam T The type of the component
      * @param component The pointer of the component to be removed
      */
-    template <class T>
+    template<class T>
     void RemoveComponent(T* component);
 
     /**
@@ -126,6 +129,7 @@ public:
      * @return bool If the UUIDs are identical
      */
     friend bool operator==(const Object& v1, const Object& v2);
+
     /**
      * @brief Tell if the UUIDs of two objects are not identical
      *
@@ -175,7 +179,7 @@ public:
 
 };
 
-template <class T>
+template<class T>
 T* Object::GetComponent()
 {
     for (Component* component : components)
@@ -188,7 +192,7 @@ T* Object::GetComponent()
     return nullptr;
 }
 
-template <class T>
+template<class T>
 boost::container::list<T*> Object::GetComponents()
 {
     boost::container::list<T*> result;
@@ -202,7 +206,7 @@ boost::container::list<T*> Object::GetComponents()
     return result;
 }
 
-template <class T>
+template<class T>
 T* Object::AddComponent()
 {
     T* newComponent = new T(this);
@@ -213,15 +217,13 @@ T* Object::AddComponent()
     return newComponent;
 }
 
-template <class T>
-void Object::RemoveComponent(T * component)
+template<class T>
+void Object::RemoveComponent(T* component)
 {
     if (component == transform) return;
     components.remove(component);
     delete component;
 }
-
-
 
 
 #endif //GAMEENGINE_OBJECT_H
