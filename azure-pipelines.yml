@@ -13,7 +13,7 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt upgrade -y
-          sudo apt --yes --force-yes install build-essential libevent-pthreads-2.1-6 doxygen xorg-dev libglu1-mesa-dev libglm-dev libboost-all-dev
+          sudo apt --yes --force-yes install build-essential libevent-pthreads-2.1-6 doxygen xorg-dev libglu1-mesa-dev libglm-dev libboost-all-dev libassimp-dev
           git clone https://github.com/glfw/glfw.git
           cd glfw
           cmake .
@@ -67,6 +67,7 @@ jobs:
           brew install glfw --HEAD
           brew install glm
           brew install boost
+          brew install assimp
         displayName: 'Install build dependencies'
 
       - bash: |
@@ -143,7 +144,7 @@ jobs:
 
                 .\\vcpkg.exe integrate install
 
-                .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows boost:x64-windows'
+                .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows boost:x64-windows assimp:x64-windows'
         displayName: 'Install build dependencies'
 
       - task: PowerShell@2
