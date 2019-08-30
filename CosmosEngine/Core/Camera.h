@@ -32,7 +32,7 @@
  * @brief Camera
  *
  */
-class Camera final
+class ENGINE_API Camera final
         : public Object
 {
 public:
