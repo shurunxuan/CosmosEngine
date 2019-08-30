@@ -24,7 +24,7 @@ set(SOURCE_FILES
         Core/Component.cpp
         Core/Transform.cpp
 #        Core/Scene.cpp
-        )
+        Core/Camera.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -39,7 +39,7 @@ set(HEADER_FILES
         Core/Component.h
         Core/Transform.h
 #        Core/Scene.h
-        )
+        Core/Camera.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

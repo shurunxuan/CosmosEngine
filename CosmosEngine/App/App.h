@@ -8,6 +8,7 @@
 #include "../Export.h"
 #include "../Rendering/RenderingBackend.h"
 #include "../Core/Object.h"
+#include "../Core/Camera.h"
 #include <boost/chrono.hpp>
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
@@ -48,6 +49,8 @@ public:
     virtual void Update(float deltaTime, float totalTime) = 0;
 
     Object* testObject;
+
+    Camera* testCamera;
 
 private:
 
