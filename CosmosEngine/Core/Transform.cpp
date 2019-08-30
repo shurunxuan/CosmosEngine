@@ -66,7 +66,7 @@ Transform* Transform::GetParent() const
     return parent;
 }
 
-std::list<Transform*> Transform::GetChildren() const
+boost::container::list<Transform*> Transform::GetChildren() const
 {
     return children;
 }

@@ -39,5 +39,6 @@
 //#define ENGINE_LOCAL
 //#endif // ENGINE_DLL
 
+#define ENGINE_EXTERNAL_VAR extern ENGINE_API
 
 #endif //COSMOSENGINE_EXPORT_H

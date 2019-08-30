@@ -14,7 +14,7 @@
 #ifndef GAMEENGINE_CAMERA_H
 #define GAMEENGINE_CAMERA_H
 
-#include <string>
+#include <boost/container/string.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -26,7 +26,9 @@
 //#include "Skybox.h"
 //#include "AudioListener.hpp"
 
-// TODO: Skybox, Scene not present
+// TODO: Skybox not present
+
+class Scene;
 
 /**
  * @brief Camera
@@ -42,7 +44,7 @@ public:
      * @param owner The scene that owns the camera
      * @param name The name of the camera, default to MainCamera
      */
-    Camera(/*Scene* owner, */std::string name = "MainCamera");
+    Camera(Scene* owner, boost::container::string name = "MainCamera");
 
     /**
      * @brief Destroy the Camera object
@@ -58,7 +60,7 @@ public:
      * @param cubeMapFile The cubemap of the skybox
      * @param irradianceMapFile The irradiance map of the cubemap
      */
-    //void SetSkybox(ID3D11Device* d, ID3D11DeviceContext* c, const std::wstring& cubeMapFile, const std::wstring& irradianceMapFile);
+    //void SetSkybox(ID3D11Device* d, ID3D11DeviceContext* c, const boost::container::wstring& cubeMapFile, const boost::container::wstring& irradianceMapFile);
     /**
      * @brief Get the Skybox object
      *

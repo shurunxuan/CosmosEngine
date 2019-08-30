@@ -9,6 +9,7 @@
 #include "../Rendering/RenderingBackend.h"
 #include "../Core/Object.h"
 #include "../Core/Camera.h"
+#include "../Core/Scene.h"
 #include <boost/chrono.hpp>
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
@@ -52,6 +53,13 @@ public:
 
     Camera* testCamera;
 
+    /**
+     * @brief Get the current active scene
+     *
+     * @todo This only returns App::currentScene currently. If we are going to have multiple scenes, there should be a scene manager.
+     */
+    Scene* CurrentActiveScene();
+
 private:
 
     RenderingBackend* renderingBackend;
@@ -61,8 +69,13 @@ private:
     boost::chrono::high_resolution_clock::time_point lastTime;
     boost::chrono::duration<float, boost::chrono::seconds::period> deltaTime;
     boost::chrono::duration<float, boost::chrono::seconds::period> totalTime;
+
+    /**
+	 * @brief Current active scene
+	 */
+    Scene currentScene;
 };
 
-extern ENGINE_API CEApp* App;
+ENGINE_EXTERNAL_VAR CEApp* App;
 
 #endif //COSMOSENGINE_APP_H

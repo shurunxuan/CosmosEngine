@@ -5,7 +5,8 @@ project(${PROJECT_NAME})
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Boost COMPONENTS log REQUIRED)
+find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
+find_package(assimp REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
@@ -23,8 +24,9 @@ set(SOURCE_FILES
         Core/Object.cpp
         Core/Component.cpp
         Core/Transform.cpp
-#        Core/Scene.cpp
-        Core/Camera.cpp)
+        Core/Scene.cpp
+        Core/Camera.cpp
+        )
 
 set(HEADER_FILES
         Export.h
@@ -38,13 +40,11 @@ set(HEADER_FILES
         Core/Object.h
         Core/Component.h
         Core/Transform.h
-#        Core/Scene.h
-        Core/Camera.h)
+        Core/Scene.h
+        Core/Camera.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
-
-add_definitions(-DBOOST_ALL_NO_LIB)
-add_definitions(-DBOOST_ALL_DYN_LINK)
 
 # Shaders (SPIR-V)
 

@@ -4,8 +4,8 @@
 
 #include "Camera.h"
 
-Camera::Camera(/*Scene *owner, */std::string name)
-        : Object(/*owner, */name)
+Camera::Camera(Scene *owner, boost::container::string name)
+        : Object(owner, name)
 {
     //skybox = nullptr;
     //AddComponent<AudioListener>();
@@ -20,8 +20,8 @@ Camera::~Camera()
     //delete skybox;
 }
 
-//void Camera::SetSkybox(ID3D11Device* d, ID3D11DeviceContext* c, const std::wstring& cubeMapFile,
-//                              const std::wstring& irradianceMapFile = L"")
+//void Camera::SetSkybox(ID3D11Device* d, ID3D11DeviceContext* c, const boost::container::wstring& cubeMapFile,
+//                              const boost::container::wstring& irradianceMapFile = L"")
 //{
 //    delete skybox;
 //    skybox = new Skybox(d, c, cubeMapFile, irradianceMapFile);

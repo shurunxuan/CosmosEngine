@@ -10,6 +10,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_compile_definitions(__SOLUTION_DIR__="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
+add_compile_definitions(BOOST_ALL_NO_LIB)
+add_compile_definitions(BOOST_ALL_DYN_LINK)
 
 # Find glslangValidator
 find_package(Vulkan REQUIRED)

@@ -81,4 +81,9 @@ void CEApp::Shutdown()
     renderingBackend->Shutdown();
 }
 
+Scene *CEApp::CurrentActiveScene()
+{
+    return &currentScene;
+}
+
 

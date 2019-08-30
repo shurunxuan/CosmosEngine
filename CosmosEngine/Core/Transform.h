@@ -18,7 +18,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <list>
+#include <boost/container/list.hpp>
 #include "../Logging/Logging.h"
 #include "Component.h"
 #include "../Export.h"
@@ -74,11 +74,11 @@ public:
     /**
      * @brief Get all children of the transform
      *
-     * @return std::list<Transform*> All children of the transform
+     * @return boost::container::list<Transform*> All children of the transform
      *
      * @todo Consider add a function that get a specified child with a property
      */
-    std::list<Transform*> GetChildren() const;
+    boost::container::list<Transform*> GetChildren() const;
 
     /**
      * @brief Get a child of the transform
@@ -281,7 +281,7 @@ private:
      * @brief All children of the transform
      *
      */
-    std::list<Transform*> children;
+    boost::container::list<Transform*> children;
     /**
      * @brief The parent of the transform, nullptr if the transform is the root
      *

@@ -15,13 +15,13 @@ void Object::Update(float deltaTime, float totalTime) {
 //    return owner;
 //}
 
-Object::Object(/*Scene *scene*/)
-        : id(boost::uuids::random_generator()()), name("Object"), /*owner(scene), */isHidden(false) {
+Object::Object(Scene *scene)
+        : id(boost::uuids::random_generator()()), name("Object"), owner(scene), isHidden(false) {
     transform = AddComponent<Transform>();
 }
 
-Object::Object(/*Scene *scene, */std::string name)
-        : id(boost::uuids::random_generator()()), name(std::move(name)), /*owner(scene), */isHidden(false) {
+Object::Object(Scene *scene, boost::container::string name)
+        : id(boost::uuids::random_generator()()), name(name), owner(scene), isHidden(false) {
     transform = AddComponent<Transform>();
 }
 
