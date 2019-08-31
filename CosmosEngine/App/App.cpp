@@ -51,6 +51,7 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     renderingBackend->StartUp(screenWidth, screenHeight);
 
+    CurrentActiveScene()->mainCamera->Resize(float(screenWidth), float(screenHeight));
 
     startTime = boost::chrono::high_resolution_clock::now();
     currentTime = startTime;

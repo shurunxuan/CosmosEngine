@@ -23,7 +23,6 @@ void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, 
     backend->width = width;
     backend->height = height;
     App->testCamera->Resize(float(width), float(height));
-    LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
 }
 
 bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeight)

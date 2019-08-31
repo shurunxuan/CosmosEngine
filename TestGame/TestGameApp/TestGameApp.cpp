@@ -23,10 +23,6 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     testObject = CurrentActiveScene()->AddObject("TestObject");
 
     testCamera = CurrentActiveScene()->mainCamera;
-    testCamera->Resize(float(screenWidth), float(screenHeight));
-    testCamera->SetFov(glm::radians(45.0f));
-    testCamera->SetNearPlane(0.1f);
-    testCamera->SetFarPlane(1000.0f);
 
     LOG_INFO << "Scene Structure:";
     boost::container::list<Object*> allObjects = CurrentActiveScene()->GetAllObjects();

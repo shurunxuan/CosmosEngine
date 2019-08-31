@@ -12,6 +12,10 @@ Camera::Camera(Scene* owner, boost::container::string name)
     //UpdateViewMatrix();
 
     //UpdateProjectionMatrix(screenWidth, screenHeight, 3.14159265f / 4.0f);
+
+    fov = glm::radians(45.0f);
+    zNear = 0.1f;
+    zFar = 1000.0f;
 }
 
 

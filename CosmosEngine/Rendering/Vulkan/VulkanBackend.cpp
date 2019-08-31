@@ -27,7 +27,7 @@ bool enableValidationLayers =
 #ifdef NDEBUG
         false;
 #else
-        true;
+true;
 #endif
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -1254,6 +1254,8 @@ void VulkanBackend::recreateSwapChain()
     }
 
     vkDeviceWaitIdle(device);
+
+    LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
 
     cleanupSwapChain();
 
