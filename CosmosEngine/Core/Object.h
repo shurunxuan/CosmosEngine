@@ -14,20 +14,20 @@
 #ifndef GAMEENGINE_OBJECT_H
 #define GAMEENGINE_OBJECT_H
 
-#include <list>
-#include <string>
 #include <typeinfo>
 
 #define BOOST_ALLOW_DEPRECATED_HEADERS
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/container/list.hpp>
+#include <boost/container/string.hpp>
 
 #include "../Export.h"
 #include "Component.h"
 #include "Transform.h"
 
-// TODO: Get Scene back when rendering backend is almost finished
-//#include "Scene.h"
+class Scene;
 
 /**
  * @brief A game object
@@ -41,14 +41,16 @@ public:
      *
      * @param scene The scene that owns the object
      */
-    Object(/*Scene* scene*/);
+    Object(Scene* scene);
+
     /**
      * @brief Construct a new Object with a name
      *
      * @param scene The scene that owns the object
      * @param name The name of the object
      */
-    Object(/*Scene* scene, */std::string name);
+    Object(Scene* scene, boost::container::string name);
+
     /**
      * @brief Destroy the Object
      *
@@ -70,17 +72,17 @@ public:
      *
      * @todo We should consider if we want to use RTTI and dynamic_cast for this.
      */
-    template <class T>
+    template<class T>
     T* GetComponent();
 
     /**
      * @brief Get all Components of a specific type
      *
      * @tparam T The type of the component
-     * @return std::list<T*> A list of pointers point to the components
+     * @return boost::container::list<T*> A list of pointers point to the components
      */
-    template <class T>
-    std::list<T*> GetComponents();
+    template<class T>
+    boost::container::list<T*> GetComponents();
 
     /**
      * @brief Add a component
@@ -88,7 +90,7 @@ public:
      * @tparam T The type of the component
      * @return T* The pointer of the added component
      */
-    template <class T>
+    template<class T>
     T* AddComponent();
 
     /**
@@ -99,7 +101,7 @@ public:
      * @tparam T The type of the component
      * @param component The pointer of the component to be removed
      */
-    template <class T>
+    template<class T>
     void RemoveComponent(T* component);
 
     /**
@@ -127,6 +129,7 @@ public:
      * @return bool If the UUIDs are identical
      */
     friend bool operator==(const Object& v1, const Object& v2);
+
     /**
      * @brief Tell if the UUIDs of two objects are not identical
      *
@@ -146,19 +149,19 @@ private:
      * @brief The scene that owns the object
      *
      */
-//    Scene* owner;
+    Scene* owner;
 
     /**
      * @brief All components of the object
      *
      */
-    std::list<Component*> components;
+    boost::container::list<Component*> components;
 public:
     /**
      * @brief The name of the object
      *
      */
-    std::string name;
+    boost::container::string name;
     /**
      * @brief If the object is hidden from the scene
      *
@@ -176,7 +179,7 @@ public:
 
 };
 
-template <class T>
+template<class T>
 T* Object::GetComponent()
 {
     for (Component* component : components)
@@ -189,10 +192,10 @@ T* Object::GetComponent()
     return nullptr;
 }
 
-template <class T>
-std::list<T*> Object::GetComponents()
+template<class T>
+boost::container::list<T*> Object::GetComponents()
 {
-    std::list<T*> result;
+    boost::container::list<T*> result;
     for (Component* component : components)
     {
         T* cast = dynamic_cast<T*>(component);
@@ -203,7 +206,7 @@ std::list<T*> Object::GetComponents()
     return result;
 }
 
-template <class T>
+template<class T>
 T* Object::AddComponent()
 {
     T* newComponent = new T(this);
@@ -214,15 +217,13 @@ T* Object::AddComponent()
     return newComponent;
 }
 
-template <class T>
-void Object::RemoveComponent(T * component)
+template<class T>
+void Object::RemoveComponent(T* component)
 {
     if (component == transform) return;
     components.remove(component);
     delete component;
 }
-
-
 
 
 #endif //GAMEENGINE_OBJECT_H

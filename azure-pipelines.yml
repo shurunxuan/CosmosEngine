@@ -6,120 +6,120 @@
 
 
 jobs:
-- job: Linux
-  pool: Default
+  - job: Linux
+    pool: Default
 
-  steps:
-    - bash: |
-        sudo add-apt-repository ppa:mhier/libboost-latest -y
-        sudo apt update
-        sudo apt upgrade -y
-        sudo apt --yes --force-yes install build-essential libevent-pthreads-2.1-6 doxygen xorg-dev libglu1-mesa-dev libglm-dev libboost1.70-dev
-        git clone https://github.com/glfw/glfw.git
-        cd glfw
-        cmake .
-        make
-        sudo make install
-        cd ..
-      displayName: 'Install build dependencies'
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt upgrade -y
+          sudo apt --yes --force-yes install build-essential libevent-pthreads-2.1-6 doxygen xorg-dev libglu1-mesa-dev libglm-dev libboost-all-dev libassimp-dev
+          git clone https://github.com/glfw/glfw.git
+          cd glfw
+          cmake .
+          make
+          sudo make install
+          cd ..
+        displayName: 'Install build dependencies'
 
-    - bash: |
-        wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
-      displayName: 'Download Vulkan'
+      - bash: |
+          wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
+        displayName: 'Download Vulkan'
 
-    - bash: |
-        sudo apt update
-        sudo apt --yes --force-yes install vulkan-sdk
-      displayName: 'Install Vulkan'
+      - bash: |
+          sudo apt update
+          sudo apt --yes --force-yes install vulkan-sdk
+        displayName: 'Install Vulkan'
 
-    - task: CMake@1
-      inputs:
-        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
-      displayName: 'CMake Generate'
+      - task: CMake@1
+        inputs:
+          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+        displayName: 'CMake Generate'
 
-    - bash: |
-        cd build
-        make
-      displayName: 'Build Project'
+      - bash: |
+          cd build
+          make
+        displayName: 'Build Project'
 
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: 'build/bin'
-        Contents: '**'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
-        CleanTargetFolder: true
-        OverWrite: true
-      displayName: 'Copy Binaries'
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'build/bin'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          CleanTargetFolder: true
+          OverWrite: true
+        displayName: 'Copy Binaries'
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'Linux'
-        publishLocation: 'Container'
-      displayName: 'Publish Build Artifacts'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'Linux'
+          publishLocation: 'Container'
+        displayName: 'Publish Build Artifacts'
 
-- job: macOS
-  pool: 
-    vmImage: 'macOS-10.14'
+  - job: macOS
+    pool:
+      vmImage: 'macOS-10.14'
 
-  steps:
-    - bash: |
-        brew install glfw --HEAD
-        brew install glm
-        brew install boost
-      displayName: 'Install build dependencies'
+    steps:
+      - bash: |
+          brew install glfw --HEAD
+          brew install glm
+          brew install boost
+          brew install assimp
+        displayName: 'Install build dependencies'
 
-    - bash: |
-        curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
-        mkdir vulkan-sdk
-        tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
-      displayName: 'Download Vulkan'
+      - bash: |
+          curl -s -o vulkan-sdk.tar.gz https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz\?Human\=true
+          mkdir vulkan-sdk
+          tar xzf vulkan-sdk.tar.gz -C ./vulkan-sdk
+        displayName: 'Download Vulkan'
 
-    - bash: |
-        cd vulkan-sdk/*
-        cd macOS
-        export VULKAN_SDK=$(pwd)
-        export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json
-        echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
-        echo '##vso[task.setvariable variable=VK_ICD_FILENAMES;]'$VK_ICD_FILENAMES
-      displayName: 'Install Vulkan'
+      - bash: |
+          cd vulkan-sdk/*
+          cd macOS
+          export VULKAN_SDK=$(pwd)
+          export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json
+          echo '##vso[task.setvariable variable=VULKAN_SDK;]'$VULKAN_SDK
+          echo '##vso[task.setvariable variable=VK_ICD_FILENAMES;]'$VK_ICD_FILENAMES
+        displayName: 'Install Vulkan'
 
-    - task: CMake@1
-      inputs:
-        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
-      displayName: 'CMake Generate'
+      - task: CMake@1
+        inputs:
+          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+        displayName: 'CMake Generate'
 
-    - bash: |
-        cd build
-        make
-      displayName: 'Build Project'
+      - bash: |
+          cd build
+          make
+        displayName: 'Build Project'
 
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: 'build/bin'
-        Contents: '**'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
-        CleanTargetFolder: true
-        OverWrite: true
-      displayName: 'Copy Binaries'
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'build/bin'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          CleanTargetFolder: true
+          OverWrite: true
+        displayName: 'Copy Binaries'
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'macOS'
-        publishLocation: 'Container'
-      displayName: 'Publish Build Artifacts'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'macOS'
+          publishLocation: 'Container'
+        displayName: 'Publish Build Artifacts'
 
-- job: Windows
-  pool: 
-    vmImage: 'windows-2019'
+  - job: Windows
+    pool:
+      vmImage: 'windows-2019'
 
-  steps:
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'git clone https://github.com/Microsoft/vcpkg.git
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: 'git clone https://github.com/Microsoft/vcpkg.git
           
           cd vcpkg
 
@@ -132,25 +132,25 @@ jobs:
           echo "##vso[task.setvariable variable=VCPKG_ROOT;]$pwd"
 
           cd ..'
-        errorActionPreference: 'silentlyContinue'
-      displayName: 'Install vcpkg'
+          errorActionPreference: 'silentlyContinue'
+        displayName: 'Install vcpkg'
 
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'cd $ENV:VCPKG_ROOT
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: 'cd $ENV:VCPKG_ROOT
 
                 .\\vcpkg.exe upgrade --no-dry-run
 
                 .\\vcpkg.exe integrate install
 
-                .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows boost:x64-windows'
-      displayName: 'Install build dependencies'
+                .\\vcpkg.exe install glfw3:x64-windows glm:x64-windows boost:x64-windows assimp:x64-windows'
+        displayName: 'Install build dependencies'
 
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: '$url = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?Human=true"
           
           $output = "vulkan-sdk.exe"
           
@@ -159,12 +159,12 @@ jobs:
           Invoke-WebRequest $url -OutFile $output
           
           dir'
-      displayName: 'Download Vulkan'
+        displayName: 'Download Vulkan'
 
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'echo "Installing..."
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: 'echo "Installing..."
         
         .\\vulkan-sdk.exe /S | Out-Null
 
@@ -175,34 +175,34 @@ jobs:
         echo "Vulkan installed at: $pwd"
 
         echo "##vso[task.setvariable variable=VULKAN_SDK;]$pwd"'
-      displayName: 'Install Vulkan'
+        displayName: 'Install Vulkan'
 
-    - task: CMake@1
-      inputs:
-        cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake
-      displayName: 'CMake Generate'
+      - task: CMake@1
+        inputs:
+          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake
+        displayName: 'CMake Generate'
 
-    - task: VSBuild@1
-      inputs:
-        solution: 'build\\*.sln'
-        vsVersion: 'latest'
-        platform: 'x64'
-        configuration: 'release'
-        maximumCpuCount: true
-      displayName: 'Build Project'
+      - task: VSBuild@1
+        inputs:
+          solution: 'build\\*.sln'
+          vsVersion: 'latest'
+          platform: 'x64'
+          configuration: 'release'
+          maximumCpuCount: true
+        displayName: 'Build Project'
 
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: 'build/bin/Release/'
-        Contents: '**'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
-        CleanTargetFolder: true
-        OverWrite: true
-      displayName: 'Copy Binaries'
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'build/bin/Release/'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          CleanTargetFolder: true
+          OverWrite: true
+        displayName: 'Copy Binaries'
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'Windows'
-        publishLocation: 'Container'
-      displayName: 'Publish Build Artifacts'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'Windows'
+          publishLocation: 'Container'
+        displayName: 'Publish Build Artifacts'

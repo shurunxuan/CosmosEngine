@@ -13,6 +13,7 @@ class ReflectionalSpirV : virtual public ReflectionalShader
 {
 public:
     explicit ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalDevice);
+
     virtual ~ReflectionalSpirV();
 
     // Initialization method (since we can't invoke derived class
@@ -21,7 +22,9 @@ public:
 
     // Activating the shader and copying data
     void CopyAllBufferData();
+
     void CopyBufferData(unsigned int index);
+
     void CopyBufferData(const boost::container::string& bufferName);
 
     // Misc getters
@@ -35,10 +38,12 @@ protected:
     std::vector<VkDeviceMemory> constantBuffersMemory;
 
     virtual bool CreateShader(const std::vector<uint32_t>& shaderBinary) = 0;
+
     void ReleaseConstantBuffer(size_t index) override;
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
                       VkDeviceMemory& bufferMemory);
+
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
 

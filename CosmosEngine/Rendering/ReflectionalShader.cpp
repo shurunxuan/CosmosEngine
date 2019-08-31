@@ -30,52 +30,52 @@ bool ReflectionalShader::SetData(const boost::container::string& name, const voi
 
 bool ReflectionalShader::SetInt(const boost::container::string& name, int data)
 {
-    return SetData(name, (void*)(&data), sizeof(int));
+    return SetData(name, (void*) (&data), sizeof(int));
 }
 
 bool ReflectionalShader::SetFloat(const boost::container::string& name, float data)
 {
-    return SetData(name, (void*)(&data), sizeof(float));
+    return SetData(name, (void*) (&data), sizeof(float));
 }
 
 bool ReflectionalShader::SetFloat2(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*)(&data), sizeof(float) * 2);
+    return SetData(name, (void*) (&data), sizeof(float) * 2);
 }
 
 bool ReflectionalShader::SetFloat2(const boost::container::string& name, const Eigen::Vector2f& data)
 {
-    return SetData(name, (void*)(data.data()), sizeof(float) * 2);
+    return SetData(name, (void*) (data.data()), sizeof(float) * 2);
 }
 
 bool ReflectionalShader::SetFloat3(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*)(&data), sizeof(float) * 3);
+    return SetData(name, (void*) (&data), sizeof(float) * 3);
 }
 
 bool ReflectionalShader::SetFloat3(const boost::container::string& name, const Eigen::Vector3f& data)
 {
-    return SetData(name, (void*)(data.data()), sizeof(float) * 3);
+    return SetData(name, (void*) (data.data()), sizeof(float) * 3);
 }
 
 bool ReflectionalShader::SetFloat4(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*)(&data), sizeof(float) * 4);
+    return SetData(name, (void*) (&data), sizeof(float) * 4);
 }
 
 bool ReflectionalShader::SetFloat4(const boost::container::string& name, const Eigen::Vector4f& data)
 {
-    return SetData(name, (void*)(data.data()), sizeof(float) * 4);
+    return SetData(name, (void*) (data.data()), sizeof(float) * 4);
 }
 
 bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*)(&data), sizeof(float) * 16);
+    return SetData(name, (void*) (&data), sizeof(float) * 16);
 }
 
 bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const Eigen::Matrix4f& data)
 {
-    return SetData(name, (void*)(data.data()), sizeof(float) * 16);
+    return SetData(name, (void*) (data.data()), sizeof(float) * 16);
 }
 
 const ReflectionalShaderVariable* ReflectionalShader::GetVariableInfo(const boost::container::string& name)
@@ -94,7 +94,7 @@ ReflectionalShaderVariable* ReflectionalShader::FindVariable(const boost::contai
         return nullptr;
 
     // Grab the result from the iterator
-    ReflectionalShaderVariable * var = &(result->second);
+    ReflectionalShaderVariable* var = &(result->second);
 
     // Is the data size correct ?
     if (size > 0 && var->Size != size)

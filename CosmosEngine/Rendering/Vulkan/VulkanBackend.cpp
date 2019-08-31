@@ -41,16 +41,13 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
     {
         LOG_ERROR << "Validation layer: " << pCallbackData->pMessage;
-    }
-    else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    } else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
     {
         LOG_WARNING << "Validation layer: " << pCallbackData->pMessage;
-    }
-    else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+    } else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
     {
         LOG_INFO << "Validation layer: " << pCallbackData->pMessage;
-    }
-    else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+    } else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
     {
         LOG_TRACE << "Validation layer: " << pCallbackData->pMessage;
     }
@@ -67,8 +64,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
     if (func != nullptr)
     {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    }
-    else
+    } else
     {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
@@ -238,8 +234,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     {
         recreateSwapChain();
         return;
-    }
-    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     {
         LOG_FATAL << "Failed to acquire swap chain image!";
         throw std::runtime_error("Failed to acquire swap chain image!");
@@ -249,10 +244,13 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     UniformBufferObject ubo = {};
 //    ((TestGameApp*)App)->testObject->transform->GetGlobalWorldMatrix();
 //    ubo.model = glm::rotate(glm::mat4(1.0f), totalTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    Camera* mainCamera = App->testCamera;
     ubo.model = App->testObject->transform->GetGlobalWorldMatrix();
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f,
-                                10.0f);
+    ubo.view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
+                           mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
+                           mainCamera->transform->Up());
+    ubo.proj = mainCamera->GetProjectionMatrix();
+    ubo.proj[0][0] *= -1;
     ubo.proj[1][1] *= -1;
 
     void* data;
@@ -303,8 +301,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     {
         framebufferResized = false;
         recreateSwapChain();
-    }
-    else if (result != VK_SUCCESS)
+    } else if (result != VK_SUCCESS)
     {
         LOG_FATAL << "Failed to present swap chain image!";
         throw std::runtime_error("Failed to present swap chain image!");
@@ -361,8 +358,7 @@ void VulkanBackend::createInstance()
     {
         populateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
-    }
-    else
+    } else
     {
         createInfo.pNext = nullptr;
     }
@@ -401,8 +397,7 @@ void VulkanBackend::createInstance()
         if (required)
         {
             ss << "* ";
-        }
-        else
+        } else
         {
             ss << "  ";
         }
@@ -437,8 +432,7 @@ bool VulkanBackend::checkValidationLayerSupport()
     if (!enableValidationLayers)
     {
         LOG_INFO << "Compiled in Release mode, disabling validation layers";
-    }
-    else
+    } else
     {
         LOG_INFO << "Compiled in Debug mode, enabling validation layers";
     }
@@ -620,8 +614,7 @@ int VulkanBackend::rateDeviceSuitability(VkPhysicalDevice device)
     if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
     {
         score += 1000;
-    }
-    else
+    } else
     {
         score += 1;
     }
@@ -658,8 +651,7 @@ void VulkanBackend::pickPhysicalDevice()
     if (candidates.rbegin()->first > 0)
     {
         physicalDevice = candidates.rbegin()->second;
-    }
-    else
+    } else
     {
         LOG_FATAL << "Failed to find a suitable GPU!";
         throw std::runtime_error("Failed to find a suitable GPU!");
@@ -702,8 +694,7 @@ void VulkanBackend::createLogicalDevice()
     {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
-    }
-    else
+    } else
     {
         createInfo.enabledLayerCount = 0;
     }
@@ -712,8 +703,7 @@ void VulkanBackend::createLogicalDevice()
     {
         LOG_FATAL << "Failed to create logical device!";
         throw std::runtime_error("Failed to create logical device!");
-    }
-    else
+    } else
     {
         LOG_INFO << "Created logical device with " << deviceProperties.deviceName << ".";
     }
@@ -765,8 +755,7 @@ VkExtent2D VulkanBackend::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capab
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
     {
         return capabilities.currentExtent;
-    }
-    else
+    } else
     {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -819,8 +808,7 @@ void VulkanBackend::createSwapChain()
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
-    }
-    else
+    } else
     {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0; // Optional

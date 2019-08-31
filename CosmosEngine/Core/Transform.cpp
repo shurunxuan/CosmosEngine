@@ -66,7 +66,7 @@ Transform* Transform::GetParent() const
     return parent;
 }
 
-std::list<Transform*> Transform::GetChildren() const
+boost::container::list<Transform*> Transform::GetChildren() const
 {
     return children;
 }
@@ -238,7 +238,7 @@ void Transform::UpdateWorldMat()
     const glm::mat4x4 r = glm::toMat4(localRotation);
     const glm::mat4x4 s = glm::scale(glm::mat4x4(1.0f), localScale);
 
-    const glm::mat4x4 w = s * r * t;
+    const glm::mat4x4 w = t * r * s;
     localWorldMatrix = w;
     itLocalWorldMatrix = glm::inverse(glm::transpose(w));
 

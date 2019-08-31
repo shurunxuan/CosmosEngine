@@ -12,6 +12,7 @@
 #include <GLFW/glfw3.h>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
+
 class ENGINE_API RenderingBackend
 {
 public:

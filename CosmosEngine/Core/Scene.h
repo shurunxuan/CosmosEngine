@@ -14,19 +14,15 @@
 #ifndef GAMEENGINE_SCENE_H
 #define GAMEENGINE_SCENE_H
 
-#include <d3d11.h>
-
-#include <DirectXCollision.h>
-
-#include <list>
-#include <vector>
+#include <boost/container/list.hpp>
+#include <boost/container/vector.hpp>
 #include <boost/filesystem/path.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "../Export.h"
 #include "Object.h"
-//#include "Camera.h"
+#include "Camera.h"
 //#include "Light.h"
 //#include "SimpleShader.h"
 //#include "MeshRenderer.h"
@@ -49,6 +45,7 @@ public:
      *
      */
     Scene();
+
     /**
      * @brief Destroy the Scene
      *
@@ -61,14 +58,14 @@ public:
      * @param d Direct3D 11 device
      * @param c Direct3D 11 device context
      */
-    void SetD3D11Device(ID3D11Device* d, ID3D11DeviceContext* c);
+    //void SetD3D11Device(ID3D11Device* d, ID3D11DeviceContext* c);
     /**
      * @brief Set the Default Shaders
      *
      * @param vs Default vertex shader of the scene
      * @param ps Default pixel shader of the scene
      */
-    void SetDefaultShader(SimpleVertexShader* vs, SimplePixelShader* ps);
+    //void SetDefaultShader(SimpleVertexShader* vs, SimplePixelShader* ps);
 
     /**
      * @brief Add an object to the scene
@@ -76,7 +73,8 @@ public:
      * @param name The name of the object, default to "GameObject"
      * @return Object* The pointer of the added object
      */
-    Object* AddObject(std::string name = "GameObject");
+    Object* AddObject(boost::container::string name = "GameObject");
+
     /**
      * @brief Instantiate a new object from a current object
      *
@@ -86,8 +84,9 @@ public:
      * @todo THIS DOES NOTHING! DON'T FORGET TO IMPLEMENT THIS
      */
     Object* Instantiate(Object* obj);
+
     /**
-     * @brief Destror an object in the scene graph
+     * @brief Destroy an object in the scene graph
      *
      * Nothing happens if there's no such object
      *
@@ -100,9 +99,9 @@ public:
     /**
      * @brief Get the list of all objects
      *
-     * @return std::list<Object*> The list of all objects
+     * @return boost::container::list<Object*> The list of all objects
      */
-    std::list<Object*> GetAllObjects();
+    boost::container::list<Object*> GetAllObjects();
 
     /**
      * @brief Load a model file and add the object(s) to the scene
@@ -110,14 +109,14 @@ public:
      * @param filename The filename of the model
      * @return Object* The pointer of the parent object added to the scene from the model file
      */
-    Object* LoadModelFile(const std::string& filename);
+    //Object* LoadModelFile(const boost::container::string& filename);
 
     /**
      * @brief Add a light to the scene
      *
      * @param light The data of the light
      */
-    void AddLight(LightData light);
+    //void AddLight(LightData light);
     /**
      * @brief Get the light
      *
@@ -126,13 +125,13 @@ public:
      *
      * @todo The "nullptr" part is not implemented
      */
-    Light* GetLightAt(int index);
+    //Light* GetLightAt(int index);
     /**
      * @brief Get the Light Count object
      *
      * @return int The number of Lights
      */
-    int GetLightCount();
+    //int GetLightCount();
     /**
      * @brief Remove a light at a specified location
      *
@@ -142,7 +141,7 @@ public:
      *
      * @todo The "invalid" part is not implemented
      */
-    void RemoveLightAt(int index);
+    //void RemoveLightAt(int index);
 
     /**
      * @brief Update the scene
@@ -161,16 +160,16 @@ public:
      *
      * @return Object* A pointer of the found object, or nullptr
      */
-    Object* FindObjectByName(std::string name);
+    Object* FindObjectByName(boost::container::string name);
 
     /**
      * @brief Find all objects in the scene with the name
      *
      * @param name The name of desired object
      *
-     * @return std::list<Object*> The list of the pointers of the found objects
+     * @return boost::container::list<Object*> The list of the pointers of the found objects
      */
-    std::list<Object*> FindObjectsByName(std::string name);
+    boost::container::list<Object*> FindObjectsByName(boost::container::string name);
 
 
     /**
@@ -183,23 +182,23 @@ public:
      * @brief Direct3D 11 device
      *
      */
-    ID3D11Device* device;
+    //ID3D11Device* device;
     /**
      * @brief Direct3D 11 device context
      *
      */
-    ID3D11DeviceContext* context;
+    //ID3D11DeviceContext* context;
 
     /**
      * @brief The default vertex shader
      *
      */
-    SimpleVertexShader* defaultVS;
+    //SimpleVertexShader* defaultVS;
     /**
      * @brief The default pixel shader
      *
      */
-    SimplePixelShader* defaultPS;
+    //SimplePixelShader* defaultPS;
 private:
     /**
      * @brief Recursively add objects to the scene from a node of the model file
@@ -210,23 +209,23 @@ private:
      * @param parent The direct parent object of the model being added
      * @return Object* The pointer of the object added to the scene
      */
-    Object* AddObjectWithNode(const std::string& modelFileName, const aiScene* scene, aiNode* node, Object* parent);
+    //Object* AddObjectWithNode(const boost::container::string& modelFileName, const aiScene* scene, aiNode* node, Object* parent);
 
     /**
      * @brief All objects
      *
      */
-    std::list<Object*> allObjects;
+    boost::container::list<Object*> allObjects;
     /**
      * @brief All light data, will be sent to the shader
      *
      */
-    std::vector<LightData> lightData;
+    //boost::container::vector<LightData> lightData;
     /**
      * @brief All lights
      *
      */
-    std::list<Light*> lights;
+    //boost::container::list<Light*> lights;
 
 
 
@@ -234,7 +233,7 @@ private:
      * @brief The axis-aligned bounding box of the whole scene
      *
      */
-    DirectX::BoundingBox aabb;
+    //DirectX::BoundingBox aabb;
 };
 
 

@@ -4,6 +4,7 @@
 
 #include "RenderingBackend.h"
 #include "../Logging/Logging.h"
+#include "../App/App.h"
 
 RenderingBackend::RenderingBackend()
 {
@@ -15,11 +16,13 @@ RenderingBackend::~RenderingBackend()
 
 }
 
-void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
     auto backend = reinterpret_cast<RenderingBackend*>(glfwGetWindowUserPointer(window));
     backend->framebufferResized = true;
     backend->width = width;
     backend->height = height;
+    App->testCamera->Resize(float(width), float(height));
     LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
 }
 

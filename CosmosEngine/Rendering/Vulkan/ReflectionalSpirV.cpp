@@ -115,13 +115,17 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
         for (unsigned int s = 0; s < imageCount; ++s)
         {
             // Set up the buffer and put its pointer in the table
-            constantBuffers[b * imageCount + s].SetIndex = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
-            constantBuffers[b * imageCount + s].BindIndex = compiler.get_decoration(resource.id, spv::DecorationBinding);
-            constantBuffers[b * imageCount + s].LocationIndex = compiler.get_decoration(resource.id, spv::DecorationLocation);
+            constantBuffers[b * imageCount + s].SetIndex = compiler.get_decoration(resource.id,
+                                                                                   spv::DecorationDescriptorSet);
+            constantBuffers[b * imageCount + s].BindIndex = compiler.get_decoration(resource.id,
+                                                                                    spv::DecorationBinding);
+            constantBuffers[b * imageCount + s].LocationIndex = compiler.get_decoration(resource.id,
+                                                                                        spv::DecorationLocation);
             constantBuffers[b * imageCount + s].Name = boost::container::string(resource.name.c_str()) + "_" +
-                                      boost::lexical_cast<boost::container::string>(s);
-            cbTable.insert(std::pair<boost::container::string, ReflectionalConstantBuffer*>(constantBuffers[b * imageCount + s].Name,
-                                                                                            &constantBuffers[b * imageCount + s]));
+                                                       boost::lexical_cast<boost::container::string>(s);
+            cbTable.insert(std::pair<boost::container::string, ReflectionalConstantBuffer*>(
+                    constantBuffers[b * imageCount + s].Name,
+                    &constantBuffers[b * imageCount + s]));
 
             // Create this constant buffer
 
