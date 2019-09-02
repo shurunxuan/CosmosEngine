@@ -5,6 +5,7 @@
 #include "VulkanBackend.h"
 #include "../../Logging/Logging.h"
 #include "../../App/App.h"
+#include "ReflectionalSpirV.h"
 
 #include <set>
 #include <algorithm>
@@ -960,6 +961,9 @@ void VulkanBackend::createRenderPass()
 
 void VulkanBackend::createGraphicsPipeline()
 {
+    VertexSpirV testVertexSpirV(device, physicalDevice);
+    testVertexSpirV.LoadShaderFile("Shaders/shader.vert.spv");
+
     auto vertShaderCode = loadShader("Shaders/shader.vert.spv");
     auto fragShaderCode = loadShader("Shaders/shader.frag.spv");
 
@@ -969,8 +973,8 @@ void VulkanBackend::createGraphicsPipeline()
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    auto bindingDescription = testVertexSpirV.bindingDescription;
+    auto attributeDescriptions = testVertexSpirV.attributeDescriptions;
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
