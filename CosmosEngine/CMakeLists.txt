@@ -81,7 +81,7 @@ add_custom_target(
         DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-add_dependencies(${PROJECT_NAME} Shaders SPIRV-Headers)
+add_dependencies(${PROJECT_NAME} Shaders SPIRV-Headers SPIRV-Cross)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES} ${ASSIMP_LIBRARY})
 
