@@ -407,6 +407,7 @@ ReflectionalSpirV::~ReflectionalSpirV()
     }
 
     spvReflectDestroyShaderModule(&module);
+    delete compiler;
 }
 
 VkShaderModule ReflectionalSpirV::GetShaderModule()
@@ -431,6 +432,12 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
     file.read(buffer.data(), fileSize);
 
     file.close();
+
+    // Create SpirV-Cross compiler module and get shader resources
+    compiler = new spirv_cross::CompilerGLSL(reinterpret_cast<uint32_t*>(buffer.data()),
+            buffer.size() * sizeof(char) / sizeof(uint32_t));
+
+    shaderResources = compiler->get_shader_resources();
 
     // Create SpvReflectModule
     module = {};
@@ -529,12 +536,93 @@ void ReflectionalSpirV::CopyBufferData(const boost::container::string& bufferNam
 
 void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
 {
-    LOG_FATAL << "Not Implemented";
-    throw std::runtime_error("Not Implemented");
+    vkDestroyBuffer(device, reinterpret_cast<VkBuffer>(constantBuffers[index].ConstantBuffer), nullptr);
+
+    delete[] reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer);
+}
+
+bool ReflectionalSpirV::CreateShader()
+{
+    constantBuffers = new ReflectionalConstantBuffer[shaderResources.uniform_buffers.size()];
+    constantBuffersMemory.resize(shaderResources.uniform_buffers.size() * vulkanBackend->GetSwapChainImageCount());
+
+    unsigned int b = 0;
+    unsigned int setCount = 0;
+    //parseUniformBuffers
+    for (auto &resource : shaderResources.uniform_buffers)
+    {
+        constantBuffers[b].Name = compiler->get_name(resource.id).c_str();
+        constantBuffers[b].BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
+        constantBuffers[b].SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        constantBuffers[b].LocationIndex = compiler->get_decoration(resource.id, spv::DecorationLocation);
+
+        cbTable.insert(std::make_pair(constantBuffers[b].Name, constantBuffers + b));
+
+        spirv_cross::SPIRType type = compiler->get_type(resource.base_type_id);
+
+        uint32_t ub_size = 0;
+        uint32_t member_count = type.member_types.size();
+        for (int i = 0; i < member_count; i++)
+        {
+            ReflectionalShaderVariable ubm{};
+            boost::container::string varName = compiler->get_member_name(resource.base_type_id, i).c_str();
+//            auto &member_type = glsl.get_type(type.member_types[i]);
+//            ubm.type = parseType(member_type);
+
+            ubm.Size = compiler->get_declared_struct_member_size(type, i);
+            ubm.ByteOffset = compiler->type_struct_member_offset(type, i);
+            ubm.BufferIndex = b;
+
+            ub_size += ubm.Size;
+
+            constantBuffers[b].Variables.push_back(ubm);
+            varTable.insert(std::make_pair(varName, ubm));
+        }
+        constantBuffers[b].Size = ub_size;
+
+        constantBuffers[b].LocalDataBuffer = new unsigned char[constantBuffers[b].Size];
+        memset(constantBuffers[b].LocalDataBuffer, 0, constantBuffers[b].Size);
+
+        if (setCount < constantBuffers[b].SetIndex)
+        {
+            setCount = constantBuffers[b].SetIndex;
+        }
+
+        constantBuffers[b].ConstantBuffer = new VkBuffer[vulkanBackend->GetSwapChainImageCount()];
+
+        for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+        {
+            createBuffer(constantBuffers[b].Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         reinterpret_cast<VkBuffer*>(constantBuffers[b].ConstantBuffer)[i],
+                         constantBuffersMemory[i + b * vulkanBackend->GetSwapChainImageCount()]);
+        }
+
+
+        //parseSampler2Ds
+//        for (auto &resource : resources.sampled_images)
+//        {
+//            Sampler2D s;
+//            s.name = glsl.get_name(resource.id);
+//            s.set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+//            s.binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+//            if (setCount < s.set)
+//            {
+//                setCount = s.set;
+//            }
+//            info->sampler2Ds.push_back(s);
+//        }
+
+        ++b;
+    }
+    return true;
 }
 
 bool VertexSpirV::CreateShader()
 {
+    bool uboResult = ReflectionalSpirV::CreateShader();
+    if (!uboResult) return false;
+
     uint32_t count = 0;
     SpvReflectResult result = spvReflectEnumerateInputVariables(&module, &count, nullptr);
     assert(result == SPV_REFLECT_RESULT_SUCCESS);

@@ -36,7 +36,7 @@ struct ReflectionalConstantBuffer
     unsigned int BindIndex;
     unsigned int SetIndex; // Not relevant in HLSL
     unsigned int LocationIndex; // Not relevant in HLSL
-    void* ConstantBuffer; // void -> VkBuffer_T / ID3D11Buffer
+    void* ConstantBuffer; // void -> VkBuffer_T[3] / ID3D11Buffer
     unsigned char* LocalDataBuffer;
     boost::container::vector<ReflectionalShaderVariable> Variables;
 };
@@ -146,7 +146,7 @@ protected:
     unsigned int constantBufferCount;
 
     // Maps for variables and buffers
-    ReflectionalConstantBuffer* constantBuffers; // For index-based lookup
+    ReflectionalConstantBuffer* constantBuffers = nullptr; // For index-based lookup
 //    boost::container::vector<ReflectionalSRV*>		shaderResourceViews;
 //    boost::container::vector<ReflectionalSampler*>	samplerStates;
     boost::unordered_map<boost::container::string, ReflectionalConstantBuffer*> cbTable;

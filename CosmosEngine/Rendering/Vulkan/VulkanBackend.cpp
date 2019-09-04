@@ -157,6 +157,8 @@ bool VulkanBackend::Init()
 
 void VulkanBackend::cleanupSwapChain()
 {
+    delete testVertexSpirV;
+
     for (auto framebuffer : swapChainFramebuffers)
     {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -255,9 +257,9 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     ubo.proj[1][1] *= -1;
 
     void* data;
-    vkMapMemory(device, uniformBuffersMemory[imageIndex], 0, sizeof(ubo), 0, &data);
+    vkMapMemory(device, testVertexSpirV->constantBuffersMemory[imageIndex], 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(device, uniformBuffersMemory[imageIndex]);
+    vkUnmapMemory(device, testVertexSpirV->constantBuffersMemory[imageIndex]);
 
 
     VkSubmitInfo submitInfo = {};
@@ -961,8 +963,8 @@ void VulkanBackend::createRenderPass()
 
 void VulkanBackend::createGraphicsPipeline()
 {
-    VertexSpirV testVertexSpirV(device, physicalDevice);
-    testVertexSpirV.LoadShaderFile("Shaders/shader.vert.spv");
+    testVertexSpirV = new VertexSpirV(device, physicalDevice);
+    testVertexSpirV->LoadShaderFile("Shaders/shader.vert.spv");
 
     auto fragShaderCode = loadShader("Shaders/shader.frag.spv");
 
@@ -970,14 +972,10 @@ void VulkanBackend::createGraphicsPipeline()
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-    auto bindingDescription = testVertexSpirV.bindingDescription;
-    auto attributeDescriptions = testVertexSpirV.attributeDescriptions;
-
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(testVertexSpirV->attributeDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = &testVertexSpirV->bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = testVertexSpirV->attributeDescriptions.data();
 
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
@@ -988,7 +986,7 @@ void VulkanBackend::createGraphicsPipeline()
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = testVertexSpirV.GetShaderModule();
+    vertShaderStageInfo.module = testVertexSpirV->GetShaderModule();
     vertShaderStageInfo.pName = "main";
 
     VkViewport viewport = {};
@@ -1490,9 +1488,10 @@ void VulkanBackend::createDescriptorSets()
     for (size_t i = 0; i < swapChainImages.size(); i++)
     {
         VkDescriptorBufferInfo bufferInfo = {};
-        bufferInfo.buffer = uniformBuffers[i];
+//        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = reinterpret_cast<VkBuffer*>(testVertexSpirV->constantBuffers[0].ConstantBuffer)[i];
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
+        bufferInfo.range = testVertexSpirV->constantBuffers[0].Size;
 
         VkWriteDescriptorSet descriptorWrite = {};
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

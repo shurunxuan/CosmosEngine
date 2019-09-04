@@ -13,14 +13,14 @@ ReflectionalShader::ReflectionalShader()
 
 ReflectionalShader::~ReflectionalShader()
 {
-
+    delete[] constantBuffers;
 }
 
 bool ReflectionalShader::SetData(const boost::container::string& name, const void* data, unsigned int size)
 {
     // Look for the variable and verify
     ReflectionalShaderVariable* var = FindVariable(name, size);
-    if (var == 0)
+    if (var == nullptr)
         return false;
 
     // Set the data in the local data buffer

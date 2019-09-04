@@ -10,7 +10,6 @@
 #include "../RenderingBackend.h"
 #include "ReflectionalSpirV.h"
 
-
 #include <optional>
 #include <boost/container/vector.hpp>
 #include <boost/array.hpp>
@@ -64,6 +63,7 @@ class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
 public:
+
     VulkanBackend();
 
     ~VulkanBackend() final;
@@ -201,6 +201,8 @@ private:
     VkDescriptorPool descriptorPool;
 
     boost::container::vector<VkDescriptorSet> descriptorSets;
+
+    VertexSpirV* testVertexSpirV;
 };
 
 extern ENGINE_LOCAL VulkanBackend* vulkanBackend;

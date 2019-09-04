@@ -83,7 +83,14 @@ add_custom_target(
 
 add_dependencies(${PROJECT_NAME} Shaders SPIRV-Headers SPIRV-Cross)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glfw glm ${Boost_LIBRARIES} ${ASSIMP_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        Vulkan::Vulkan
+        glfw
+        glm
+        ${Boost_LIBRARIES}
+        ${ASSIMP_LIBRARY}
+        ${SPRIV_CROSS_LIBRARIES}
+        )
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
