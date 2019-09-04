@@ -964,10 +964,8 @@ void VulkanBackend::createGraphicsPipeline()
     VertexSpirV testVertexSpirV(device, physicalDevice);
     testVertexSpirV.LoadShaderFile("Shaders/shader.vert.spv");
 
-    auto vertShaderCode = loadShader("Shaders/shader.vert.spv");
     auto fragShaderCode = loadShader("Shaders/shader.frag.spv");
 
-    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
@@ -990,7 +988,7 @@ void VulkanBackend::createGraphicsPipeline()
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.module = testVertexSpirV.GetShaderModule();
     vertShaderStageInfo.pName = "main";
 
     VkViewport viewport = {};
@@ -1106,7 +1104,6 @@ void VulkanBackend::createGraphicsPipeline()
     LOG_INFO << "Created graphics pipeline.";
 
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
 void VulkanBackend::createFramebuffers()

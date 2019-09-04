@@ -432,16 +432,12 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
 
     file.close();
 
-    // Copy data from the char-vector to a new uint32_t-vector
-    boost::container::vector<uint32_t> spirv_binary(buffer.size() / sizeof(uint32_t) * sizeof(char));
-    memcpy(spirv_binary.data(), buffer.data(), buffer.size());
-
     // Create SpvReflectModule
     module = {};
     SpvReflectResult result = spvReflectCreateShaderModule(buffer.size(), buffer.data(), &module);
     assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
-    shaderValid = CreateShader(spirv_binary);
+    shaderValid = CreateShader();
     if (!shaderValid)
     {
         LOG_ERROR << "Error loading shader " << shaderFile << ", shader not valid!";
@@ -449,6 +445,19 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
     }
 
     LOG_INFO << "Shader file " << shaderFile << " loaded.";
+
+    VkShaderModuleCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = buffer.size();
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
+
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to create shader module!";
+        throw std::runtime_error("Failed to create shader module!");
+    }
+
+    LOG_INFO << "Created shader module.";
 
     return true;
 }
@@ -524,7 +533,7 @@ void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
     throw std::runtime_error("Not Implemented");
 }
 
-bool VertexSpirV::CreateShader(const boost::container::vector<uint32_t>& shaderBinary)
+bool VertexSpirV::CreateShader()
 {
     uint32_t count = 0;
     SpvReflectResult result = spvReflectEnumerateInputVariables(&module, &count, nullptr);

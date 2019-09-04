@@ -40,7 +40,7 @@ protected:
 
     std::vector<VkDeviceMemory> constantBuffersMemory;
 
-    virtual bool CreateShader(const boost::container::vector<uint32_t>& shaderBinary) = 0;
+    virtual bool CreateShader() = 0;
 
     void ReleaseConstantBuffer(size_t index) override;
 
@@ -60,7 +60,7 @@ public:
     ~VertexSpirV() final;
 
 private:
-    bool CreateShader(const boost::container::vector<uint32_t>& shaderBinary) override;
+    bool CreateShader() override;
 
     void SetShaderAndCBs() final;
 
