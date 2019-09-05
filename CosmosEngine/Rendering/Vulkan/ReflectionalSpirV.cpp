@@ -490,10 +490,7 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
         throw std::runtime_error("Failed to open shader file!");
     }
 
-    if (boost::algorithm::ends_with(shaderFile, ".hlsl.spv"))
-    {
-        transposeMatrix = true;
-    }
+    transposeMatrix = boost::algorithm::ends_with(shaderFile, ".hlsl.spv");
 
     size_t fileSize = (size_t) file.tellg();
     boost::container::vector<char> buffer(fileSize);
