@@ -81,6 +81,10 @@ public:
 
     size_t GetSwapChainImageCount();
 
+    size_t GetCurrentFrame();
+
+    uint32_t GetCurrentImageIndex();
+
 private:
     void createInstance();
 
@@ -185,6 +189,8 @@ private:
     boost::container::vector<VkFence> inFlightFences;
 
     size_t currentFrame = 0;
+
+    uint32_t imageIndex = 0;
 
     VkBuffer vertexBuffer;
 

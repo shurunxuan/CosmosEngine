@@ -164,7 +164,7 @@ protected:
     // Helpers for finding data by name
     ReflectionalShaderVariable* FindVariable(const boost::container::string& name, int size);
 
-    ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name);
+    ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name, size_t* index = nullptr);
 };
 
 #endif //GAMEENGINE_REFLECTIONALSHADER_H

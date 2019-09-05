@@ -229,7 +229,6 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
-    uint32_t imageIndex;
     VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(),
                                             imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
@@ -244,23 +243,18 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     }
 
     // Update uniform buffer
-    UniformBufferObject ubo = {};
-//    ((TestGameApp*)App)->testObject->transform->GetGlobalWorldMatrix();
-//    ubo.model = glm::rotate(glm::mat4(1.0f), totalTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     Camera* mainCamera = App->testCamera;
-    ubo.model = App->testObject->transform->GetGlobalWorldMatrix();
-    ubo.view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
+
+    testVertexSpirV->SetMatrix4x4("model", App->testObject->transform->GetGlobalWorldMatrix());
+    testVertexSpirV->SetMatrix4x4("view", glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
                            mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
-                           mainCamera->transform->Up());
-    ubo.proj = mainCamera->GetProjectionMatrix();
-    ubo.proj[0][0] *= -1;
-    ubo.proj[1][1] *= -1;
+                           mainCamera->transform->Up()));
+    auto proj = mainCamera->GetProjectionMatrix();
+    proj[0][0] *= -1;
+    proj[1][1] *= -1;
+    testVertexSpirV->SetMatrix4x4("proj", proj);
 
-    void* data;
-    vkMapMemory(device, testVertexSpirV->constantBuffersMemory[imageIndex], 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(device, testVertexSpirV->constantBuffersMemory[imageIndex]);
-
+    testVertexSpirV->CopyAllBufferData();
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1508,4 +1502,14 @@ void VulkanBackend::createDescriptorSets()
 
         vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
     }
+}
+
+size_t VulkanBackend::GetCurrentFrame()
+{
+    return currentFrame;
+}
+
+uint32_t VulkanBackend::GetCurrentImageIndex()
+{
+    return imageIndex;
 }

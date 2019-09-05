@@ -109,11 +109,14 @@ ReflectionalShaderVariable* ReflectionalShader::FindVariable(const boost::contai
     return var;
 }
 
-ReflectionalConstantBuffer* ReflectionalShader::FindConstantBuffer(const boost::container::string& name)
+ReflectionalConstantBuffer* ReflectionalShader::FindConstantBuffer(const boost::container::string& name, size_t* index)
 {
     // Look for the key
     boost::unordered_map<boost::container::string, ReflectionalConstantBuffer*>::iterator result =
             cbTable.find(name);
+
+    if (index != nullptr)
+        *index = std::distance(cbTable.begin(), result);
 
     // Did we find the key?
     if (result == cbTable.end())

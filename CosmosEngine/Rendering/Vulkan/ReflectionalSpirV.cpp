@@ -435,7 +435,7 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
 
     // Create SpirV-Cross compiler module and get shader resources
     compiler = new spirv_cross::CompilerGLSL(reinterpret_cast<uint32_t*>(buffer.data()),
-            buffer.size() * sizeof(char) / sizeof(uint32_t));
+                                             buffer.size() * sizeof(char) / sizeof(uint32_t));
 
     shaderResources = compiler->get_shader_resources();
 
@@ -518,25 +518,66 @@ uint32_t ReflectionalSpirV::findMemoryType(uint32_t typeFilter, VkMemoryProperty
 
 void ReflectionalSpirV::CopyAllBufferData()
 {
-    LOG_FATAL << "Not Implemented";
-    throw std::runtime_error("Not Implemented");
+    // Ensure the shader is valid
+    if (!shaderValid) return;
+
+    for (size_t index = 0; index < constantBufferCount; ++index)
+    {
+        auto currentImage = vulkanBackend->GetCurrentImageIndex();
+
+        void* data;
+        vkMapMemory(device, constantBuffersMemory[index][currentImage],
+                    0, constantBuffers[index].Size, 0, &data);
+        memcpy(data,
+               constantBuffers[index].LocalDataBuffer,
+               constantBuffers[index].Size);
+        vkUnmapMemory(device, constantBuffersMemory[index][currentImage]);
+    }
 }
 
 void ReflectionalSpirV::CopyBufferData(unsigned int index)
 {
-    LOG_FATAL << "Not Implemented";
-    throw std::runtime_error("Not Implemented");
+    // Ensure the shader is valid
+    if (!shaderValid) return;
+
+    // Validate the index
+    if (index >= this->constantBufferCount)
+        return;
+
+    auto currentImage = vulkanBackend->GetCurrentImageIndex();
+    void* data;
+    vkMapMemory(device, constantBuffersMemory[index][currentImage],
+                0, constantBuffers[index].Size, 0, &data);
+    memcpy(data,
+           constantBuffers[index].LocalDataBuffer,
+           constantBuffers[index].Size);
+    vkUnmapMemory(device, constantBuffersMemory[index][currentImage]);
 }
 
 void ReflectionalSpirV::CopyBufferData(const boost::container::string& bufferName)
 {
-    LOG_FATAL << "Not Implemented";
-    throw std::runtime_error("Not Implemented");
+    // Ensure the shader is valid
+    if (!shaderValid) return;
+
+    // Check for the buffer
+    size_t index;
+    ReflectionalConstantBuffer* cb = this->FindConstantBuffer(bufferName, &index);
+    if (!cb) return;
+
+    auto currentImage = vulkanBackend->GetCurrentImageIndex();
+    void* data;
+    vkMapMemory(device, constantBuffersMemory[index][currentImage],
+                0, cb->Size, 0, &data);
+    memcpy(data,
+           cb->LocalDataBuffer,
+           cb->Size);
+    vkUnmapMemory(device, constantBuffersMemory[index][currentImage]);
 }
 
 void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
 {
-    vkDestroyBuffer(device, reinterpret_cast<VkBuffer>(constantBuffers[index].ConstantBuffer), nullptr);
+    for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+        vkDestroyBuffer(device, reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer)[i], nullptr);
 
     delete[] reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer);
 }
@@ -544,12 +585,15 @@ void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
 bool ReflectionalSpirV::CreateShader()
 {
     constantBuffers = new ReflectionalConstantBuffer[shaderResources.uniform_buffers.size()];
-    constantBuffersMemory.resize(shaderResources.uniform_buffers.size() * vulkanBackend->GetSwapChainImageCount());
+    constantBuffersMemory.resize(shaderResources.uniform_buffers.size());
+    for (auto& memory : constantBuffersMemory)
+        memory.resize(vulkanBackend->GetSwapChainImageCount());
+    constantBufferCount = shaderResources.uniform_buffers.size();
 
     unsigned int b = 0;
     unsigned int setCount = 0;
     //parseUniformBuffers
-    for (auto &resource : shaderResources.uniform_buffers)
+    for (auto& resource : shaderResources.uniform_buffers)
     {
         constantBuffers[b].Name = compiler->get_name(resource.id).c_str();
         constantBuffers[b].BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
@@ -595,7 +639,7 @@ bool ReflectionalSpirV::CreateShader()
             createBuffer(constantBuffers[b].Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                          reinterpret_cast<VkBuffer*>(constantBuffers[b].ConstantBuffer)[i],
-                         constantBuffersMemory[i + b * vulkanBackend->GetSwapChainImageCount()]);
+                         constantBuffersMemory[b][i]);
         }
 
 

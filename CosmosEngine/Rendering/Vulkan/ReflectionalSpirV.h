@@ -40,7 +40,7 @@ protected:
     SpvReflectShaderModule module;
     spirv_cross::CompilerGLSL* compiler = nullptr;
     spirv_cross::ShaderResources shaderResources;
-    boost::container::vector<VkDeviceMemory> constantBuffersMemory;
+    boost::container::vector<boost::container::vector<VkDeviceMemory>> constantBuffersMemory;
 
     virtual bool CreateShader();
 
