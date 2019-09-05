@@ -127,7 +127,7 @@ public:
     //size_t GetSamplerCount() { return samplerTable.size(); }
 
     // Get data about constant buffers
-    unsigned int GetBufferCount();
+    size_t GetBufferCount();
 
     unsigned int GetBufferSize(unsigned int index);
 
@@ -143,7 +143,7 @@ protected:
 //    ID3D11DeviceContext* deviceContext;
 
     // Resource counts
-    unsigned int constantBufferCount;
+    size_t constantBufferCount;
 
     // Maps for variables and buffers
     ReflectionalConstantBuffer* constantBuffers = nullptr; // For index-based lookup

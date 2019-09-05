@@ -136,7 +136,7 @@ void ReflectionalShader::SetShader()
     SetShaderAndCBs();
 }
 
-unsigned int ReflectionalShader::GetBufferCount()
+size_t ReflectionalShader::GetBufferCount()
 {
     return constantBufferCount;
 }

@@ -605,15 +605,15 @@ bool ReflectionalSpirV::CreateShader()
         spirv_cross::SPIRType type = compiler->get_type(resource.base_type_id);
 
         uint32_t ub_size = 0;
-        uint32_t member_count = type.member_types.size();
-        for (int i = 0; i < member_count; i++)
+        size_t member_count = type.member_types.size();
+        for (uint32_t i = 0; i < member_count; i++)
         {
             ReflectionalShaderVariable ubm{};
             boost::container::string varName = compiler->get_member_name(resource.base_type_id, i).c_str();
 //            auto &member_type = glsl.get_type(type.member_types[i]);
 //            ubm.type = parseType(member_type);
 
-            ubm.Size = compiler->get_declared_struct_member_size(type, i);
+            ubm.Size = static_cast<unsigned int>(compiler->get_declared_struct_member_size(type, i));
             ubm.ByteOffset = compiler->type_struct_member_offset(type, i);
             ubm.BufferIndex = b;
 
