@@ -165,6 +165,8 @@ protected:
     ReflectionalShaderVariable* FindVariable(const boost::container::string& name, int size);
 
     ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name, size_t* index = nullptr);
+
+    bool transposeMatrix = false;
 };
 
 #endif //GAMEENGINE_REFLECTIONALSHADER_H

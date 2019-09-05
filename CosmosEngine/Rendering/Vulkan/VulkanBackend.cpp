@@ -245,13 +245,16 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     // Update uniform buffer
     Camera* mainCamera = App->testCamera;
 
-    testVertexSpirV->SetMatrix4x4("model", App->testObject->transform->GetGlobalWorldMatrix());
-    testVertexSpirV->SetMatrix4x4("view", glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
-                           mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
-                           mainCamera->transform->Up()));
+    auto model = App->testObject->transform->GetGlobalWorldMatrix();
+    auto view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
+                            mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
+                            mainCamera->transform->Up());
     auto proj = mainCamera->GetProjectionMatrix();
     proj[0][0] *= -1;
     proj[1][1] *= -1;
+
+    testVertexSpirV->SetMatrix4x4("model", model);
+    testVertexSpirV->SetMatrix4x4("view", view);
     testVertexSpirV->SetMatrix4x4("proj", proj);
 
     testVertexSpirV->CopyAllBufferData();
@@ -958,7 +961,7 @@ void VulkanBackend::createRenderPass()
 void VulkanBackend::createGraphicsPipeline()
 {
     testVertexSpirV = new VertexSpirV(device, physicalDevice);
-    testVertexSpirV->LoadShaderFile("Shaders/shader.vert.spv");
+    testVertexSpirV->LoadShaderFile("Shaders/VertexShader.hlsl.spv");
 
     auto fragShaderCode = loadShader("Shaders/shader.frag.spv");
 

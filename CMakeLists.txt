@@ -7,6 +7,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(CMAKE_THIRD_PARTY_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/${CMAKE_BUILD_TYPE})
+
 add_compile_definitions(__SOLUTION_DIR__="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
@@ -39,6 +41,50 @@ if (EXISTS ${GLSL_VALIDATOR})
 else ()
     message(SEND_ERROR "GLSL Validator Not Found!")
 endif ()
+
+# Get ShaderConductor
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+set(SHADER_CONDUCTOR_DIR_FOUND FALSE)
+set(SHADER_CONDUCTOR_CLI_EXECUTABLE_FOUND FALSE)
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME ShaderConductorCmd.exe)
+else ()
+    set(SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME ShaderConductorCmd)
+endif ()
+
+file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+        ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
+    set(SHADER_CONDUCTOR_CLI_EXECUTABLE_FOUND TRUE)
+    message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+else ()
+    message("-- Downloading ShaderConductor Executables")
+
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+            set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-win-vc142-x64-Release")
+        else ()
+            set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-win-vc142-x86-Release")
+        endif ()
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-osx-clang9-x64-Release")
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-linux-gcc8-x64-Release")
+    endif ()
+
+    execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/download_dependencies.py 135 ${SHADER_CONDUCTOR_ZIP_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/Downloads ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY})
+
+    file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+            ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+    if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
+        message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+    else ()
+        message(FATAL_ERROR "-- Can't find/download ShaderConductor Executable")
+    endif ()
+endif ()
+
 
 # Operating System Specification
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")

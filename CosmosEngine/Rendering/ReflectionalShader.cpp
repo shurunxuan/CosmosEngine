@@ -75,11 +75,24 @@ bool ReflectionalShader::SetFloat4(const boost::container::string& name, const g
 
 bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const float* data)
 {
+    if (transposeMatrix)
+    {
+        glm::mat4 transposed(data[0], data[4], data[8], data[12],
+                             data[1], data[5], data[9], data[13],
+                             data[2], data[6], data[10], data[14],
+                             data[3], data[7], data[11], data[15]);
+        return SetData(name, (void*) (&transposed), sizeof(float) * 16);
+    }
     return SetData(name, (void*) (data), sizeof(float) * 16);
 }
 
 bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const glm::mat4& data)
 {
+    if (transposeMatrix)
+    {
+        glm::mat4 transposed = glm::transpose(data);
+        return SetData(name, (void*) (&transposed), sizeof(float) * 16);
+    }
     return SetData(name, (void*) (&data), sizeof(float) * 16);
 }
 

@@ -49,16 +49,39 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 # Delete last compilation folder
 file(REMOVE_RECURSE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/)
 
-# Get all glsl shaders
-file(GLOB_RECURSE GLSL_SHADERS
-        "Rendering/Shaders/*.frag"
-        "Rendering/Shaders/*.vert"
+# Shaders
+#file(GLOB_RECURSE SHADER_FILES
+#        "Rendering/Shaders/*.frag"
+#        "Rendering/Shaders/*.vert"
+#        "Rendering/Shaders/*.hlsl"
+#        )
+set(SHADER_FILES
+        Rendering/Shaders/shader.vert
+        Rendering/Shaders/shader.frag
+        Rendering/Shaders/VertexShader.hlsl
         )
 
+set_source_files_properties(Rendering/Shaders/shader.vert
+        PROPERTIES
+        lang glsl
+        stage vs)
 
-foreach (GLSL ${GLSL_SHADERS})
-    get_filename_component(FILE_NAME ${GLSL} NAME)
-    file(RELATIVE_PATH REL_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/Rendering/Shaders/ ${GLSL})
+set_source_files_properties(Rendering/Shaders/shader.frag
+        PROPERTIES
+        lang glsl
+        stage ps)
+
+set_source_files_properties(Rendering/Shaders/VertexShader.hlsl
+        PROPERTIES
+        lang hlsl
+        stage vs)
+
+foreach (SHADER_FILE ${SHADER_FILES})
+    get_source_file_property(SHADER_LANG ${SHADER_FILE} lang)
+    get_source_file_property(SHADER_STAGE ${SHADER_FILE} stage)
+
+    get_filename_component(FILE_NAME ${SHADER_FILE} NAME)
+    file(RELATIVE_PATH REL_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/Rendering/Shaders/ ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER_FILE})
     set(SPIRV "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_FILE_NAME}.spv")
     if (${REL_FILE_NAME} STREQUAL ${FILE_NAME})
         set(REL_PATH ".")
@@ -66,13 +89,25 @@ foreach (GLSL ${GLSL_SHADERS})
         get_filename_component(REL_PATH ${REL_FILE_NAME} DIRECTORY)
     endif ()
 
-    add_custom_command(
-            OUTPUT ${SPIRV}
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_PATH}/"
-            COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
-            DEPENDS ${GLSL})
-    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-endforeach (GLSL)
+    set(SHADER_FILE_OUTPUT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders/${REL_PATH}/)
+    set(INPUT_SHADER_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER_FILE})
+    if (${SHADER_LANG} STREQUAL "glsl")
+        add_custom_command(
+                OUTPUT ${SPIRV}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_FILE_OUTPUT_DIR}
+                COMMAND ${GLSL_VALIDATOR} -V ${INPUT_SHADER_FILE} -o ${SPIRV}
+                DEPENDS ${SHADER_FILE})
+        list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+    elseif (${SHADER_LANG} STREQUAL "hlsl")
+        message("${SHADER_CONDUCTOR_CLI_EXECUTABLE} -I ${INPUT_SHADER_FILE} -T spirv -S ${SHADER_STAGE} -E main -O ${SPIRV}")
+        add_custom_command(
+                OUTPUT ${SPIRV}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_FILE_OUTPUT_DIR}
+                COMMAND ${SHADER_CONDUCTOR_CLI_EXECUTABLE} -I ${INPUT_SHADER_FILE} -T spirv -S ${SHADER_STAGE} -E main -O ${SPIRV}
+                DEPENDS ${SHADER_FILE})
+        list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+    endif ()
+endforeach (SHADER_FILE)
 
 add_custom_target(
         Shaders

@@ -38,14 +38,16 @@ struct ENGINE_LOCAL SwapChainSupportDetails
 struct Vertex
 {
     glm::vec3 pos;
+    float pad0;
     glm::vec3 color;
+    float pad1;
 };
 
 const std::vector<Vertex> vertices = {
-        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f,  0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f,  0.0f, 0.5f},  {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.0f, 0.5f},  {1.0f, 1.0f, 1.0f}}
+        {{-0.5f, 0.0f, -0.5f}, 0, {1.0f, 0.0f, 0.0f}, 0},
+        {{0.5f,  0.0f, -0.5f}, 0, {0.0f, 1.0f, 0.0f}, 0},
+        {{0.5f,  0.0f, 0.5f},  0, {0.0f, 0.0f, 1.0f}, 0},
+        {{-0.5f, 0.0f, 0.5f},  0, {1.0f, 1.0f, 1.0f}, 0}
 };
 
 const std::vector<uint16_t> indices = {

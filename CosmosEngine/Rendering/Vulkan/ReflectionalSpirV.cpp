@@ -1,7 +1,7 @@
 //
 // Created by shuru on 7/15/2019.
 //
-
+#include <boost/algorithm/string/predicate.hpp>
 #include "ReflectionalSpirV.h"
 #include "../../Logging/Logging.h"
 #include "VulkanBackend.h"
@@ -488,6 +488,11 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
     {
         LOG_FATAL << "Failed to open shader file: " << shaderFile;
         throw std::runtime_error("Failed to open shader file!");
+    }
+
+    if (boost::algorithm::ends_with(shaderFile, ".hlsl.spv"))
+    {
+        transposeMatrix = true;
     }
 
     size_t fileSize = (size_t) file.tellg();
