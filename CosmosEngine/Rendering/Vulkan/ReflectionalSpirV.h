@@ -8,7 +8,6 @@
 #include "../ReflectionalShader.h"
 
 #include <vulkan/vulkan.h>
-#include "SPIRV_Reflect/spirv_reflect.h"
 #include <spirv_cross/spirv_glsl.hpp>
 
 class ReflectionalSpirV : virtual public ReflectionalShader
@@ -37,7 +36,6 @@ protected:
     VkDevice device;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
-    SpvReflectShaderModule module;
     spirv_cross::CompilerGLSL* compiler = nullptr;
     spirv_cross::ShaderResources shaderResources;
     boost::container::vector<boost::container::vector<VkDeviceMemory>> constantBuffersMemory;

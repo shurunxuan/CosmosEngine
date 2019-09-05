@@ -392,6 +392,72 @@ static uint32_t FormatSize(VkFormat format)
     return result;
 }
 
+VkFormat parseFormat(const spirv_cross::SPIRType& type)
+{
+    if (type.width != 32)
+    {
+        LOG_FATAL << "Only types with width 32 are supported.";
+        return VK_FORMAT_UNDEFINED;
+    }
+    switch (type.basetype)
+    {
+        case spirv_cross::SPIRType::Int:
+        {
+            switch (type.vecsize)
+            {
+                case 1:
+                    return VK_FORMAT_R32_SINT;
+                case 2:
+                    return VK_FORMAT_R32G32_SINT;
+                case 3:
+                    return VK_FORMAT_R32G32B32_SINT;
+                case 4:
+                    return VK_FORMAT_R32G32B32A32_SINT;
+                default:
+                    LOG_FATAL << "Only types with vecsize 1~4 are supported.";
+                    return VK_FORMAT_UNDEFINED;
+            }
+        }
+        case spirv_cross::SPIRType::UInt:
+        {
+            switch (type.vecsize)
+            {
+                case 1:
+                    return VK_FORMAT_R32_UINT;
+                case 2:
+                    return VK_FORMAT_R32G32_UINT;
+                case 3:
+                    return VK_FORMAT_R32G32B32_UINT;
+                case 4:
+                    return VK_FORMAT_R32G32B32A32_UINT;
+                default:
+                    LOG_FATAL << "Only types with vecsize 1~4 are supported.";
+                    return VK_FORMAT_UNDEFINED;
+            }
+        }
+        case spirv_cross::SPIRType::Float:
+        {
+            switch (type.vecsize)
+            {
+                case 1:
+                    return VK_FORMAT_R32_SFLOAT;
+                case 2:
+                    return VK_FORMAT_R32G32_SFLOAT;
+                case 3:
+                    return VK_FORMAT_R32G32B32_SFLOAT;
+                case 4:
+                    return VK_FORMAT_R32G32B32A32_SFLOAT;
+                default:
+                    LOG_FATAL << "Only types with vecsize 1~4 are supported.";
+                    return VK_FORMAT_UNDEFINED;
+            }
+        }
+        default:
+            LOG_FATAL << "Only UInt, Int and Float are supported.";
+            return VK_FORMAT_UNDEFINED;
+    }
+}
+
 ReflectionalSpirV::ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalDevice)
 {
     this->device = device;
@@ -406,7 +472,6 @@ ReflectionalSpirV::~ReflectionalSpirV()
         vkDestroyShaderModule(device, shaderModule, nullptr);
     }
 
-    spvReflectDestroyShaderModule(&module);
     delete compiler;
 }
 
@@ -438,11 +503,6 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
                                              buffer.size() * sizeof(char) / sizeof(uint32_t));
 
     shaderResources = compiler->get_shader_resources();
-
-    // Create SpvReflectModule
-    module = {};
-    SpvReflectResult result = spvReflectCreateShaderModule(buffer.size(), buffer.data(), &module);
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
     shaderValid = CreateShader();
     if (!shaderValid)
@@ -667,23 +727,9 @@ bool VertexSpirV::CreateShader()
     bool uboResult = ReflectionalSpirV::CreateShader();
     if (!uboResult) return false;
 
-    uint32_t count = 0;
-    SpvReflectResult result = spvReflectEnumerateInputVariables(&module, &count, nullptr);
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    std::vector<SpvReflectInterfaceVariable*> input_vars(count);
-    result = spvReflectEnumerateInputVariables(&module, &count, input_vars.data());
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    count = 0;
-    result = spvReflectEnumerateOutputVariables(&module, &count, nullptr);
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    std::vector<SpvReflectInterfaceVariable*> output_vars(count);
-    result = spvReflectEnumerateOutputVariables(&module, &count, output_vars.data());
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    if (module.shader_stage == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+    // Assuming only one entry point in the shader
+    auto stages = compiler->get_entry_points_and_stages();
+    if (stages[0].execution_model == spv::ExecutionModelVertex)
     {
         // Demonstrates how to generate all necessary data structures to populate
         // a VkPipelineVertexInputStateCreateInfo structure, given the module's
@@ -702,15 +748,17 @@ bool VertexSpirV::CreateShader()
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info = {
                 VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
-        attributeDescriptions = boost::container::vector<VkVertexInputAttributeDescription>(input_vars.size(),
-                                                                                            VkVertexInputAttributeDescription{});
-        for (size_t i_var = 0; i_var < input_vars.size(); ++i_var)
+        attributeDescriptions = boost::container::vector<VkVertexInputAttributeDescription>(
+                shaderResources.stage_inputs.size(),
+                VkVertexInputAttributeDescription{});
+        for (size_t i_var = 0; i_var < shaderResources.stage_inputs.size(); ++i_var)
         {
-            const SpvReflectInterfaceVariable& refl_var = *(input_vars[i_var]);
+            const spirv_cross::Resource& refl_var = shaderResources.stage_inputs[i_var];
             VkVertexInputAttributeDescription& attr_desc = attributeDescriptions[i_var];
-            attr_desc.location = refl_var.location;
-            attr_desc.binding = bindingDescription.binding;
-            attr_desc.format = static_cast<VkFormat>(refl_var.format);
+            attr_desc.location = compiler->get_decoration(refl_var.id, spv::DecorationLocation);
+            attr_desc.binding = compiler->get_decoration(refl_var.id, spv::DecorationBinding);
+            const spirv_cross::SPIRType& type = compiler->get_type(refl_var.base_type_id);
+            attr_desc.format = parseFormat(type);
             attr_desc.offset = 0;  // final offset computed below after sorting.
         }
         // Sort attributes by location

@@ -16,7 +16,6 @@ add_compile_definitions(ENGINE_EXPORTS)
 set(SOURCE_FILES
         App/App.cpp
         Rendering/RenderingBackend.cpp
-        Rendering/Vulkan/SPIRV_Reflect/spirv_reflect.c
         Rendering/ReflectionalShader.cpp
         Rendering/Vulkan/VulkanBackend.cpp
         Logging/Logging.cpp
@@ -32,7 +31,6 @@ set(HEADER_FILES
         Export.h
         App/App.h
         Rendering/RenderingBackend.h
-        Rendering/Vulkan/SPIRV_Reflect/spirv_reflect.h
         Rendering/ReflectionalShader.h
         Rendering/Vulkan/VulkanBackend.h
         Logging/Logging.h
