@@ -99,7 +99,6 @@ foreach (SHADER_FILE ${SHADER_FILES})
                 DEPENDS ${SHADER_FILE})
         list(APPEND SPIRV_BINARY_FILES ${SPIRV})
     elseif (${SHADER_LANG} STREQUAL "hlsl")
-        message("${SHADER_CONDUCTOR_CLI_EXECUTABLE} -I ${INPUT_SHADER_FILE} -T spirv -S ${SHADER_STAGE} -E main -O ${SPIRV}")
         add_custom_command(
                 OUTPUT ${SPIRV}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_FILE_OUTPUT_DIR}
