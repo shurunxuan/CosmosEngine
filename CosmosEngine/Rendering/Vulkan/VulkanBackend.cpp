@@ -158,6 +158,7 @@ bool VulkanBackend::Init()
 void VulkanBackend::cleanupSwapChain()
 {
     delete testVertexSpirV;
+    delete testFragmentSpirV;
 
     for (auto framebuffer : swapChainFramebuffers)
     {
@@ -871,11 +872,12 @@ void VulkanBackend::createImageViews()
 
 boost::container::vector<char> VulkanBackend::loadShader(const boost::container::string& filename)
 {
-    boost::filesystem::ifstream file(boost::filesystem::path(filename.c_str()), std::ios::ate | std::ios::binary);
+    boost::container::string realShaderFileName = filename + ".spv";
+    boost::filesystem::ifstream file(boost::filesystem::path(realShaderFileName.c_str()), std::ios::ate | std::ios::binary);
 
     if (!file.is_open())
     {
-        LOG_FATAL << "Failed to open shader file: " << filename;
+        LOG_FATAL << "Failed to open shader file: " << realShaderFileName;
         throw std::runtime_error("Failed to open shader file!");
     }
 
@@ -887,7 +889,7 @@ boost::container::vector<char> VulkanBackend::loadShader(const boost::container:
 
     file.close();
 
-    LOG_INFO << "Shader file " << filename << " loaded.";
+    LOG_INFO << "Shader file " << realShaderFileName << " loaded.";
 
     return buffer;
 }
@@ -961,11 +963,10 @@ void VulkanBackend::createRenderPass()
 void VulkanBackend::createGraphicsPipeline()
 {
     testVertexSpirV = new VertexSpirV(device, physicalDevice);
-    testVertexSpirV->LoadShaderFile("Shaders/VertexShader.hlsl.spv");
+    testVertexSpirV->LoadShaderFile("Shaders/VertexShader.hlsl");
 
-    auto fragShaderCode = loadShader("Shaders/shader.frag.spv");
-
-    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+    testFragmentSpirV = new FragmentSpirV(device, physicalDevice);
+    testFragmentSpirV->LoadShaderFile("Shaders/shader.frag");
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -1030,7 +1031,7 @@ void VulkanBackend::createGraphicsPipeline()
     VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
     fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.module = testFragmentSpirV->GetShaderModule();
     fragShaderStageInfo.pName = "main";
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
@@ -1097,8 +1098,6 @@ void VulkanBackend::createGraphicsPipeline()
     }
 
     LOG_INFO << "Created graphics pipeline.";
-
-    vkDestroyShaderModule(device, fragShaderModule, nullptr);
 }
 
 void VulkanBackend::createFramebuffers()

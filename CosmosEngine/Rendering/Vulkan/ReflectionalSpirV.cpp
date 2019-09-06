@@ -482,15 +482,16 @@ VkShaderModule ReflectionalSpirV::GetShaderModule()
 
 bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFile)
 {
-    boost::filesystem::ifstream file(boost::filesystem::path(shaderFile.c_str()), std::ios::ate | std::ios::binary);
+    boost::container::string realShaderFileName = shaderFile + ".spv";
+    boost::filesystem::ifstream file(boost::filesystem::path(realShaderFileName.c_str()), std::ios::ate | std::ios::binary);
 
     if (!file.is_open())
     {
-        LOG_FATAL << "Failed to open shader file: " << shaderFile;
+        LOG_FATAL << "Failed to open shader file: " << realShaderFileName;
         throw std::runtime_error("Failed to open shader file!");
     }
 
-    transposeMatrix = boost::algorithm::ends_with(shaderFile, ".hlsl.spv");
+    transposeMatrix = boost::algorithm::ends_with(shaderFile, ".hlsl");
 
     size_t fileSize = (size_t) file.tellg();
     boost::container::vector<char> buffer(fileSize);
@@ -509,11 +510,11 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
     shaderValid = CreateShader();
     if (!shaderValid)
     {
-        LOG_ERROR << "Error loading shader " << shaderFile << ", shader not valid!";
+        LOG_ERROR << "Error loading shader " << realShaderFileName << ", shader not valid!";
         return false;
     }
 
-    LOG_INFO << "Shader file " << shaderFile << " loaded.";
+    LOG_INFO << "Shader file " << realShaderFileName << " loaded.";
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -797,6 +798,27 @@ VertexSpirV::VertexSpirV(VkDevice device, VkPhysicalDevice physicalDevice) : Ref
 }
 
 VertexSpirV::~VertexSpirV()
+{
+
+}
+
+FragmentSpirV::FragmentSpirV(VkDevice device, VkPhysicalDevice physicalDevice) : ReflectionalSpirV(device,
+                                                                                                   physicalDevice)
+{
+
+}
+
+FragmentSpirV::~FragmentSpirV()
+{
+
+}
+
+bool FragmentSpirV::CreateShader()
+{
+    return ReflectionalSpirV::CreateShader();
+}
+
+void FragmentSpirV::SetShaderAndCBs()
 {
 
 }

@@ -209,7 +209,9 @@ private:
     boost::container::vector<VkDescriptorSet> descriptorSets;
 
     VertexSpirV* testVertexSpirV;
+    FragmentSpirV* testFragmentSpirV;
 };
+
 
 extern ENGINE_LOCAL VulkanBackend* vulkanBackend;
 

@@ -69,4 +69,19 @@ private:
     boost::container::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 };
 
+class FragmentSpirV : public ReflectionalSpirV
+{
+public:
+    friend class VulkanBackend;
+
+    FragmentSpirV(VkDevice device, VkPhysicalDevice physicalDevice);
+
+    ~FragmentSpirV() final;
+
+private:
+    bool CreateShader() override;
+
+    void SetShaderAndCBs() final;
+};
+
 #endif //GAMEENGINE_REFLECTIONALSPIRV_H
