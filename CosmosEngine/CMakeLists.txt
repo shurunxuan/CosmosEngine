@@ -25,7 +25,7 @@ set(SOURCE_FILES
         Core/Transform.cpp
         Core/Scene.cpp
         Core/Camera.cpp
-        )
+        Rendering/RenderingPipeline.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -40,7 +40,7 @@ set(HEADER_FILES
         Core/Transform.h
         Core/Scene.h
         Core/Camera.h
-        )
+        Rendering/RenderingPipeline.h Rendering/Vulkan/VulkanPipeline.h Rendering/Vulkan/VulkanPipeline.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

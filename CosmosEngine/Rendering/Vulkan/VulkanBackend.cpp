@@ -6,6 +6,7 @@
 #include "../../Logging/Logging.h"
 #include "../../App/App.h"
 #include "ReflectionalSpirV.h"
+#include "VulkanPipeline.h"
 
 #include <set>
 #include <algorithm>
@@ -141,33 +142,51 @@ bool VulkanBackend::Init()
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createGraphicsPipeline();
+    //createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
-    createVertexBuffer();
-    createIndexBuffer();
-    createUniformBuffers();
-    createCommandBuffers();
+    //createUniformBuffers();
+    //createCommandBuffers();
     createSyncObjects();
 
     return true;
 }
 
+void VulkanBackend::recreateSwapChain()
+{
+    while (width == 0 || height == 0)
+    {
+        glfwGetFramebufferSize(window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(device);
+
+    LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
+
+    cleanupSwapChain();
+
+    createSwapChain();
+    createImageViews();
+    createRenderPass();
+    //createGraphicsPipeline();
+    createFramebuffers();
+    //createUniformBuffers();
+    //createCommandBuffers();
+}
+
 void VulkanBackend::cleanupSwapChain()
 {
-    delete testVertexSpirV;
-    delete testFragmentSpirV;
-
     for (auto framebuffer : swapChainFramebuffers)
     {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
     }
 
-    vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    //vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    //vkDestroyPipeline(device, graphicsPipeline, nullptr);
 
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    //vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 
     vkDestroyRenderPass(device, renderPass, nullptr);
 
@@ -177,12 +196,6 @@ void VulkanBackend::cleanupSwapChain()
     }
 
     vkDestroySwapchainKHR(device, swapChain, nullptr);
-
-    for (size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-        vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-    }
 }
 
 void VulkanBackend::DeInit()
@@ -190,12 +203,6 @@ void VulkanBackend::DeInit()
     vkDeviceWaitIdle(device);
 
     cleanupSwapChain();
-
-    vkDestroyBuffer(device, indexBuffer, nullptr);
-    vkFreeMemory(device, indexBufferMemory, nullptr);
-
-    vkDestroyBuffer(device, vertexBuffer, nullptr);
-    vkFreeMemory(device, vertexBufferMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
@@ -237,22 +244,30 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
+    boost::container::vector<VkCommandBuffer> frameCommandBuffers;
+    frameCommandBuffers.reserve(presentedPipelines.size());
+
     // Update uniform buffer
-    Camera* mainCamera = App->testCamera;
+    for (auto pipeline : presentedPipelines)
+    {
+        Camera* mainCamera = App->testCamera;
 
-    auto model = App->testObject->transform->GetGlobalWorldMatrix();
-    auto view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
-                            mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
-                            mainCamera->transform->Up());
-    auto proj = mainCamera->GetProjectionMatrix();
-    proj[0][0] *= -1;
-    proj[1][1] *= -1;
+        auto model = App->testObject->transform->GetGlobalWorldMatrix();
+        auto view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
+                                mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
+                                mainCamera->transform->Up());
+        auto proj = mainCamera->GetProjectionMatrix();
+        proj[0][0] *= -1;
+        proj[1][1] *= -1;
 
-    testVertexSpirV->SetMatrix4x4("model", model);
-    testVertexSpirV->SetMatrix4x4("view", view);
-    testVertexSpirV->SetMatrix4x4("proj", proj);
+        pipeline->vertexSpirV->SetMatrix4x4("model", model);
+        pipeline->vertexSpirV->SetMatrix4x4("view", view);
+        pipeline->vertexSpirV->SetMatrix4x4("proj", proj);
 
-    testVertexSpirV->CopyAllBufferData();
+        pipeline->vertexSpirV->CopyAllBufferData();
+
+        frameCommandBuffers.push_back(pipeline->commandBuffers[imageIndex]);
+    }
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -263,8 +278,8 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
 
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+    submitInfo.commandBufferCount = static_cast<uint32_t>(frameCommandBuffers.size());
+    submitInfo.pCommandBuffers = frameCommandBuffers.data();
 
     VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
@@ -954,146 +969,6 @@ void VulkanBackend::createRenderPass()
     LOG_INFO << "Created render pass.";
 }
 
-void VulkanBackend::createGraphicsPipeline()
-{
-    testVertexSpirV = new VertexSpirV(device, physicalDevice);
-    testVertexSpirV->LoadShaderFile("Shaders/VertexShader.hlsl");
-
-    testFragmentSpirV = new FragmentSpirV(device, physicalDevice);
-    testFragmentSpirV->LoadShaderFile("Shaders/shader.frag");
-
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(testVertexSpirV->attributeDescriptions.size());
-    vertexInputInfo.pVertexBindingDescriptions = &testVertexSpirV->bindingDescription;
-    vertexInputInfo.pVertexAttributeDescriptions = testVertexSpirV->attributeDescriptions.data();
-
-
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
-    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-    VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = testVertexSpirV->GetShaderModule();
-    vertShaderStageInfo.pName = "main";
-
-    VkViewport viewport = {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float) swapChainExtent.width;
-    viewport.height = (float) swapChainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor = {};
-    scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
-
-    VkPipelineViewportStateCreateInfo viewportState = {};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
-
-    VkPipelineRasterizationStateCreateInfo rasterizer = {};
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
-    rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-    rasterizer.depthBiasClamp = 0.0f; // Optional
-    rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-    VkPipelineMultisampleStateCreateInfo multisampling = {};
-    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampling.minSampleShading = 1.0f; // Optional
-    multisampling.pSampleMask = nullptr; // Optional
-    multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-    multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
-    VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = testFragmentSpirV->GetShaderModule();
-    fragShaderStageInfo.pName = "main";
-
-    VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-    colorBlendAttachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
-
-    VkPipelineColorBlendStateCreateInfo colorBlending = {};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
-    colorBlending.blendConstants[0] = 0.0f; // Optional
-    colorBlending.blendConstants[1] = 0.0f; // Optional
-    colorBlending.blendConstants[2] = 0.0f; // Optional
-    colorBlending.blendConstants[3] = 0.0f; // Optional
-
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &testVertexSpirV->descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-    if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to create pipeline layout!";
-        throw std::runtime_error("Failed to create pipeline layout!");
-    }
-
-    LOG_INFO << "Created pipeline layout.";
-
-    VkGraphicsPipelineCreateInfo pipelineInfo = {};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
-    pipelineInfo.pViewportState = &viewportState;
-    pipelineInfo.pRasterizationState = &rasterizer;
-    pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
-    pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.pDynamicState = nullptr; // Optional
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = renderPass;
-    pipelineInfo.subpass = 0;
-    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-    pipelineInfo.basePipelineIndex = -1; // Optional
-
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to create graphics pipeline!";
-        throw std::runtime_error("Failed to create graphics pipeline!");
-    }
-
-    LOG_INFO << "Created graphics pipeline.";
-}
-
 void VulkanBackend::createFramebuffers()
 {
     swapChainFramebuffers.resize(swapChainImageViews.size());
@@ -1141,74 +1016,6 @@ void VulkanBackend::createCommandPool()
     LOG_INFO << "Created command pool.";
 }
 
-void VulkanBackend::createCommandBuffers()
-{
-    commandBuffers.resize(swapChainFramebuffers.size());
-
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to allocate command buffers!";
-        throw std::runtime_error("Failed to allocate command buffers!");
-    }
-
-    LOG_INFO << "Allocated command buffers.";
-
-    for (size_t i = 0; i < commandBuffers.size(); i++)
-    {
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr; // Optional
-
-        if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to begin recording command buffer " << i;
-            throw std::runtime_error("Failed to begin recording command buffer!");
-        }
-
-        LOG_INFO << "Recording command buffer " << i << " started.";
-
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapChainFramebuffers[i];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = swapChainExtent;
-        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkBuffer vertexBuffers[] = {vertexBuffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-
-        vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                                &testVertexSpirV->descriptorSets[i], 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
-        vkCmdEndRenderPass(commandBuffers[i]);
-
-        if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to record command buffer!";
-            throw std::runtime_error("Failed to record command buffer!");
-        }
-    }
-}
-
 void VulkanBackend::createSyncObjects()
 {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1232,29 +1039,6 @@ void VulkanBackend::createSyncObjects()
             throw std::runtime_error("Failed to create synchronization objects for a frame!");
         }
     }
-}
-
-void VulkanBackend::recreateSwapChain()
-{
-    while (width == 0 || height == 0)
-    {
-        glfwGetFramebufferSize(window, &width, &height);
-        glfwWaitEvents();
-    }
-
-    vkDeviceWaitIdle(device);
-
-    LOG_INFO << "Framebuffer Resize! New Resolution: " << width << "x" << height;
-
-    cleanupSwapChain();
-
-    createSwapChain();
-    createImageViews();
-    createRenderPass();
-    createGraphicsPipeline();
-    createFramebuffers();
-    createUniformBuffers();
-    createCommandBuffers();
 }
 
 void VulkanBackend::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
@@ -1316,30 +1100,6 @@ bool QueueFamilyIndices::isComplete()
     return graphicsFamily.has_value() && presentFamily.has_value();
 }
 
-void VulkanBackend::createVertexBuffer()
-{
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-                 stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-    copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-}
-
 void VulkanBackend::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
     VkCommandBufferAllocateInfo allocInfo = {};
@@ -1376,45 +1136,6 @@ void VulkanBackend::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceS
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-void VulkanBackend::createIndexBuffer()
-{
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-                 stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), (size_t) bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-    copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-}
-
-void VulkanBackend::createUniformBuffers()
-{
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-    uniformBuffers.resize(swapChainImages.size());
-    uniformBuffersMemory.resize(swapChainImages.size());
-
-    for (size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i],
-                     uniformBuffersMemory[i]);
-    }
-}
-
 size_t VulkanBackend::GetCurrentFrame()
 {
     return currentFrame;
@@ -1423,4 +1144,23 @@ size_t VulkanBackend::GetCurrentFrame()
 uint32_t VulkanBackend::GetCurrentImageIndex()
 {
     return imageIndex;
+}
+
+RenderingPipeline* VulkanBackend::CreateRenderingPipeline()
+{
+    VulkanPipeline* newPipeline = new VulkanPipeline();
+    presentedPipelines.push_back(newPipeline);
+    return reinterpret_cast<RenderingPipeline*>(newPipeline);
+}
+
+void VulkanBackend::DestroyRenderingPipeline(RenderingPipeline** pipeline)
+{
+    auto* oldPipeline = dynamic_cast<VulkanPipeline*>(*pipeline);
+    auto findResult = std::find(presentedPipelines.begin(), presentedPipelines.end(), oldPipeline);
+    if (findResult != presentedPipelines.end())
+    {
+        presentedPipelines.erase(findResult);
+    }
+    delete oldPipeline;
+    *pipeline = nullptr;
 }

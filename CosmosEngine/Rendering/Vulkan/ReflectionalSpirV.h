@@ -9,11 +9,13 @@
 
 #include <vulkan/vulkan.h>
 #include <spirv_cross/spirv_glsl.hpp>
+#include <boost/container/string.hpp>
 
 class ReflectionalSpirV : virtual public ReflectionalShader
 {
 public:
     friend class VulkanBackend;
+    friend class VulkanPipeline;
 
     explicit ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalDevice);
 
@@ -32,6 +34,10 @@ public:
 
     // Misc getters
     VkShaderModule GetShaderModule();
+
+    VkPipelineShaderStageCreateInfo& GetStageInfo();
+
+    VkDescriptorSetLayout& GetDescriptorSetLayout();
 
 protected:
     VkShaderModule shaderModule;
@@ -58,6 +64,8 @@ protected:
 	VkDescriptorPool descriptorPool;
 
 	bool hasDescriptors;
+
+    VkPipelineShaderStageCreateInfo stageInfo;
 };
 
 class VertexSpirV : public ReflectionalSpirV
@@ -69,10 +77,14 @@ public:
 
     ~VertexSpirV() final;
 
+    VkPipelineVertexInputStateCreateInfo& GetInputInfo();
+
 private:
     bool CreateShader() override;
 
     void SetShaderAndCBs() final;
+
+    VkPipelineVertexInputStateCreateInfo inputInfo;
 
     VkVertexInputBindingDescription bindingDescription;
 

@@ -5,6 +5,23 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+struct Vertex
+{
+    glm::vec3 pos;
+    glm::vec3 color;
+};
+
+const std::vector<Vertex> vertices = {
+        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f,  0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f,  0.0f, 0.5f},  {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.0f, 0.5f},  {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+        0, 2, 1, 2, 0, 3, 0, 1, 2, 2, 3, 0
+};
+
 TestGameApp::TestGameApp()
         : CEApp()
 {
@@ -23,6 +40,14 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     testObject = CurrentActiveScene()->AddObject("TestObject");
 
     testCamera = CurrentActiveScene()->mainCamera;
+
+    pipeline = presentedRenderingBackend->CreateRenderingPipeline();
+
+    pipeline->SetVertexShader("Shaders/VertexShader.hlsl");
+    pipeline->SetPixelShader("Shaders/shader.frag");
+    pipeline->LoadVertexData((void*)(&*vertices.begin()), sizeof(Vertex), vertices.size());
+    pipeline->LoadIndexData((uint16_t*)(&*indices.begin()), indices.size());
+    pipeline->CreateRenderingPipeline();
 
     LOG_INFO << "Scene Structure:";
     boost::container::list<Object*> allObjects = CurrentActiveScene()->GetAllObjects();
@@ -66,6 +91,8 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
 void TestGameApp::Shutdown()
 {
+    presentedRenderingBackend->DestroyRenderingPipeline(&pipeline);
+
     CEApp::Shutdown();
 }
 

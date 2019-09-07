@@ -6,6 +6,7 @@
 #define COSMOSENGINE_RENDERINGBACKEND_H
 
 #include "../Export.h"
+#include "RenderingPipeline.h"
 
 #define GLFW_INCLUDE_VULKAN
 
@@ -36,6 +37,10 @@ public:
 
     virtual boost::container::vector<char> loadShader(const boost::container::string& filename) = 0;
 
+    virtual RenderingPipeline* CreateRenderingPipeline() = 0;
+
+    virtual void DestroyRenderingPipeline(RenderingPipeline** pipeline) = 0;
+
 protected:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
@@ -48,6 +53,6 @@ protected:
     bool framebufferResized = false;
 };
 
-extern ENGINE_LOCAL RenderingBackend* presentedRenderingBackend;
+ENGINE_EXTERNAL_VAR RenderingBackend* presentedRenderingBackend;
 
 #endif //COSMOSENGINE_RENDERINGBACKEND_H

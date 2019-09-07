@@ -35,35 +35,12 @@ struct ENGINE_LOCAL SwapChainSupportDetails
     boost::container::vector<VkPresentModeKHR> presentModes;
 };
 
-struct Vertex
-{
-    glm::vec3 pos;
-    glm::vec3 color;
-};
-
-const std::vector<Vertex> vertices = {
-        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f,  0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f,  0.0f, 0.5f},  {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.0f, 0.5f},  {1.0f, 1.0f, 1.0f}}
-};
-
-const std::vector<uint16_t> indices = {
-        0, 2, 1, 2, 0, 3, 0, 1, 2, 2, 3, 0
-};
-
-struct UniformBufferObject
-{
-    glm::mat4x4 model;
-    glm::mat4x4 view;
-    glm::mat4x4 proj;
-};
-
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
 public:
     friend class ReflectionalSpirV;
+    friend class VulkanPipeline;
 
     VulkanBackend();
 
@@ -85,6 +62,10 @@ public:
     size_t GetCurrentFrame();
 
     uint32_t GetCurrentImageIndex();
+
+    RenderingPipeline* CreateRenderingPipeline() final;
+
+    void DestroyRenderingPipeline(RenderingPipeline** pipeline) final;
 
 private:
     void createInstance();
@@ -113,25 +94,15 @@ private:
 
     void createRenderPass();
 
-    void createGraphicsPipeline();
-
     void createFramebuffers();
 
     void createCommandPool();
-
-    void createCommandBuffers();
 
     void createSyncObjects();
 
     void recreateSwapChain();
 
     void cleanupSwapChain();
-
-    void createVertexBuffer();
-
-    void createIndexBuffer();
-
-    void createUniformBuffers();
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
@@ -165,15 +136,9 @@ private:
 
     VkRenderPass renderPass;
 
-    VkPipelineLayout pipelineLayout;
-
-    VkPipeline graphicsPipeline;
-
     boost::container::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkCommandPool commandPool;
-
-    boost::container::vector<VkCommandBuffer> commandBuffers;
 
     boost::container::vector<VkSemaphore> imageAvailableSemaphores;
 
@@ -185,20 +150,8 @@ private:
 
     uint32_t imageIndex = 0;
 
-    VkBuffer vertexBuffer;
-
-    VkDeviceMemory vertexBufferMemory;
-
-    VkBuffer indexBuffer;
-
-    VkDeviceMemory indexBufferMemory;
-
-    boost::container::vector<VkBuffer> uniformBuffers;
-
-    boost::container::vector<VkDeviceMemory> uniformBuffersMemory;
-
-    VertexSpirV* testVertexSpirV;
-    FragmentSpirV* testFragmentSpirV;
+    // TODO: change this into MeshRenderer
+    boost::container::vector<VulkanPipeline*> presentedPipelines;
 };
 
 

@@ -468,6 +468,8 @@ ReflectionalSpirV::ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalD
 
 ReflectionalSpirV::~ReflectionalSpirV()
 {
+	delete[] stageInfo.pName;
+	
 	if (hasDescriptors)
 	{
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -533,6 +535,8 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
         throw std::runtime_error("Failed to create shader module!");
     }
 
+	stageInfo.module = shaderModule;
+	
     LOG_INFO << "Created shader module.";
 
     return true;
@@ -733,8 +737,59 @@ bool ReflectionalSpirV::CreateShader()
     return true;
 }
 
+VkShaderStageFlagBits GetShaderStageFlag(spv::ExecutionModel executionModel)
+{
+	switch (executionModel)
+	{
+	case spv::ExecutionModelVertex:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	case spv::ExecutionModelTessellationControl:
+		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+	case spv::ExecutionModelTessellationEvaluation:
+		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+	case spv::ExecutionModelGeometry:
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case spv::ExecutionModelFragment:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case spv::ExecutionModelGLCompute:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+	case spv::ExecutionModelKernel:
+		return VK_SHADER_STAGE_ALL_GRAPHICS;
+	case spv::ExecutionModelTaskNV:
+		return VK_SHADER_STAGE_TASK_BIT_NV;
+	case spv::ExecutionModelMeshNV:
+		return VK_SHADER_STAGE_MESH_BIT_NV;
+	case spv::ExecutionModelRayGenerationNV:
+		return VK_SHADER_STAGE_RAYGEN_BIT_NV;
+	case spv::ExecutionModelIntersectionNV:
+		return VK_SHADER_STAGE_INTERSECTION_BIT_NV;
+	case spv::ExecutionModelAnyHitNV:
+		return VK_SHADER_STAGE_ANY_HIT_BIT_NV;
+	case spv::ExecutionModelClosestHitNV:
+		return VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV;
+	case spv::ExecutionModelMissNV:
+		return VK_SHADER_STAGE_MISS_BIT_NV;
+	case spv::ExecutionModelCallableNV:
+		return VK_SHADER_STAGE_CALLABLE_BIT_NV;
+	case spv::ExecutionModelMax:
+		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	}
+}
+
 void ReflectionalSpirV::createDescriptorSets()
 {
+    // Assuming only one entry point in the shader
+    auto stages = compiler->get_entry_points_and_stages();
+	VkShaderStageFlagBits shaderStageFlag = GetShaderStageFlag(stages[0].execution_model);
+    
+    stageInfo = {};
+
+    stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageInfo.stage = shaderStageFlag;
+	stageInfo.pName = new char[stages[0].name.size() + 1];
+	memcpy((void*)stageInfo.pName, stages[0].name.c_str(), stages[0].name.size() + 1);
+    
+    
 	if (shaderResources.uniform_buffers.empty()) return;
 	
 	hasDescriptors = true;
@@ -756,65 +811,12 @@ void ReflectionalSpirV::createDescriptorSets()
 		LOG_FATAL << "Failed to create descriptor pool!";
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
-	
-    // Assuming only one entry point in the shader
-    auto stages = compiler->get_entry_points_and_stages();
 
     VkDescriptorSetLayoutBinding uboLayoutBinding = {};
     uboLayoutBinding.binding = 0;
     uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBinding.descriptorCount = static_cast<uint32_t>(shaderResources.uniform_buffers.size());
-    switch (stages[0].execution_model)
-    {
-        case spv::ExecutionModelVertex:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            break;
-        case spv::ExecutionModelTessellationControl:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-            break;
-        case spv::ExecutionModelTessellationEvaluation:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-            break;
-        case spv::ExecutionModelGeometry:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
-            break;
-        case spv::ExecutionModelFragment:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            break;
-        case spv::ExecutionModelGLCompute:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            break;
-        case spv::ExecutionModelKernel:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-            break;
-        case spv::ExecutionModelTaskNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TASK_BIT_NV;
-            break;
-        case spv::ExecutionModelMeshNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_MESH_BIT_NV;
-            break;
-        case spv::ExecutionModelRayGenerationNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_NV;
-            break;
-        case spv::ExecutionModelIntersectionNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_INTERSECTION_BIT_NV;
-            break;
-        case spv::ExecutionModelAnyHitNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ANY_HIT_BIT_NV;
-            break;
-        case spv::ExecutionModelClosestHitNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV;
-            break;
-        case spv::ExecutionModelMissNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_MISS_BIT_NV;
-            break;
-        case spv::ExecutionModelCallableNV:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_CALLABLE_BIT_NV;
-            break;
-        case spv::ExecutionModelMax:
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
-            break;
-    }
+    uboLayoutBinding.stageFlags = shaderStageFlag;
     uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
@@ -866,6 +868,16 @@ void ReflectionalSpirV::createDescriptorSets()
 
         vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
     }
+}
+
+VkPipelineShaderStageCreateInfo& ReflectionalSpirV::GetStageInfo()
+{
+    return stageInfo;
+}
+
+VkDescriptorSetLayout& ReflectionalSpirV::GetDescriptorSetLayout()
+{
+    return descriptorSetLayout;
 }
 
 bool VertexSpirV::CreateShader()
@@ -924,6 +936,12 @@ bool VertexSpirV::CreateShader()
         // in this sample. A real application would probably derive this information from its
         // mesh format(s); a similar mechanism could be used to ensure mesh/shader compatibility.
 
+        inputInfo = {};
+        inputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        inputInfo.vertexBindingDescriptionCount = 1;
+        inputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        inputInfo.pVertexBindingDescriptions = &bindingDescription;
+        inputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         return true;
     }
@@ -943,6 +961,11 @@ VertexSpirV::VertexSpirV(VkDevice device, VkPhysicalDevice physicalDevice) : Ref
 VertexSpirV::~VertexSpirV()
 {
 
+}
+
+VkPipelineVertexInputStateCreateInfo& VertexSpirV::GetInputInfo()
+{
+    return inputInfo;
 }
 
 FragmentSpirV::FragmentSpirV(VkDevice device, VkPhysicalDevice physicalDevice) : ReflectionalSpirV(device,

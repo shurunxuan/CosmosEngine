@@ -3,6 +3,7 @@
 
 #include "CosmosEngine/App/App.h"
 #include "CosmosEngine/Core/Object.h"
+#include "CosmosEngine/Rendering/RenderingPipeline.h"
 
 class TestGameApp :
         public CEApp
@@ -18,6 +19,7 @@ public:
 
     void Update(float deltaTime, float totalTime) override;
 
+    RenderingPipeline* pipeline;
 };
 
 
