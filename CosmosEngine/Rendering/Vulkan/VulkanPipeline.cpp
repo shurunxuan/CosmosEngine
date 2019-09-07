@@ -283,4 +283,16 @@ void VulkanPipeline::LoadIndexData(uint16_t* indexData, size_t indexCount)
     vkFreeMemory(vulkanBackend->device, stagingBufferMemory, nullptr);
 }
 
+void VulkanPipeline::RecreatePipeline()
+{
+    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
+                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+    vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
+
+    vkDestroyPipelineLayout(vulkanBackend->device, pipelineLayout, nullptr);
+
+    CreateRenderingPipeline();
+}
+
 

@@ -774,6 +774,7 @@ VkShaderStageFlagBits GetShaderStageFlag(spv::ExecutionModel executionModel)
 	case spv::ExecutionModelMax:
 		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 	}
+    return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 }
 
 void ReflectionalSpirV::createDescriptorSets()

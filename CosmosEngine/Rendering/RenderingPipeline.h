@@ -17,6 +17,8 @@ public:
 
     virtual ~RenderingPipeline();
 
+    virtual void RecreatePipeline() = 0;
+
     virtual void SetVertexShader(const boost::container::string& vs) = 0;
 
     virtual void SetPixelShader(const boost::container::string& ps) = 0;

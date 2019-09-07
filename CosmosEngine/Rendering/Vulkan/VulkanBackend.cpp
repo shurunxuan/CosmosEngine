@@ -173,6 +173,11 @@ void VulkanBackend::recreateSwapChain()
     createFramebuffers();
     //createUniformBuffers();
     //createCommandBuffers();
+
+    for (auto pipeline : presentedPipelines)
+    {
+        pipeline->RecreatePipeline();
+    }
 }
 
 void VulkanBackend::cleanupSwapChain()

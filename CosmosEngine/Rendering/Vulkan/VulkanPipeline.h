@@ -17,6 +17,8 @@ public:
 
     ~VulkanPipeline() final;
 
+    void RecreatePipeline() final;
+
     void SetVertexShader(const boost::container::string& vs) final;
 
     void SetPixelShader(const boost::container::string& ps) final;
