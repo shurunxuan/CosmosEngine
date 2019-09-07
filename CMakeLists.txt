@@ -7,7 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(CMAKE_THIRD_PARTY_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/${CMAKE_BUILD_TYPE})
+set(CMAKE_THIRD_PARTY_SOURCE_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_compile_definitions(__SOLUTION_DIR__="${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -55,40 +55,58 @@ else ()
 endif ()
 
 file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
-        ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+        ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME}
+        ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/Build/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
 if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
     set(SHADER_CONDUCTOR_CLI_EXECUTABLE_FOUND TRUE)
     message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
-    if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-        execute_process(COMMAND "chmod +x ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
-    endif ()
 else ()
-    message("-- Downloading ShaderConductor Executables")
-
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        message("-- Downloading ShaderConductor Executables")
+
         if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
             set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-win-vc142-x64-Release")
         else ()
             set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-win-vc142-x86-Release")
         endif ()
-    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-        set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-osx-clang9-x64-Release")
-    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        set(SHADER_CONDUCTOR_ZIP_FILE "ShaderConductor-linux-gcc8-x64-Release")
-    endif ()
 
-    execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/download_dependencies.py 135 ${SHADER_CONDUCTOR_ZIP_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/Downloads ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY})
+        execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/download_dependencies.py 135 ${SHADER_CONDUCTOR_ZIP_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/Downloads ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY})
 
-    file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
-            ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
-    if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
-        message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
-        if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-            execute_process(COMMAND "chmod +x ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+        file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+                ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+        if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
+            message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+        else ()
+            message(FATAL_ERROR "-- Can't find/download ShaderConductor Executable")
         endif ()
-    else ()
-        message(FATAL_ERROR "-- Can't find/download ShaderConductor Executable")
+
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(SHADER_CONDUCTOR_COMPILER clang)
+        set(COMPILE_SHADER_CONDUCTOR YES)
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        set(SHADER_CONDUCTOR_COMPILER gcc)
+        set(COMPILE_SHADER_CONDUCTOR YES)
     endif ()
+
+    if (${COMPILE_SHADER_CONDUCTOR})
+        message("-- Compiling Shader Conductor from source")
+
+        execute_process(COMMAND git clone https://github.com/microsoft/ShaderConductor.git ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
+
+        execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/BuildAll.py ninja ${SHADER_CONDUCTOR_COMPILER} x64 Release
+                WORKING_DIRECTORY ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
+
+        file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+                ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/Build/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+        if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
+            message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+        else ()
+            message(FATAL_ERROR "-- Can't find/download ShaderConductor Executable")
+        endif ()
+
+    endif ()
+
+
 endif ()
 
 

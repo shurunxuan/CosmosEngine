@@ -7,7 +7,8 @@
 
 jobs:
   - job: Linux
-    pool: Default
+    pool:
+      vmImage: 'ubuntu-latest'
 
     steps:
       - bash: |

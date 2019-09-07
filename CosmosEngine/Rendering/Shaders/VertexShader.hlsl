@@ -19,9 +19,7 @@ cbuffer ubo : register(b0)
 struct VertexShaderInput
 {
 	float3 inPosition		: POSITION0;     // XYZ position
-	float pad0              : POSITION1;
 	float3 inColor		    : COLOR;
-	float pad1              : POSITION2;
 };
 
 struct VertexToPixel
