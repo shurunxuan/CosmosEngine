@@ -101,6 +101,7 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 VulkanBackend::VulkanBackend()
 {
     vulkanBackend = this;
+    presentedRenderingBackend = this;
 }
 
 VulkanBackend::~VulkanBackend()

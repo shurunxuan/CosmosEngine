@@ -48,5 +48,6 @@ protected:
     bool framebufferResized = false;
 };
 
+extern ENGINE_LOCAL RenderingBackend* presentedRenderingBackend;
 
 #endif //COSMOSENGINE_RENDERINGBACKEND_H

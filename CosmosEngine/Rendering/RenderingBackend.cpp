@@ -6,6 +6,8 @@
 #include "../Logging/Logging.h"
 #include "../App/App.h"
 
+RenderingBackend* presentedRenderingBackend = nullptr;
+
 RenderingBackend::RenderingBackend()
 {
     window = nullptr;
