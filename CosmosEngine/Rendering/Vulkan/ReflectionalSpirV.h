@@ -13,6 +13,8 @@
 class ReflectionalSpirV : virtual public ReflectionalShader
 {
 public:
+    friend class VulkanBackend;
+
     explicit ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalDevice);
 
     virtual ~ReflectionalSpirV();
@@ -39,7 +41,7 @@ protected:
     spirv_cross::CompilerGLSL* compiler = nullptr;
     spirv_cross::ShaderResources shaderResources;
     boost::container::vector<boost::container::vector<VkDeviceMemory>> constantBuffersMemory;
-
+    VkDescriptorSetLayout descriptorSetLayout;
     virtual bool CreateShader();
 
     void ReleaseConstantBuffer(size_t index) override;
@@ -48,6 +50,14 @@ protected:
                       VkDeviceMemory& bufferMemory);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    void createDescriptorSets();
+
+    boost::container::vector<VkDescriptorSet> descriptorSets;
+
+	VkDescriptorPool descriptorPool;
+
+	bool hasDescriptors;
 };
 
 class VertexSpirV : public ReflectionalSpirV

@@ -141,15 +141,12 @@ bool VulkanBackend::Init()
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createDescriptorSetLayout();
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
-    createDescriptorPool();
-    createDescriptorSets();
     createCommandBuffers();
     createSyncObjects();
 
@@ -186,8 +183,6 @@ void VulkanBackend::cleanupSwapChain()
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
     }
-
-    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
 void VulkanBackend::DeInit()
@@ -195,8 +190,6 @@ void VulkanBackend::DeInit()
     vkDeviceWaitIdle(device);
 
     cleanupSwapChain();
-
-    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
     vkDestroyBuffer(device, indexBuffer, nullptr);
     vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -1062,7 +1055,7 @@ void VulkanBackend::createGraphicsPipeline()
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutInfo.pSetLayouts = &testVertexSpirV->descriptorSetLayout;
     pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
     pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
@@ -1202,7 +1195,7 @@ void VulkanBackend::createCommandBuffers()
         vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
         vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                                &descriptorSets[i], 0, nullptr);
+                                &testVertexSpirV->descriptorSets[i], 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
@@ -1261,8 +1254,6 @@ void VulkanBackend::recreateSwapChain()
     createGraphicsPipeline();
     createFramebuffers();
     createUniformBuffers();
-    createDescriptorPool();
-    createDescriptorSets();
     createCommandBuffers();
 }
 
@@ -1409,28 +1400,6 @@ void VulkanBackend::createIndexBuffer()
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void VulkanBackend::createDescriptorSetLayout()
-{
-    VkDescriptorSetLayoutBinding uboLayoutBinding = {};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
-
-    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to create descriptor set layout!";
-        throw std::runtime_error("Failed to create descriptor set layout!");
-    }
-
-}
-
 void VulkanBackend::createUniformBuffers()
 {
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -1443,67 +1412,6 @@ void VulkanBackend::createUniformBuffers()
         createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i],
                      uniformBuffersMemory[i]);
-    }
-}
-
-void VulkanBackend::createDescriptorPool()
-{
-    VkDescriptorPoolSize poolSize = {};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-
-    VkDescriptorPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
-
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to create descriptor pool!";
-        throw std::runtime_error("Failed to create descriptor pool!");
-    }
-
-}
-
-void VulkanBackend::createDescriptorSets()
-{
-    boost::container::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
-    allocInfo.pSetLayouts = layouts.data();
-
-    descriptorSets.resize(swapChainImages.size());
-    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to allocate descriptor sets!";
-        throw std::runtime_error("Failed to allocate descriptor sets!");
-    }
-
-    for (size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        VkDescriptorBufferInfo bufferInfo = {};
-//        bufferInfo.buffer = uniformBuffers[i];
-        bufferInfo.buffer = reinterpret_cast<VkBuffer*>(testVertexSpirV->constantBuffers[0].ConstantBuffer)[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = testVertexSpirV->constantBuffers[0].Size;
-
-        VkWriteDescriptorSet descriptorWrite = {};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-
-        descriptorWrite.pBufferInfo = &bufferInfo;
-        descriptorWrite.pImageInfo = nullptr; // Optional
-        descriptorWrite.pTexelBufferView = nullptr; // Optional
-
-        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
     }
 }
 

@@ -463,10 +463,16 @@ ReflectionalSpirV::ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalD
     this->device = device;
     this->physicalDevice = physicalDevice;
     shaderModule = nullptr;
+	hasDescriptors = false;
 }
 
 ReflectionalSpirV::~ReflectionalSpirV()
 {
+	if (hasDescriptors)
+	{
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+	}
     if (shaderModule)
     {
         vkDestroyShaderModule(device, shaderModule, nullptr);
@@ -722,7 +728,144 @@ bool ReflectionalSpirV::CreateShader()
 
         ++b;
     }
+
+	createDescriptorSets();
     return true;
+}
+
+void ReflectionalSpirV::createDescriptorSets()
+{
+	if (shaderResources.uniform_buffers.empty()) return;
+	
+	hasDescriptors = true;
+	
+	size_t swapChainImageCount = vulkanBackend->GetSwapChainImageCount();
+
+	VkDescriptorPoolSize poolSize = {};
+	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>(swapChainImageCount);
+
+	VkDescriptorPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = static_cast<uint32_t>(swapChainImageCount);
+
+	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+	{
+		LOG_FATAL << "Failed to create descriptor pool!";
+		throw std::runtime_error("Failed to create descriptor pool!");
+	}
+	
+    // Assuming only one entry point in the shader
+    auto stages = compiler->get_entry_points_and_stages();
+
+    VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.descriptorCount = static_cast<uint32_t>(shaderResources.uniform_buffers.size());
+    switch (stages[0].execution_model)
+    {
+        case spv::ExecutionModelVertex:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            break;
+        case spv::ExecutionModelTessellationControl:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            break;
+        case spv::ExecutionModelTessellationEvaluation:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            break;
+        case spv::ExecutionModelGeometry:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+            break;
+        case spv::ExecutionModelFragment:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            break;
+        case spv::ExecutionModelGLCompute:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            break;
+        case spv::ExecutionModelKernel:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+            break;
+        case spv::ExecutionModelTaskNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TASK_BIT_NV;
+            break;
+        case spv::ExecutionModelMeshNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_MESH_BIT_NV;
+            break;
+        case spv::ExecutionModelRayGenerationNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_NV;
+            break;
+        case spv::ExecutionModelIntersectionNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_INTERSECTION_BIT_NV;
+            break;
+        case spv::ExecutionModelAnyHitNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ANY_HIT_BIT_NV;
+            break;
+        case spv::ExecutionModelClosestHitNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV;
+            break;
+        case spv::ExecutionModelMissNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_MISS_BIT_NV;
+            break;
+        case spv::ExecutionModelCallableNV:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_CALLABLE_BIT_NV;
+            break;
+        case spv::ExecutionModelMax:
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+            break;
+    }
+    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &uboLayoutBinding;
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to create descriptor set layout!";
+        throw std::runtime_error("Failed to create descriptor set layout!");
+    }
+
+    boost::container::vector<VkDescriptorSetLayout> layouts(swapChainImageCount, descriptorSetLayout);
+    VkDescriptorSetAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImageCount);
+    allocInfo.pSetLayouts = layouts.data();
+
+    descriptorSets.resize(swapChainImageCount);
+	VkResult res = vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data());
+    if (res != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to allocate descriptor sets!";
+        throw std::runtime_error("Failed to allocate descriptor sets!");
+    }
+
+    for (size_t i = 0; i < swapChainImageCount; i++)
+    {
+        VkDescriptorBufferInfo bufferInfo = {};
+//        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = reinterpret_cast<VkBuffer*>(constantBuffers[0].ConstantBuffer)[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = constantBuffers[0].Size;
+
+        VkWriteDescriptorSet descriptorWrite = {};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSets[i];
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+
+        descriptorWrite.pBufferInfo = &bufferInfo;
+        descriptorWrite.pImageInfo = nullptr; // Optional
+        descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+    }
 }
 
 bool VertexSpirV::CreateShader()
@@ -815,7 +958,13 @@ FragmentSpirV::~FragmentSpirV()
 
 bool FragmentSpirV::CreateShader()
 {
-    return ReflectionalSpirV::CreateShader();
+    bool uboResult = ReflectionalSpirV::CreateShader();
+    if (!uboResult) return false;
+
+    // Assuming only one entry point in the shader
+    auto stages = compiler->get_entry_points_and_stages();
+
+    return stages[0].execution_model == spv::ExecutionModelFragment;
 }
 
 void FragmentSpirV::SetShaderAndCBs()

@@ -63,6 +63,7 @@ class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
 public:
+    friend class ReflectionalSpirV;
 
     VulkanBackend();
 
@@ -112,8 +113,6 @@ private:
 
     void createRenderPass();
 
-    void createDescriptorSetLayout();
-
     void createGraphicsPipeline();
 
     void createFramebuffers();
@@ -134,11 +133,7 @@ private:
 
     void createUniformBuffers();
 
-    void createDescriptorPool();
-
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
-    void createDescriptorSets();
 
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
@@ -169,8 +164,6 @@ private:
     VkExtent2D swapChainExtent;
 
     VkRenderPass renderPass;
-
-    VkDescriptorSetLayout descriptorSetLayout;
 
     VkPipelineLayout pipelineLayout;
 
@@ -203,10 +196,6 @@ private:
     boost::container::vector<VkBuffer> uniformBuffers;
 
     boost::container::vector<VkDeviceMemory> uniformBuffersMemory;
-
-    VkDescriptorPool descriptorPool;
-
-    boost::container::vector<VkDescriptorSet> descriptorSets;
 
     VertexSpirV* testVertexSpirV;
     FragmentSpirV* testFragmentSpirV;
