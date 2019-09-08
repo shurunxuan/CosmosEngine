@@ -9,6 +9,7 @@
 
 #include "../RenderingBackend.h"
 #include "ReflectionalSpirV.h"
+#include "VulkanPipeline.h"
 
 #include <optional>
 #include <boost/container/vector.hpp>
