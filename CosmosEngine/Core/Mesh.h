@@ -5,6 +5,7 @@
 #ifndef GAMEENGINE_MESH_H
 #define GAMEENGINE_MESH_H
 
+#include <cstddef>
 #include <cstdint>
 #include "../Export.h"
 
