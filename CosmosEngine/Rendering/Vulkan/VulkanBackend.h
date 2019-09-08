@@ -35,6 +35,12 @@ struct ENGINE_LOCAL SwapChainSupportDetails
     boost::container::vector<VkPresentModeKHR> presentModes;
 };
 
+struct VulkanBufferWithMemory
+{
+    VkBuffer buffer;
+    VkDeviceMemory deviceMemory;
+};
+
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
@@ -63,9 +69,25 @@ public:
 
     uint32_t GetCurrentImageIndex();
 
-    RenderingPipeline* CreateRenderingPipeline() final;
+    RenderingPipeline* CreateRenderingPipeline(Mesh* mesh, Material* material) final;
 
     void DestroyRenderingPipeline(RenderingPipeline** pipeline) final;
+
+    ReflectionalShader* CreateVertexShader(const boost::container::string& filename) final;
+
+    void DestroyVertexShader(ReflectionalShader** shader) final;
+
+    ReflectionalShader* CreatePixelShader(const boost::container::string& filename) final;
+
+    void DestroyPixelShader(ReflectionalShader** shader) final;
+
+    void* CreateVertexBuffer(void* vertexData, size_t vertexSize, size_t vertexCount) final;
+
+    void DestroyVertexBuffer(void** vertexBuffer) final;
+
+    void* CreateIndexBuffer(uint16_t* indexData, size_t indexCount) final;
+
+    void DestroyIndexBuffer(void** indexBuffer) final;
 
 private:
     void createInstance();
@@ -149,9 +171,6 @@ private:
     size_t currentFrame = 0;
 
     uint32_t imageIndex = 0;
-
-    // TODO: change this into MeshRenderer
-    boost::container::vector<VulkanPipeline*> presentedPipelines;
 };
 
 

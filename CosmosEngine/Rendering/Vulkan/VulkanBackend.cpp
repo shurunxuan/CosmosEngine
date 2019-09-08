@@ -146,7 +146,7 @@ bool VulkanBackend::Init()
     createFramebuffers();
     createCommandPool();
     //createUniformBuffers();
-    //createCommandBuffers();
+    //createStartEndRenderCommandBuffer();
     createSyncObjects();
 
     return true;
@@ -172,10 +172,18 @@ void VulkanBackend::recreateSwapChain()
     //createGraphicsPipeline();
     createFramebuffers();
     //createUniformBuffers();
-    //createCommandBuffers();
+    //createStartEndRenderCommandBuffer();
 
-    for (auto pipeline : presentedPipelines)
+    boost::container::list<MeshRenderer*> presentedMeshRenderers;
+    auto allObjects = App->CurrentActiveScene()->GetAllObjects();
+    for (auto object : allObjects)
     {
+        presentedMeshRenderers.merge(object->GetComponents<MeshRenderer>());
+    }
+
+    for (auto meshRenderer : presentedMeshRenderers)
+    {
+        auto pipeline = static_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
         pipeline->RecreatePipeline();
     }
 }
@@ -249,15 +257,24 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
+
+    boost::container::list<MeshRenderer*> presentedMeshRenderers;
+    auto allObjects = App->CurrentActiveScene()->GetAllObjects();
+    for (auto object : allObjects)
+    {
+        presentedMeshRenderers.merge(object->GetComponents<MeshRenderer>());
+    }
+
     boost::container::vector<VkCommandBuffer> frameCommandBuffers;
-    frameCommandBuffers.reserve(presentedPipelines.size());
+    frameCommandBuffers.reserve(presentedMeshRenderers.size() + 2);
+
 
     // Update uniform buffer
-    for (auto pipeline : presentedPipelines)
+    for (auto meshRenderer : presentedMeshRenderers)
     {
-        Camera* mainCamera = App->testCamera;
+        Camera* mainCamera = App->CurrentActiveScene()->mainCamera;
 
-        auto model = App->testObject->transform->GetGlobalWorldMatrix();
+        auto model = meshRenderer->object->transform->GetGlobalWorldMatrix();
         auto view = glm::lookAt(mainCamera->transform->GetGlobalTranslation(),
                                 mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
                                 mainCamera->transform->Up());
@@ -265,14 +282,66 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         proj[0][0] *= -1;
         proj[1][1] *= -1;
 
-        pipeline->vertexSpirV->SetMatrix4x4("model", model);
-        pipeline->vertexSpirV->SetMatrix4x4("view", view);
-        pipeline->vertexSpirV->SetMatrix4x4("proj", proj);
+        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("model", model);
+        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("view", view);
+        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("proj", proj);
 
-        pipeline->vertexSpirV->CopyAllBufferData();
+        meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
+
+        auto pipeline = static_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
 
         frameCommandBuffers.push_back(pipeline->commandBuffers[imageIndex]);
     }
+
+    // Record new command buffer
+    VkCommandBuffer cBuffer;
+
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    if (vkAllocateCommandBuffers(device, &allocInfo, &cBuffer) != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to allocate command buffers!";
+        throw std::runtime_error("Failed to allocate command buffers!");
+    }
+
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = nullptr; // Optional
+
+    if (vkBeginCommandBuffer(cBuffer, &beginInfo) != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to begin recording primary command buffer " << imageIndex;
+        throw std::runtime_error("Failed to begin recording primary command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = swapChainExtent;
+    VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(cBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+    vkCmdExecuteCommands(cBuffer, frameCommandBuffers.size(), frameCommandBuffers.data());
+
+    vkCmdEndRenderPass(cBuffer);
+
+    if (vkEndCommandBuffer(cBuffer) != VK_SUCCESS)
+    {
+        LOG_FATAL << "Failed to record start command buffer!";
+        throw std::runtime_error("Failed to record start command buffer!");
+    }
+
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -283,8 +352,8 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
 
-    submitInfo.commandBufferCount = static_cast<uint32_t>(frameCommandBuffers.size());
-    submitInfo.pCommandBuffers = frameCommandBuffers.data();
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cBuffer;
 
     VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
@@ -325,6 +394,8 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     vkQueueWaitIdle(presentQueue);
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+    vkFreeCommandBuffers(device, commandPool, 1, &cBuffer);
 }
 
 std::vector<const char*> getRequiredExtensions()
@@ -887,7 +958,8 @@ void VulkanBackend::createImageViews()
 boost::container::vector<char> VulkanBackend::loadShader(const boost::container::string& filename)
 {
     boost::container::string realShaderFileName = filename + ".spv";
-    boost::filesystem::ifstream file(boost::filesystem::path(realShaderFileName.c_str()), std::ios::ate | std::ios::binary);
+    boost::filesystem::ifstream file(boost::filesystem::path(realShaderFileName.c_str()),
+                                     std::ios::ate | std::ios::binary);
 
     if (!file.is_open())
     {
@@ -1151,21 +1223,122 @@ uint32_t VulkanBackend::GetCurrentImageIndex()
     return imageIndex;
 }
 
-RenderingPipeline* VulkanBackend::CreateRenderingPipeline()
+RenderingPipeline* VulkanBackend::CreateRenderingPipeline(Mesh* mesh, Material* material)
 {
-    VulkanPipeline* newPipeline = new VulkanPipeline();
-    presentedPipelines.push_back(newPipeline);
+    auto* newPipeline = new VulkanPipeline(mesh, material);
+    newPipeline->CreateRenderingPipeline();
     return reinterpret_cast<RenderingPipeline*>(newPipeline);
 }
 
 void VulkanBackend::DestroyRenderingPipeline(RenderingPipeline** pipeline)
 {
     auto* oldPipeline = dynamic_cast<VulkanPipeline*>(*pipeline);
-    auto findResult = std::find(presentedPipelines.begin(), presentedPipelines.end(), oldPipeline);
-    if (findResult != presentedPipelines.end())
-    {
-        presentedPipelines.erase(findResult);
-    }
     delete oldPipeline;
     *pipeline = nullptr;
+}
+
+ReflectionalShader* VulkanBackend::CreateVertexShader(const boost::container::string& filename)
+{
+    auto vertexSpirV = new VertexSpirV(vulkanBackend->device, vulkanBackend->physicalDevice);
+    vertexSpirV->LoadShaderFile(filename);
+    return vertexSpirV;
+}
+
+void VulkanBackend::DestroyVertexShader(ReflectionalShader** shader)
+{
+    auto vertexSpirV = dynamic_cast<VertexSpirV*>(*shader);
+    delete vertexSpirV;
+    *shader = nullptr;
+}
+
+ReflectionalShader* VulkanBackend::CreatePixelShader(const boost::container::string& filename)
+{
+    auto fragmentSpirV = new FragmentSpirV(vulkanBackend->device, vulkanBackend->physicalDevice);
+    fragmentSpirV->LoadShaderFile(filename);
+    return fragmentSpirV;
+}
+
+void VulkanBackend::DestroyPixelShader(ReflectionalShader** shader)
+{
+    auto fragmentSpirV = dynamic_cast<FragmentSpirV*>(*shader);
+    delete fragmentSpirV;
+    *shader = nullptr;
+}
+
+void* VulkanBackend::CreateVertexBuffer(void* vertexData, size_t vertexSize, size_t vertexCount)
+{
+    VulkanBufferWithMemory* buffer = new VulkanBufferWithMemory();
+
+    VkDeviceSize bufferSize = vertexSize * vertexCount;
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+                 stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, vertexData, (size_t) bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->buffer, buffer->deviceMemory);
+
+    copyBuffer(stagingBuffer, buffer->buffer, bufferSize);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    return buffer;
+}
+
+void VulkanBackend::DestroyVertexBuffer(void** vertexBuffer)
+{
+    VulkanBufferWithMemory* buffer = reinterpret_cast<VulkanBufferWithMemory*>(*vertexBuffer);
+
+    vkDestroyBuffer(device, buffer->buffer, nullptr);
+    vkFreeMemory(device, buffer->deviceMemory, nullptr);
+
+    delete buffer;
+    *vertexBuffer = nullptr;
+}
+
+void* VulkanBackend::CreateIndexBuffer(uint16_t* indexData, size_t indexCount)
+{
+    VulkanBufferWithMemory* buffer = new VulkanBufferWithMemory();
+
+    VkDeviceSize bufferSize = sizeof(uint16_t) * indexCount;
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+                 stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, indexData, (size_t) bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->buffer, buffer->deviceMemory);
+
+    copyBuffer(stagingBuffer, buffer->buffer, bufferSize);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    return buffer;
+}
+
+void VulkanBackend::DestroyIndexBuffer(void** indexBuffer)
+{
+    auto* buffer = reinterpret_cast<VulkanBufferWithMemory*>(*indexBuffer);
+
+    vkDestroyBuffer(device, buffer->buffer, nullptr);
+    vkFreeMemory(device, buffer->deviceMemory, nullptr);
+
+    delete buffer;
+    *indexBuffer = nullptr;
 }

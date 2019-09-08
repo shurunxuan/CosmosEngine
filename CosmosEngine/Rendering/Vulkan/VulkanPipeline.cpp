@@ -7,47 +7,26 @@
 #include "VulkanBackend.h"
 #include "../../Logging/Logging.h"
 
-VulkanPipeline::VulkanPipeline()
-        : RenderingPipeline()
+VulkanPipeline::VulkanPipeline(Mesh* mesh, Material* material)
+        : RenderingPipeline(mesh, material)
 {
-    vertexSpirV = nullptr;
-    fragmentSpirV = nullptr;
 	graphicsPipeline = VK_NULL_HANDLE;
 }
 
 VulkanPipeline::~VulkanPipeline()
 {
-    vkDestroyBuffer(vulkanBackend->device, indexBuffer, nullptr);
-    vkFreeMemory(vulkanBackend->device, indexBufferMemory, nullptr);
-
-    vkDestroyBuffer(vulkanBackend->device, vertexBuffer, nullptr);
-    vkFreeMemory(vulkanBackend->device, vertexBufferMemory, nullptr);
-
     vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
     vkDestroyPipelineLayout(vulkanBackend->device, pipelineLayout, nullptr);
-
-    delete vertexSpirV;
-
-    delete fragmentSpirV;
-}
-
-void VulkanPipeline::SetVertexShader(const boost::container::string& vs)
-{
-    vertexSpirV = new VertexSpirV(vulkanBackend->device, vulkanBackend->physicalDevice);
-    vertexSpirV->LoadShaderFile(vs);
-}
-
-void VulkanPipeline::SetPixelShader(const boost::container::string& ps)
-{
-    fragmentSpirV = new FragmentSpirV(vulkanBackend->device, vulkanBackend->physicalDevice);
-    fragmentSpirV->LoadShaderFile(ps);
 }
 
 void VulkanPipeline::CreateRenderingPipeline()
 {
+    VertexSpirV* vertexSpirV = dynamic_cast<VertexSpirV*>(material->GetVertexShader());
+    FragmentSpirV* fragmentSpirV = dynamic_cast<FragmentSpirV*>(material->GetPixelShader());
+
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -159,22 +138,17 @@ void VulkanPipeline::CreateRenderingPipeline()
 
     LOG_INFO << "Created graphics pipeline.";
 
-    createCommandBuffers();
-}
+    // Create and Record Command Buffers
 
-VkPipeline& VulkanPipeline::GetPipeline()
-{
-    return graphicsPipeline;
-}
+    VulkanBufferWithMemory* vBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetVertexBuffer());
+    VulkanBufferWithMemory* iBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetIndexBuffer());
 
-void VulkanPipeline::createCommandBuffers()
-{
     commandBuffers.resize(vulkanBackend->swapChainFramebuffers.size());
 
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = vulkanBackend->commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
     allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
 
     if (vkAllocateCommandBuffers(vulkanBackend->device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
@@ -187,10 +161,14 @@ void VulkanPipeline::createCommandBuffers()
 
     for (size_t i = 0; i < commandBuffers.size(); i++)
     {
+        VkCommandBufferInheritanceInfo inheritanceInfo = {};
+        inheritanceInfo.renderPass = vulkanBackend->renderPass;
+        inheritanceInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
+
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr; // Optional
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+        beginInfo.pInheritanceInfo = &inheritanceInfo; // Optional
 
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
         {
@@ -200,32 +178,32 @@ void VulkanPipeline::createCommandBuffers()
 
         LOG_INFO << "Recording command buffer " << i << " started.";
 
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = vulkanBackend->renderPass;
-        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
-        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+//        VkRenderPassBeginInfo renderPassInfo = {};
+//        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+//        renderPassInfo.renderPass = vulkanBackend->renderPass;
+//        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
+//        renderPassInfo.renderArea.offset = {0, 0};
+//        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
+//        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+//        renderPassInfo.clearValueCount = 1;
+//        renderPassInfo.pClearValues = &clearColor;
+//
+//        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkBuffer vertexBuffers[] = {vBuffer->buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(commandBuffers[i], iBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
 
         vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                                 &vertexSpirV->descriptorSets[i], 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesCount), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffers[i], mesh->GetIndexCount(), 1, 0, 0, 0);
 
-        vkCmdEndRenderPass(commandBuffers[i]);
+//        vkCmdEndRenderPass(commandBuffers[i]);
 
         if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
         {
@@ -235,52 +213,9 @@ void VulkanPipeline::createCommandBuffers()
     }
 }
 
-void VulkanPipeline::LoadVertexData(void* vertexData, size_t vertexSize, size_t vertexCount)
+VkPipeline& VulkanPipeline::GetPipeline()
 {
-    VkDeviceSize bufferSize = vertexSize * vertexCount;
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    vulkanBackend->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-                 stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(vulkanBackend->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertexData, (size_t) bufferSize);
-    vkUnmapMemory(vulkanBackend->device, stagingBufferMemory);
-
-    vulkanBackend->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-    vulkanBackend->copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-    vkDestroyBuffer(vulkanBackend->device, stagingBuffer, nullptr);
-    vkFreeMemory(vulkanBackend->device, stagingBufferMemory, nullptr);
-}
-
-void VulkanPipeline::LoadIndexData(uint16_t* indexData, size_t indexCount)
-{
-    VkDeviceSize bufferSize = sizeof(uint16_t) * indexCount;
-    indicesCount = static_cast<uint32_t>(indexCount);
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    vulkanBackend->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-                 stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(vulkanBackend->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indexData, (size_t) bufferSize);
-    vkUnmapMemory(vulkanBackend->device, stagingBufferMemory);
-
-    vulkanBackend->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-    vulkanBackend->copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-    vkDestroyBuffer(vulkanBackend->device, stagingBuffer, nullptr);
-    vkFreeMemory(vulkanBackend->device, stagingBufferMemory, nullptr);
+    return graphicsPipeline;
 }
 
 void VulkanPipeline::RecreatePipeline()

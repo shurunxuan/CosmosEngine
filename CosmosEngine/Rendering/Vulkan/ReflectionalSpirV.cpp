@@ -462,7 +462,7 @@ ReflectionalSpirV::ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalD
 {
     this->device = device;
     this->physicalDevice = physicalDevice;
-    shaderModule = nullptr;
+    shaderModule = VK_NULL_HANDLE;
 	hasDescriptors = false;
 }
 

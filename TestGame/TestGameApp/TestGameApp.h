@@ -16,10 +16,6 @@ public:
     bool StartUp(unsigned int screenWidth, unsigned int screenHeight) override;
 
     void Shutdown() override;
-
-    void Update(float deltaTime, float totalTime) override;
-
-    RenderingPipeline* pipeline;
 };
 
 

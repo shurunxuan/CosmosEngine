@@ -24,7 +24,7 @@ void RenderingBackend::framebufferResizeCallback(GLFWwindow* window, int width, 
     backend->framebufferResized = true;
     backend->width = width;
     backend->height = height;
-    App->testCamera->Resize(float(width), float(height));
+    App->CurrentActiveScene()->mainCamera->Resize(float(width), float(height));
 }
 
 bool RenderingBackend::StartUp(unsigned int screenWidth, unsigned int screenHeight)

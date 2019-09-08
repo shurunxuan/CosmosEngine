@@ -7,7 +7,7 @@
 Scene::Scene()
 {
     mainCamera = new Camera(this);
-
+    LOG_INFO << "Scene created.";
 //    device = nullptr;
 //    context = nullptr;
 }
@@ -25,6 +25,8 @@ Scene::~Scene()
 //        delete light;
 //    }
 //    lights.clear();
+
+    LOG_INFO << "Scene destroyed.";
 }
 
 //void Scene::SetD3D11Device(ID3D11Device* d, ID3D11DeviceContext* c)
