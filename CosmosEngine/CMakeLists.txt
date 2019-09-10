@@ -8,6 +8,14 @@ find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
 find_package(assimp REQUIRED)
 
+link_directories(${ASSIMP_LIBRARY_DIRS})
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
+else()
+    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARIES})
+endif ()
+
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
@@ -25,7 +33,11 @@ set(SOURCE_FILES
         Core/Transform.cpp
         Core/Scene.cpp
         Core/Camera.cpp
-        Rendering/RenderingPipeline.cpp Core/MeshRenderer.cpp Core/Mesh.cpp Core/Material.cpp)
+        Rendering/RenderingPipeline.cpp
+        Core/MeshRenderer.cpp
+        Core/Mesh.cpp
+        Core/Material.cpp
+        )
 
 set(HEADER_FILES
         Export.h
@@ -40,7 +52,13 @@ set(HEADER_FILES
         Core/Transform.h
         Core/Scene.h
         Core/Camera.h
-        Rendering/RenderingPipeline.h Rendering/Vulkan/VulkanPipeline.h Rendering/Vulkan/VulkanPipeline.cpp Core/MeshRenderer.h Core/Mesh.h Core/Material.h)
+        Rendering/RenderingPipeline.h
+        Rendering/Vulkan/VulkanPipeline.h
+        Rendering/Vulkan/VulkanPipeline.cpp
+        Core/MeshRenderer.h
+        Core/Mesh.h
+        Core/Material.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -120,7 +138,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         glfw
         glm
         ${Boost_LIBRARIES}
-        ${ASSIMP_LIBRARY}
+        ${ASSIMP_LIBS_FIX}
         ${SPRIV_CROSS_LIBRARIES}
         )
 

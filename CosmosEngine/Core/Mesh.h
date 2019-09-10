@@ -7,7 +7,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include "../Export.h"
+
+struct ENGINE_API DefaultVertex
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 uv;
+    glm::vec3 tangent;
+};
 
 class ENGINE_API Mesh
 {

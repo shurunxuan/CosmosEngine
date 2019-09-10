@@ -109,7 +109,7 @@ public:
      * @param filename The filename of the model
      * @return Object* The pointer of the parent object added to the scene from the model file
      */
-    //Object* LoadModelFile(const boost::container::string& filename);
+    Object* LoadModelFile(const boost::container::string& filename);
 
     /**
      * @brief Add a light to the scene
@@ -209,7 +209,7 @@ private:
      * @param parent The direct parent object of the model being added
      * @return Object* The pointer of the object added to the scene
      */
-    //Object* AddObjectWithNode(const boost::container::string& modelFileName, const aiScene* scene, aiNode* node, Object* parent);
+    Object* AddObjectWithNode(const boost::container::string& modelFileName, const aiScene* scene, aiNode* node, Object* parent);
 
     /**
      * @brief All objects
