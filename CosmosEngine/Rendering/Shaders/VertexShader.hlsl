@@ -18,8 +18,10 @@ cbuffer ubo : register(b0)
 // - Each variable must have a semantic, which defines its usage
 struct VertexShaderInput
 {
-	float3 inPosition		: POSITION0;     // XYZ position
-	float3 inColor		    : COLOR;
+	float3 position		: POSITION;     // XYZ position
+	float3 normal		: NORMAL;
+	float2 uv			: TEXCOORD;
+	float3 tangent		: TANGENT0;
 };
 
 struct VertexToPixel
@@ -38,10 +40,11 @@ VertexToPixel main(VertexShaderInput input)
 	//
 	// The result is essentially the position (XY) of the vertex on our 2D 
 	// screen and the distance (Z) from the camera (the "depth" of the pixel)
-	float4 worldPos = mul(float4(input.inPosition, 1.0f), model);
+	float4 worldPos = mul(float4(input.position, 1.0f), model);
 	float4 viewPos = mul(worldPos, view);
 	output.position = mul(viewPos, proj);
-	output.fragColor = input.inColor;
+	//float ndl = dot(input.normal, float3(-1.0, -1.0, 0.0));
+	output.fragColor = float3(1.0, 1.0, 0.0);// * ndl;
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
 	return output;

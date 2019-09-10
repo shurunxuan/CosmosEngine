@@ -112,7 +112,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     mesh->LoadIndexData((uint16_t*) (&*indices.begin()), indices.size());
 
     boost::shared_ptr<Material> material = boost::make_shared<Material>();
-    material->LoadVertexShader("Shaders/VertexShader.hlsl");
+    material->LoadVertexShader("Shaders/shader.vert");
     material->LoadPixelShader("Shaders/shader.frag");
 
     meshRenderer->SetMaterial(material);
@@ -123,59 +123,61 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     movement->movementType = 0;
 
 
-    boost::container::vector<Vertex> vertices_1 =
-            {
-                    {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}}
-            };
-
-    boost::container::vector<uint16_t> indices_1;
-
-    float radius = 0.5f;
-    int precision = 1000;
-
-    vertices_1.reserve(precision + 1);
-    indices_1.reserve(vertices_1.capacity() * 6);
-
-    for (int i = 0; i < precision; ++i)
-    {
-        indices_1.push_back(0);
-        indices_1.push_back(i % precision + 1);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(0);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(i % precision + 1);
-
-        float h = 360.0f / precision * i;
-        float s = 1.0f;
-        float v = 1.0f;
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 0.0f;
-        HSVtoRGB(r, g, b, h, s, v);
-
-        float theta = float(i) / precision * 3.14159265f * 2;
-
-        Vertex newVert;
-        newVert.color = {r, g, b};
-        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
-
-        vertices_1.push_back(newVert);
-    }
-
-
-    Object* testObject_1 = CurrentActiveScene()->AddObject("TestObject_1");
-    MeshRenderer* meshRenderer_1 = testObject_1->AddComponent<MeshRenderer>();
-
-    boost::shared_ptr<Mesh> mesh_1 = boost::make_shared<Mesh>();
-    mesh_1->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
-    mesh_1->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
-
-    boost::shared_ptr<Material> material_1 = boost::make_shared<Material>();
-    material_1->LoadVertexShader("Shaders/VertexShader.hlsl");
-    material_1->LoadPixelShader("Shaders/shader.frag");
-
-    meshRenderer_1->SetMaterial(material_1);
-    meshRenderer_1->SetMesh(mesh_1);
+//    boost::container::vector<DefaultVertex> vertices_1;
+//
+//    DefaultVertex orig = {};
+//
+//    boost::container::vector<uint16_t> indices_1;
+//
+//    float radius = 0.5f;
+//    int precision = 1000;
+//
+//    vertices_1.reserve(precision + 1);
+//    indices_1.reserve(vertices_1.capacity() * 6);
+//
+//    vertices_1.push_back(orig);
+//
+//    for (int i = 0; i < precision; ++i)
+//    {
+//        indices_1.push_back(0);
+//        indices_1.push_back(i % precision + 1);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(0);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(i % precision + 1);
+//
+//        float h = 360.0f / precision * i;
+//        float s = 1.0f;
+//        float v = 1.0f;
+//        float r = 0.0f;
+//        float g = 0.0f;
+//        float b = 0.0f;
+//        HSVtoRGB(r, g, b, h, s, v);
+//
+//        float theta = float(i) / precision * 3.14159265f * 2;
+//
+//        DefaultVertex newVert = {};
+//        newVert.position = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
+//
+//        vertices_1.push_back(newVert);
+//    }
+//
+//
+//    Object* testObject_1 = CurrentActiveScene()->AddObject("TestObject_1");
+//    MeshRenderer* meshRenderer_1 = testObject_1->AddComponent<MeshRenderer>();
+//
+//    boost::shared_ptr<Mesh> mesh_1 = boost::make_shared<Mesh>();
+//    mesh_1->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(DefaultVertex), vertices_1.size());
+//    mesh_1->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
+//
+//    boost::shared_ptr<Material> material_1 = boost::make_shared<Material>();
+//    material_1->LoadVertexShader("Shaders/VertexShader.hlsl");
+//    material_1->LoadPixelShader("Shaders/shader.frag");
+//
+//    meshRenderer_1->SetMaterial(material_1);
+//    meshRenderer_1->SetMesh(mesh_1);
+    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
+    testObject_1->transform->SetLocalScale(0.05f, 0.05f, 0.05f);
 
     ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
 

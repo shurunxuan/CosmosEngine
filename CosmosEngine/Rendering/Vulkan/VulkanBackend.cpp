@@ -332,7 +332,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 
     vkCmdBeginRenderPass(cBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-    vkCmdExecuteCommands(cBuffer, frameCommandBuffers.size(), frameCommandBuffers.data());
+    vkCmdExecuteCommands(cBuffer, static_cast<uint32_t>(frameCommandBuffers.size()), frameCommandBuffers.data());
 
     vkCmdEndRenderPass(cBuffer);
 

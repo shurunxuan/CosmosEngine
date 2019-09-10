@@ -212,7 +212,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         aiMesh* aMesh = scene->mMeshes[meshIndex];
 
         boost::container::vector<DefaultVertex> vertices;
-        boost::container::vector<int> indices;
+        boost::container::vector<uint16_t> indices;
 
         vertices.reserve(aMesh->mNumVertices);
         unsigned int indicesCount = 0;
@@ -238,7 +238,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 
         for (unsigned int c = 0; c < aMesh->mNumFaces; c++)
             for (unsigned int e = 0; e < aMesh->mFaces[c].mNumIndices; e++)
-                indices.push_back(int(aMesh->mFaces[c].mIndices[e]));
+                indices.push_back(uint16_t(aMesh->mFaces[c].mIndices[e]));
 
         // MeshRenderer
         auto * meshRendererComponent = newObj->AddComponent<MeshRenderer>();

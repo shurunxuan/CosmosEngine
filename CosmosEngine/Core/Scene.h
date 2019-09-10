@@ -201,7 +201,7 @@ public:
     //SimplePixelShader* defaultPS;
 private:
     /**
-     * @brief Recursively add objects to the scene from a node of the model file
+     * @brief Recursively add objects to the scene from a no/de of the model file
      *
      * @param modelFileName The file name of the model
      * @param scene The imported model file data structure
