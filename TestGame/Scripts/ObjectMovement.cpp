@@ -31,7 +31,7 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
     } else
     {
         auto quaternion = object->transform->GetLocalRotation();
-        quaternion = quaternion * glm::angleAxis(deltaTime * glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        quaternion = quaternion * glm::angleAxis(deltaTime * glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         object->transform->SetLocalRotation(quaternion);
 
         auto position = object->transform->GetLocalTranslation();
