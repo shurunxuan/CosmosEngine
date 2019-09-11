@@ -151,21 +151,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     ObjectMovement* movement = testObject->AddComponent<ObjectMovement>();
 
     movement->movementType = 0;
-//
-//
-//    Object* testObject_1 = CurrentActiveScene()->AddObject("TestObject_1");
-//    MeshRenderer* meshRenderer_1 = testObject_1->AddComponent<MeshRenderer>();
-//
-//    boost::shared_ptr<Mesh> mesh_1 = boost::make_shared<Mesh>();
-//    mesh_1->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(DefaultVertex), vertices_1.size());
-//    mesh_1->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
-//
-//    boost::shared_ptr<Material> material_1 = boost::make_shared<Material>();
-//    material_1->LoadVertexShader("Shaders/VertexShader.hlsl");
-//    material_1->LoadPixelShader("Shaders/shader.frag");
-//
-//    meshRenderer_1->SetMaterial(material_1);
-//    meshRenderer_1->SetMesh(mesh_1);
+
     Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
     testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
 

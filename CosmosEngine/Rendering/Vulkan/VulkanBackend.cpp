@@ -290,8 +290,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
                                 mainCamera->transform->GetGlobalTranslation() + mainCamera->transform->Forward(),
                                 mainCamera->transform->Up());
         auto proj = mainCamera->GetProjectionMatrix();
-        //model[3][0] *= -1;
-        //proj[0][0] *= -1;
+        proj[0][0] *= -1;
         proj[1][1] *= -1;
         proj[2][2] = 0.5f * (proj[2][2] - 1);
         proj[3][2] /= 2.0f;
