@@ -127,11 +127,30 @@ private:
 
     void cleanupSwapChain();
 
+    void createDepthResources();
+
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+            VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    VkFormat findSupportedFormat(const boost::container::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+
+    VkFormat findDepthFormat();
+
+    bool hasStencilComponent(VkFormat format);
+
+    VkCommandBuffer beginSingleTimeCommands();
+
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     VkInstance vulkanInstance{};
 
@@ -172,6 +191,10 @@ private:
     size_t currentFrame = 0;
 
     uint32_t imageIndex = 0;
+
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
 };
 
 

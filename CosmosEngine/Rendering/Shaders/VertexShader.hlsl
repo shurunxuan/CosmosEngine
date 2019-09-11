@@ -9,6 +9,7 @@ cbuffer ubo : register(b0)
 	matrix model;
 	matrix view;
 	matrix proj;
+	matrix itModel;
 };
 
 // Struct representing a single vertex worth of data
@@ -43,8 +44,10 @@ VertexToPixel main(VertexShaderInput input)
 	float4 worldPos = mul(float4(input.position, 1.0f), model);
 	float4 viewPos = mul(worldPos, view);
 	output.position = mul(viewPos, proj);
-	//float ndl = dot(input.normal, float3(-1.0, -1.0, 0.0));
-	output.fragColor = float3(1.0, 1.0, 0.0);// * ndl;
+	float3 transformedNormal = mul(float4(input.normal, 0.0), itModel).xyz;
+	transformedNormal = normalize(transformedNormal);
+	float ndl = dot(transformedNormal, float3(-1.0, -1.0, 0.0));
+	output.fragColor = float3(1.0, 1.0, 0.0)/*;//*/ * (ndl / 2 + 0.5);
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
 	return output;
