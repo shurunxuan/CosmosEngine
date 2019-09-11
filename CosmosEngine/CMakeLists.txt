@@ -77,6 +77,7 @@ set(SHADER_FILES
         Rendering/Shaders/shader.vert
         Rendering/Shaders/shader.frag
         Rendering/Shaders/VertexShader.hlsl
+        Rendering/Shaders/PixelShader.hlsl
         )
 
 set_source_files_properties(Rendering/Shaders/shader.vert
@@ -93,6 +94,11 @@ set_source_files_properties(Rendering/Shaders/VertexShader.hlsl
         PROPERTIES
         lang hlsl
         stage vs)
+
+set_source_files_properties(Rendering/Shaders/PixelShader.hlsl
+        PROPERTIES
+        lang hlsl
+        stage ps)
 
 foreach (SHADER_FILE ${SHADER_FILES})
     get_source_file_property(SHADER_LANG ${SHADER_FILE} lang)
