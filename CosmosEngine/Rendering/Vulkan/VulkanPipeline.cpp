@@ -109,11 +109,18 @@ void VulkanPipeline::CreateRenderingPipeline()
     colorBlending.blendConstants[3] = 0.0f; // Optional
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertexSpirV->GetStageInfo(), fragmentSpirV->GetStageInfo()};
+    boost::container::vector<VkDescriptorSetLayout> setLayouts;
+
+    if (vertexSpirV->hasDescriptors)
+        setLayouts.push_back(vertexSpirV->GetDescriptorSetLayout());
+
+    if (fragmentSpirV->hasDescriptors)
+        setLayouts.push_back(fragmentSpirV->GetDescriptorSetLayout());
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &vertexSpirV->GetDescriptorSetLayout();
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+    pipelineLayoutInfo.pSetLayouts = setLayouts.data();
     pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
     pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 

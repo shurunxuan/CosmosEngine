@@ -246,7 +246,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         // Material
         boost::shared_ptr<Material> defaultMaterial = boost::make_shared<Material>();
         defaultMaterial->LoadVertexShader("Shaders/VertexShader.hlsl");
-        defaultMaterial->LoadPixelShader("Shaders/Pixelshader.hlsl");
+        defaultMaterial->LoadPixelShader("Shaders/PixelShader.hlsl");
 
 //        // Load Textures
 //        aiMaterial * aMaterial = scene->mMaterials[aMesh->mMaterialIndex];

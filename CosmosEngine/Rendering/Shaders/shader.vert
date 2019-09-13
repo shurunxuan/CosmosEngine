@@ -1,11 +1,14 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
 } ubo;
+
+//layout(set = 1, binding = 1) uniform UniformBufferObject_1 {
+//    mat4 proj;
+//} ubo_1;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;

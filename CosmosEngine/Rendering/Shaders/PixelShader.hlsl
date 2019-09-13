@@ -5,6 +5,11 @@ struct VertexToPixel
 	float2 uv                   : TEXCOORD0;
 	float3 fragColor            : COLOR;
 };
+//
+// cbuffer colorData : register(b0)
+// {
+//     float3 color;
+// };
 
 float4 main(VertexToPixel input) : SV_TARGET0
 {
