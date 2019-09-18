@@ -18,3 +18,9 @@ add_dependencies(${PROJECT_NAME} CosmosEngine)
 target_include_directories(${PROJECT_NAME} PRIVATE ..)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CosmosEngine)
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD COMMAND
+            ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/." $<TARGET_FILE:${PROJECT_NAME}>)
+endif ()
