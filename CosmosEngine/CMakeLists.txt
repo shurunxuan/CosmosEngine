@@ -3,6 +3,9 @@ set(ENGINE_NAME ${PROJECT_NAME})
 
 project(${PROJECT_NAME})
 
+# Fix boost 1.71 find_package error
+set(Boost_NO_BOOST_CMAKE 1)
+
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
