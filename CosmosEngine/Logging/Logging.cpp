@@ -1,9 +1,6 @@
 //
 // Created by shuru on 7/13/2019.
 //
-
-#define BOOST_LOG_DYN_LINK
-
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>

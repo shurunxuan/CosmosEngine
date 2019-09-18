@@ -12,8 +12,12 @@ set(CMAKE_THIRD_PARTY_SOURCE_DIRECTORY ${CMAKE_BINARY_DIR})
 add_compile_definitions(__SOLUTION_DIR__="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-add_compile_definitions(BOOST_ALL_NO_LIB)
-add_compile_definitions(BOOST_ALL_DYN_LINK)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    add_compile_definitions(BOOST_ALL_NO_LIB)
+    add_compile_definitions(BOOST_ALL_DYN_LINK)
+else ()
+    add_compile_definitions(BOOST_LOG_DYN_LINK)
+endif ()
 
 # Find glslangValidator
 find_package(Vulkan REQUIRED)
@@ -54,9 +58,19 @@ else ()
     set(SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME ShaderConductorCmd)
 endif ()
 
-file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+set(SHADER_CONDUCTOR_DIR_HINTS
+        $ENV{PATH}
         ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME}
         ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/Build/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+
+if (NOT "$ENV{SHADERCONDUCTOR_ROOT}" STREQUAL "")
+    set(SHADER_CONDUCTOR_DIR_HINTS
+            ${SHADER_CONDUCTOR_DIR_HINTS}
+            $ENV{SHADERCONDUCTOR_ROOT}/Bin)
+endif ()
+
+file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+        ${SHADER_CONDUCTOR_DIR_HINTS})
 if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
     set(SHADER_CONDUCTOR_CLI_EXECUTABLE_FOUND TRUE)
     message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
@@ -64,36 +78,29 @@ else ()
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         set(SHADER_CONDUCTOR_BUILD_SYSTEM vs2017)
         set(SHADER_CONDUCTOR_COMPILER vc141)
-        set(COMPILE_SHADER_CONDUCTOR YES)
     elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
         set(SHADER_CONDUCTOR_BUILD_SYSTEM ninja)
         set(SHADER_CONDUCTOR_COMPILER clang)
-        set(COMPILE_SHADER_CONDUCTOR YES)
     elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         set(SHADER_CONDUCTOR_BUILD_SYSTEM ninja)
         set(SHADER_CONDUCTOR_COMPILER gcc)
-        set(COMPILE_SHADER_CONDUCTOR YES)
     endif ()
 
-    if (${COMPILE_SHADER_CONDUCTOR})
-        message("-- Compiling Shader Conductor from source")
+    message("-- Compiling Shader Conductor from source")
 
-        execute_process(COMMAND git clone https://github.com/microsoft/ShaderConductor.git ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
+    execute_process(COMMAND git clone https://github.com/microsoft/ShaderConductor.git ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
 
-        execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/BuildAll.py ${SHADER_CONDUCTOR_BUILD_SYSTEM} ${SHADER_CONDUCTOR_COMPILER} x64 Release
-                WORKING_DIRECTORY ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
+    execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/BuildAll.py ${SHADER_CONDUCTOR_BUILD_SYSTEM} ${SHADER_CONDUCTOR_COMPILER} x64 Release
+            WORKING_DIRECTORY ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor)
 
-        file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
-                ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME}
-                ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/Build/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
-        if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
-            message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
-        else ()
-            message(FATAL_ERROR "-- Can't find ShaderConductor Executable")
-        endif ()
-
+    file(GLOB_RECURSE SHADER_CONDUCTOR_CLI_EXECUTABLE
+            ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME}
+            ${CMAKE_THIRD_PARTY_SOURCE_DIRECTORY}/ShaderConductor/Build/*/Bin/${SHADER_CONDUCTOR_CLI_EXECUTABLE_NAME})
+    if (EXISTS ${SHADER_CONDUCTOR_CLI_EXECUTABLE})
+        message("-- ShaderConductor Executable Found: ${SHADER_CONDUCTOR_CLI_EXECUTABLE}")
+    else ()
+        message(FATAL_ERROR "-- Can't find ShaderConductor Executable")
     endif ()
-
 
 endif ()
 
