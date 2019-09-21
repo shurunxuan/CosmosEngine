@@ -41,7 +41,7 @@ jobs:
 
       - bash: |
           cd build
-          make
+          make -j4
         displayName: 'Build Project'
 
       - task: CopyFiles@2
@@ -95,7 +95,7 @@ jobs:
 
       - bash: |
           cd build
-          make
+          make -j4
         displayName: 'Build Project'
 
       - task: CopyFiles@2

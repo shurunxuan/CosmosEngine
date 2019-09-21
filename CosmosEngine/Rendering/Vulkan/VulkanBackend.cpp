@@ -303,8 +303,8 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 
         meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
 
-        glm::vec3 color = {1.0f, 1.0f, 1.0f};
-        meshRenderer->GetMaterial()->GetPixelShader()->SetFloat3("color", color);
+        glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+        meshRenderer->GetMaterial()->GetPixelShader()->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
         auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
