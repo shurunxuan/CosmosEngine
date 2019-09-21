@@ -10,12 +10,13 @@
 VulkanPipeline::VulkanPipeline(Mesh* mesh, Material* material)
         : RenderingPipeline(mesh, material)
 {
-	graphicsPipeline = VK_NULL_HANDLE;
+    graphicsPipeline = VK_NULL_HANDLE;
 }
 
 VulkanPipeline::~VulkanPipeline()
 {
-    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
+                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
@@ -109,14 +110,30 @@ void VulkanPipeline::CreateRenderingPipeline()
     colorBlending.blendConstants[3] = 0.0f; // Optional
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertexSpirV->GetStageInfo(), fragmentSpirV->GetStageInfo()};
-    boost::container::vector<VkDescriptorSetLayout> setLayouts;
+    setLayouts.clear();
+    descriptorSets.clear();
+    descriptorSets.resize(vulkanBackend->swapChainImages.size());
+    for (size_t i = 0; i < vulkanBackend->swapChainImages.size(); ++i)
+    {
+        if (vertexSpirV->hasDescriptors)
+        {
+            setLayouts.push_back(vertexSpirV->GetDescriptorSetLayout());
+            for (auto set : vertexSpirV->descriptorSets)
+            {
+                descriptorSets[i].push_back(set[i]);
+            }
+        }
 
-    if (vertexSpirV->hasDescriptors)
-        setLayouts.push_back(vertexSpirV->GetDescriptorSetLayout());
-
-    if (fragmentSpirV->hasDescriptors)
-        setLayouts.push_back(fragmentSpirV->GetDescriptorSetLayout());
-
+        if (fragmentSpirV->hasDescriptors)
+        {
+            setLayouts.push_back(fragmentSpirV->GetDescriptorSetLayout());
+            for (auto set : fragmentSpirV->descriptorSets)
+            {
+                descriptorSets[i].push_back(set[i]);
+            }
+        }
+    }
+    LOG_DEBUG << descriptorSets[0].size();
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
@@ -149,7 +166,8 @@ void VulkanPipeline::CreateRenderingPipeline()
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
-	auto result = vkCreateGraphicsPipelines(vulkanBackend->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+    auto result = vkCreateGraphicsPipelines(vulkanBackend->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+                                            &graphicsPipeline);
     if (result != VK_SUCCESS)
     {
         LOG_FATAL << "Failed to create graphics pipeline!";
@@ -218,8 +236,9 @@ void VulkanPipeline::CreateRenderingPipeline()
 
         vkCmdBindIndexBuffer(commandBuffers[i], iBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
 
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                                &vertexSpirV->descriptorSets[i], 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+                                static_cast<uint32_t>(descriptorSets[i].size()),
+                                descriptorSets[i].data(), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffers[i], mesh->GetIndexCount(), 1, 0, 0, 0);
 

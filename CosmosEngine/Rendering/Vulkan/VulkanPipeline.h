@@ -31,6 +31,9 @@ private:
 
     boost::container::vector<VkCommandBuffer> commandBuffers;
 
+    boost::container::vector<VkDescriptorSetLayout> setLayouts;
+    boost::container::vector<boost::container::vector<VkDescriptorSet>> descriptorSets;
+
 };
 
 #endif //GAMEENGINE_VULKANPIPELINE_H

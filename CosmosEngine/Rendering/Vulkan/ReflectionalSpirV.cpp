@@ -814,14 +814,16 @@ void ReflectionalSpirV::createDescriptorSets()
 
     size_t swapChainImageCount = vulkanBackend->GetSwapChainImageCount();
 
-    VkDescriptorPoolSize poolSize = {};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(swapChainImageCount);
+    // TODO: This assumes that we have only one descriptor!
+    boost::container::vector<VkDescriptorPoolSize> poolSize;
+    poolSize.resize(1);
+    poolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize[0].descriptorCount = static_cast<uint32_t>(swapChainImageCount);
 
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSize.size());
+    poolInfo.pPoolSizes = poolSize.data();
     poolInfo.maxSets = static_cast<uint32_t>(swapChainImageCount);
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
@@ -845,8 +847,8 @@ void ReflectionalSpirV::createDescriptorSets()
                                                                 spv::DecorationBinding);
         uboLayoutBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBindings[i].descriptorCount = 1;
-        //uboLayoutBindings[i].stageFlags = shaderStageFlag;
-        uboLayoutBindings[i].stageFlags = VK_SHADER_STAGE_ALL;
+        uboLayoutBindings[i].stageFlags = shaderStageFlag;
+        //uboLayoutBindings[i].stageFlags = VK_SHADER_STAGE_ALL;
         uboLayoutBindings[i].pImmutableSamplers = nullptr; // Optional
     }
 
@@ -854,7 +856,7 @@ void ReflectionalSpirV::createDescriptorSets()
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(uboLayoutBindings.size());
     layoutInfo.pBindings = uboLayoutBindings.data();
-
+    // TODO: This still assumes one shader one descriptor set!!!!!!!!
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
     {
         LOG_FATAL << "Failed to create descriptor set layout!";
@@ -868,12 +870,16 @@ void ReflectionalSpirV::createDescriptorSets()
     allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImageCount);
     allocInfo.pSetLayouts = layouts.data();
 
-    descriptorSets.resize(swapChainImageCount);
-    VkResult res = vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data());
-    if (res != VK_SUCCESS)
+    descriptorSets.resize(1);
+    for (auto& set : descriptorSets)
     {
-        LOG_FATAL << "Failed to allocate descriptor sets!";
-        throw std::runtime_error("Failed to allocate descriptor sets!");
+        set.resize(swapChainImageCount);
+        VkResult res = vkAllocateDescriptorSets(device, &allocInfo, set.data());
+        if (res != VK_SUCCESS)
+        {
+            LOG_FATAL << "Failed to allocate descriptor sets!";
+            throw std::runtime_error("Failed to allocate descriptor sets!");
+        }
     }
 
     for (size_t i = 0; i < swapChainImageCount; i++)
@@ -891,10 +897,11 @@ void ReflectionalSpirV::createDescriptorSets()
         boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
         descriptorWrite.resize(uboLayoutBindings.size());
 
+        // TODO: This still assumes that one shader one set!!!!!!
         for (size_t w = 0; w < descriptorWrite.size(); ++w)
         {
             descriptorWrite[w].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite[w].dstSet = descriptorSets[i];
+            descriptorWrite[w].dstSet = descriptorSets[0][i];
             descriptorWrite[w].dstBinding = uboLayoutBindings[w].binding;
             descriptorWrite[w].dstArrayElement = 0;
 

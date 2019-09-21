@@ -59,7 +59,7 @@ protected:
 
     void createDescriptorSets();
 
-    boost::container::vector<VkDescriptorSet> descriptorSets;
+    boost::container::vector<boost::container::vector<VkDescriptorSet>> descriptorSets;
 
 	VkDescriptorPool descriptorPool;
 
