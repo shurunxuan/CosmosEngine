@@ -36,7 +36,7 @@ jobs:
 
       - task: CMake@1
         inputs:
-          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DSHADERCONDUCTOR_PATH="/home/shurunxuan/ShaderConductor/Build/ninja-linux-gcc-x64-Release"
         displayName: 'CMake Generate'
 
       - bash: |
@@ -90,7 +90,7 @@ jobs:
 
       - task: CMake@1
         inputs:
-          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release
+          cmakeArgs: .. -DCMAKE_BUILD_TYPE=Release -DSHADERCONDUCTOR_PATH="/Users/shurunxuan/ShaderConductor/Build/ninja-osx-clang-x64-Release"
         displayName: 'CMake Generate'
 
       - bash: |
