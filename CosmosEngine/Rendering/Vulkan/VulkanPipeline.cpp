@@ -282,14 +282,6 @@ void VulkanPipeline::cleanup()
         descriptorSet.clear();
     descriptorSets.clear();
 
-    for (auto& descriptorPool : descriptorPools)
-        vkDestroyDescriptorPool(vulkanBackend->device, descriptorPool, nullptr);
-    descriptorPools.clear();
-
-    for (auto& setLayout : setLayouts)
-        vkDestroyDescriptorSetLayout(vulkanBackend->device, setLayout, nullptr);
-    setLayouts.clear();
-
     uniformBuffers.clear();
 
     vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
@@ -298,6 +290,14 @@ void VulkanPipeline::cleanup()
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
     vkDestroyPipelineLayout(vulkanBackend->device, pipelineLayout, nullptr);
+
+    for (auto& descriptorPool : descriptorPools)
+        vkDestroyDescriptorPool(vulkanBackend->device, descriptorPool, nullptr);
+    descriptorPools.clear();
+
+    for (auto& setLayout : setLayouts)
+        vkDestroyDescriptorSetLayout(vulkanBackend->device, setLayout, nullptr);
+    setLayouts.clear();
 }
 
 void VulkanPipeline::RecreatePipeline()

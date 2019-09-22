@@ -303,7 +303,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 
         meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
 
-        glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+        glm::vec4 color = {1.0f, 1.0f, 0.0f, 1.0f};
         meshRenderer->GetMaterial()->GetPixelShader()->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
