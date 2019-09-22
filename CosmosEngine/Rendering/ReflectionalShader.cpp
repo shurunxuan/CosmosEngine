@@ -16,6 +16,11 @@ ReflectionalShader::~ReflectionalShader()
     delete[] constantBuffers;
 }
 
+size_t ReflectionalShader::GetBufferCount()
+{
+    return constantBufferCount;
+}
+
 bool ReflectionalShader::SetData(const boost::container::string& name, const void* data, unsigned int size)
 {
     // Look for the variable and verify
@@ -147,11 +152,6 @@ void ReflectionalShader::SetShader()
     // Set the shader and any relevant constant buffers, which
     // is an overloaded method in a subclass
     SetShaderAndCBs();
-}
-
-size_t ReflectionalShader::GetBufferCount()
-{
-    return constantBufferCount;
 }
 
 unsigned int ReflectionalShader::GetBufferSize(unsigned int index)

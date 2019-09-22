@@ -15,18 +15,35 @@ VulkanPipeline::VulkanPipeline(Mesh* mesh, Material* material)
 
 VulkanPipeline::~VulkanPipeline()
 {
-    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
-                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    for (auto& shaderStage : shaderStages)
+    {
+        delete[] shaderStage.pName;
+    }
 
-    vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
-
-    vkDestroyPipelineLayout(vulkanBackend->device, pipelineLayout, nullptr);
+    cleanup();
 }
 
 void VulkanPipeline::CreateRenderingPipeline()
 {
     VertexSpirV* vertexSpirV = dynamic_cast<VertexSpirV*>(material->GetVertexShader());
     FragmentSpirV* fragmentSpirV = dynamic_cast<FragmentSpirV*>(material->GetPixelShader());
+
+    buildLayoutInfo(vertexSpirV);
+    buildLayoutInfo(fragmentSpirV);
+
+    createDescriptorSets();
+
+    boost::container::vector<boost::container::vector<VkDescriptorSet>> transposedDescriptorSets;
+    transposedDescriptorSets.resize(vulkanBackend->GetSwapChainImageCount());
+    transposedDescriptorSets[0].reserve(descriptorSets.size());
+    transposedDescriptorSets[1].reserve(descriptorSets.size());
+    transposedDescriptorSets[2].reserve(descriptorSets.size());
+    for (int i = 0; i < descriptorSets.size(); ++i)
+    {
+        transposedDescriptorSets[0].push_back(descriptorSets[i][0]);
+        transposedDescriptorSets[1].push_back(descriptorSets[i][1]);
+        transposedDescriptorSets[2].push_back(descriptorSets[i][2]);
+    }
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -109,31 +126,30 @@ void VulkanPipeline::CreateRenderingPipeline()
     colorBlending.blendConstants[2] = 0.0f; // Optional
     colorBlending.blendConstants[3] = 0.0f; // Optional
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexSpirV->GetStageInfo(), fragmentSpirV->GetStageInfo()};
-    setLayouts.clear();
-    descriptorSets.clear();
-    descriptorSets.resize(vulkanBackend->swapChainImages.size());
-    for (size_t i = 0; i < vulkanBackend->swapChainImages.size(); ++i)
-    {
-        if (vertexSpirV->hasDescriptors)
-        {
-            setLayouts.push_back(vertexSpirV->GetDescriptorSetLayout());
-            for (auto set : vertexSpirV->descriptorSets)
-            {
-                descriptorSets[i].push_back(set[i]);
-            }
-        }
+    //setLayouts.clear();
+    //descriptorSets.clear();
+    //descriptorSets.resize(vulkanBackend->swapChainImages.size());
+    //for (size_t i = 0; i < vulkanBackend->swapChainImages.size(); ++i)
+    //{
+    //    if (vertexSpirV->hasDescriptors)
+    //    {
+    //        //setLayouts.push_back(vertexSpirV->GetDescriptorSetLayout());
+    //        for (auto set : vertexSpirV->descriptorSets)
+    //        {
+    //            descriptorSets[i].push_back(set[i]);
+    //        }
+    //    }
 
-        if (fragmentSpirV->hasDescriptors)
-        {
-            setLayouts.push_back(fragmentSpirV->GetDescriptorSetLayout());
-            for (auto set : fragmentSpirV->descriptorSets)
-            {
-                descriptorSets[i].push_back(set[i]);
-            }
-        }
-    }
-    LOG_DEBUG << descriptorSets[0].size();
+    //    if (fragmentSpirV->hasDescriptors)
+    //    {
+    //        //setLayouts.push_back(fragmentSpirV->GetDescriptorSetLayout());
+    //        for (auto set : fragmentSpirV->descriptorSets)
+    //        {
+    //            descriptorSets[i].push_back(set[i]);
+    //        }
+    //    }
+    //}
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
@@ -151,8 +167,8 @@ void VulkanPipeline::CreateRenderingPipeline()
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+    pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexSpirV->GetInputInfo();
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
@@ -216,17 +232,17 @@ void VulkanPipeline::CreateRenderingPipeline()
 
         LOG_INFO << "Recording command buffer " << i << " started.";
 
-//        VkRenderPassBeginInfo renderPassInfo = {};
-//        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-//        renderPassInfo.renderPass = vulkanBackend->renderPass;
-//        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-//        renderPassInfo.renderArea.offset = {0, 0};
-//        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
-//        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-//        renderPassInfo.clearValueCount = 1;
-//        renderPassInfo.pClearValues = &clearColor;
-//
-//        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        //        VkRenderPassBeginInfo renderPassInfo = {};
+        //        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        //        renderPassInfo.renderPass = vulkanBackend->renderPass;
+        //        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
+        //        renderPassInfo.renderArea.offset = {0, 0};
+        //        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
+        //        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+        //        renderPassInfo.clearValueCount = 1;
+        //        renderPassInfo.pClearValues = &clearColor;
+        //
+        //        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
@@ -237,12 +253,12 @@ void VulkanPipeline::CreateRenderingPipeline()
         vkCmdBindIndexBuffer(commandBuffers[i], iBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
 
         vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-                                static_cast<uint32_t>(descriptorSets[i].size()),
-                                descriptorSets[i].data(), 0, nullptr);
+                                static_cast<uint32_t>(transposedDescriptorSets[i].size()),
+                                transposedDescriptorSets[i].data(), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffers[i], mesh->GetIndexCount(), 1, 0, 0, 0);
 
-//        vkCmdEndRenderPass(commandBuffers[i]);
+        //        vkCmdEndRenderPass(commandBuffers[i]);
 
         if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
         {
@@ -257,16 +273,193 @@ VkPipeline& VulkanPipeline::GetPipeline()
     return graphicsPipeline;
 }
 
-void VulkanPipeline::RecreatePipeline()
+void VulkanPipeline::cleanup()
 {
+    setBindingsLayoutMap.clear();
+    shaderStages.clear();
+
+    for (auto& descriptorSet : descriptorSets)
+        descriptorSet.clear();
+    descriptorSets.clear();
+
+    for (auto& descriptorPool : descriptorPools)
+        vkDestroyDescriptorPool(vulkanBackend->device, descriptorPool, nullptr);
+    descriptorPools.clear();
+
+    for (auto& setLayout : setLayouts)
+        vkDestroyDescriptorSetLayout(vulkanBackend->device, setLayout, nullptr);
+    setLayouts.clear();
+
+    uniformBuffers.clear();
+
     vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
                          static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
     vkDestroyPipelineLayout(vulkanBackend->device, pipelineLayout, nullptr);
+}
+
+void VulkanPipeline::RecreatePipeline()
+{
+    cleanup();
 
     CreateRenderingPipeline();
+}
+
+
+void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
+{
+    // Assuming only one entry point in the shader
+    auto stages = shader->compiler->get_entry_points_and_stages();
+    VkShaderStageFlagBits shaderStageFlag = GetShaderStageFlag(stages[0].execution_model);
+
+    VkPipelineShaderStageCreateInfo stageInfo = {};
+    stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageInfo.stage = shaderStageFlag;
+    stageInfo.pName = new char[stages[0].name.size() + 1];
+    stageInfo.module = shader->GetShaderModule();
+    memcpy((void*) stageInfo.pName, stages[0].name.c_str(), stages[0].name.size() + 1);
+
+    shaderStages.push_back(stageInfo);
+
+    if (shader->shaderResources.uniform_buffers.empty()) return;
+    // TODO: textures / samplers
+
+    for (auto& itr : shader->setBindingsLayoutMap)
+    {
+        auto findResult = setBindingsLayoutMap.find(itr.first);
+        if (findResult == setBindingsLayoutMap.end())
+        {
+            setBindingsLayoutMap.insert(std::make_pair(itr.first, itr.second));
+        } else
+        {
+            for (auto& b : itr.second)
+            {
+                findResult->second.push_back(b);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < shader->GetBufferCount(); ++i)
+    {
+        uniformBuffers.push_back(&(shader->constantBuffers[i]));
+    }
+
+}
+
+void VulkanPipeline::createDescriptorSets()
+{
+    uint32_t swapChainImageCount = static_cast<uint32_t>(vulkanBackend->GetSwapChainImageCount());
+
+
+    for (auto& itr : setBindingsLayoutMap)
+    {
+        boost::container::vector<VkDescriptorPoolSize> poolSize;
+        poolSize.resize(uniformBuffers.size());
+        for (size_t i = 0; i < poolSize.size(); ++i)
+        {
+            poolSize[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            poolSize[i].descriptorCount = swapChainImageCount;
+        }
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSize.size());
+        poolInfo.pPoolSizes = poolSize.data();
+        poolInfo.maxSets = swapChainImageCount;
+
+        VkDescriptorPool descriptorPool;
+
+        if (vkCreateDescriptorPool(vulkanBackend->device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        {
+            LOG_FATAL << "Failed to create descriptor pool!";
+            throw std::runtime_error("Failed to create descriptor pool!");
+        }
+
+        descriptorPools.push_back(descriptorPool);
+
+        VkDescriptorSetLayout descriptorSetLayout;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(itr.second.size());
+        layoutInfo.pBindings = itr.second.data();
+        // TODO: This still assumes one shader one descriptor set!!!!!!!!
+        if (vkCreateDescriptorSetLayout(vulkanBackend->device, &layoutInfo, nullptr, &descriptorSetLayout) !=
+            VK_SUCCESS)
+        {
+            LOG_FATAL << "Failed to create descriptor set layout!";
+            throw std::runtime_error("Failed to create descriptor set layout!");
+        }
+
+        setLayouts.push_back(descriptorSetLayout);
+
+        boost::container::vector<VkDescriptorSetLayout> layouts(swapChainImageCount, descriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = swapChainImageCount;
+        allocInfo.pSetLayouts = layouts.data();
+
+        //descriptorSets.resize(1);
+        boost::container::vector<VkDescriptorSet> set;
+
+        set.resize(swapChainImageCount);
+        if (vkAllocateDescriptorSets(vulkanBackend->device, &allocInfo, set.data()) != VK_SUCCESS)
+        {
+            LOG_FATAL << "Failed to allocate descriptor sets!";
+            throw std::runtime_error("Failed to allocate descriptor sets!");
+        }
+
+        descriptorSets.push_back(set);
+
+
+        for (size_t i = 0; i < swapChainImageCount; i++)
+        {
+            boost::container::vector<VkDescriptorBufferInfo> bufferInfo;
+
+            //        bufferInfo.buffer = uniformBuffers[i];
+            for (auto& uniformBuffer : uniformBuffers)
+            {
+                VkDescriptorBufferInfo info = {};
+                if (uniformBuffer->SetIndex != itr.first)
+                    continue;
+
+                info.buffer = reinterpret_cast<VkBuffer*>(uniformBuffer->ConstantBuffer)[i];
+                info.offset = 0;
+                info.range = uniformBuffer->Size;
+                bufferInfo.push_back(info);
+            }
+            // TODO: Samplers / Textures
+
+
+            // Notice for the above todo: this already takes other descriptors into consideration.
+            // but not the count (descriptorWrite.size())
+            boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
+            descriptorWrite.resize(itr.second.size());
+
+            for (size_t w = 0; w < descriptorWrite.size(); ++w)
+            {
+                descriptorWrite[w].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrite[w].dstSet = set[i];
+                descriptorWrite[w].dstBinding = itr.second[w].binding;
+                descriptorWrite[w].dstArrayElement = 0;
+
+                descriptorWrite[w].descriptorType = itr.second[w].descriptorType;
+                descriptorWrite[w].descriptorCount = itr.second[w].descriptorCount;
+
+                descriptorWrite[w].pBufferInfo = &bufferInfo[w];
+                descriptorWrite[w].pImageInfo = nullptr; // Optional
+                descriptorWrite[w].pTexelBufferView = nullptr; // Optional
+            }
+
+            vkUpdateDescriptorSets(vulkanBackend->device, static_cast<uint32_t>(descriptorWrite.size()),
+                                   descriptorWrite.data(), 0, nullptr);
+        }
+
+    }
+
 }
 
 

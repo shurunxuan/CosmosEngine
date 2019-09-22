@@ -6,7 +6,7 @@ struct VertexToPixel
 	float3 fragColor            : COLOR;
 };
 
-cbuffer colorData : register(b1, space1)
+cbuffer colorData : register(b1)
 {
     float4 color;
 };

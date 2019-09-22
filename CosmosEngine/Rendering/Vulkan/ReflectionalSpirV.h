@@ -10,6 +10,10 @@
 #include <vulkan/vulkan.h>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <boost/container/string.hpp>
+#include <boost/container/set.hpp>
+#include <boost/container/map.hpp>
+
+VkShaderStageFlagBits GetShaderStageFlag(spv::ExecutionModel executionModel);
 
 class ReflectionalSpirV : virtual public ReflectionalShader
 {
@@ -33,11 +37,9 @@ public:
     void CopyBufferData(const boost::container::string& bufferName) override;
 
     // Misc getters
+    size_t GetDescriptorCount();
+
     VkShaderModule GetShaderModule();
-
-    VkPipelineShaderStageCreateInfo& GetStageInfo();
-
-    VkDescriptorSetLayout& GetDescriptorSetLayout();
 
 protected:
     VkShaderModule shaderModule;
@@ -47,7 +49,7 @@ protected:
     spirv_cross::CompilerGLSL* compiler = nullptr;
     spirv_cross::ShaderResources shaderResources;
     boost::container::vector<boost::container::vector<VkDeviceMemory>> constantBuffersMemory;
-    VkDescriptorSetLayout descriptorSetLayout;
+
     virtual bool CreateShader();
 
     void ReleaseConstantBuffer(size_t index) override;
@@ -57,15 +59,9 @@ protected:
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-    void createDescriptorSets();
-
-    boost::container::vector<boost::container::vector<VkDescriptorSet>> descriptorSets;
-
-	VkDescriptorPool descriptorPool;
+    boost::container::map<uint32_t, boost::container::vector<VkDescriptorSetLayoutBinding>> setBindingsLayoutMap;
 
 	bool hasDescriptors;
-
-    VkPipelineShaderStageCreateInfo stageInfo;
 };
 
 class VertexSpirV : public ReflectionalSpirV
