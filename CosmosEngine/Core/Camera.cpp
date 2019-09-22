@@ -3,6 +3,7 @@
 //
 
 #include "Camera.h"
+#include "../Logging/Logging.h"
 
 Camera::Camera(Scene* owner, boost::container::string name)
         : Object(owner, name)

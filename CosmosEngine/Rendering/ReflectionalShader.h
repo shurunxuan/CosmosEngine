@@ -7,7 +7,7 @@
 
 #include "../Export.h"
 
-#include <Eigen/Dense>
+#include <glm/glm.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
@@ -36,7 +36,7 @@ struct ReflectionalConstantBuffer
     unsigned int BindIndex;
     unsigned int SetIndex; // Not relevant in HLSL
     unsigned int LocationIndex; // Not relevant in HLSL
-    void* ConstantBuffer; // void -> VkBuffer_T / ID3D11Buffer
+    void* ConstantBuffer; // void -> VkBuffer_T[3] / ID3D11Buffer
     unsigned char* LocalDataBuffer;
     boost::container::vector<ReflectionalShaderVariable> Variables;
 };
@@ -69,7 +69,7 @@ class ENGINE_API ReflectionalShader
 public:
     ReflectionalShader();
 
-    virtual ~ReflectionalShader() = 0;
+    virtual ~ReflectionalShader();
 
     // Initialization method (since we can't invoke derived class
     // overrides in the base class constructor)
@@ -96,19 +96,19 @@ public:
 
     bool SetFloat2(const boost::container::string& name, const float data[2]);
 
-    bool SetFloat2(const boost::container::string& name, const Eigen::Vector2f& data);
+    bool SetFloat2(const boost::container::string& name, const glm::vec2& data);
 
     bool SetFloat3(const boost::container::string& name, const float data[3]);
 
-    bool SetFloat3(const boost::container::string& name, const Eigen::Vector3f& data);
+    bool SetFloat3(const boost::container::string& name, const glm::vec3& data);
 
     bool SetFloat4(const boost::container::string& name, const float data[4]);
 
-    bool SetFloat4(const boost::container::string& name, const Eigen::Vector4f& data);
+    bool SetFloat4(const boost::container::string& name, const glm::vec4& data);
 
     bool SetMatrix4x4(const boost::container::string& name, const float data[16]);
 
-    bool SetMatrix4x4(const boost::container::string& name, const Eigen::Matrix4f& data);
+    bool SetMatrix4x4(const boost::container::string& name, const glm::mat4& data);
 
     // Setting shader resources
     // TODO: Declare this after class Texture is well defined
@@ -127,7 +127,7 @@ public:
     //size_t GetSamplerCount() { return samplerTable.size(); }
 
     // Get data about constant buffers
-    unsigned int GetBufferCount();
+    size_t GetBufferCount();
 
     unsigned int GetBufferSize(unsigned int index);
 
@@ -143,10 +143,10 @@ protected:
 //    ID3D11DeviceContext* deviceContext;
 
     // Resource counts
-    unsigned int constantBufferCount;
+    size_t constantBufferCount;
 
     // Maps for variables and buffers
-    ReflectionalConstantBuffer* constantBuffers; // For index-based lookup
+    ReflectionalConstantBuffer* constantBuffers = nullptr; // For index-based lookup
 //    boost::container::vector<ReflectionalSRV*>		shaderResourceViews;
 //    boost::container::vector<ReflectionalSampler*>	samplerStates;
     boost::unordered_map<boost::container::string, ReflectionalConstantBuffer*> cbTable;
@@ -164,7 +164,9 @@ protected:
     // Helpers for finding data by name
     ReflectionalShaderVariable* FindVariable(const boost::container::string& name, int size);
 
-    ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name);
+    ReflectionalConstantBuffer* FindConstantBuffer(const boost::container::string& name, size_t* index = nullptr);
+
+    bool transposeMatrix = false;
 };
 
 #endif //GAMEENGINE_REFLECTIONALSHADER_H

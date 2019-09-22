@@ -51,6 +51,7 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     renderingBackend->StartUp(screenWidth, screenHeight);
 
+    currentScene = new Scene();
     CurrentActiveScene()->mainCamera->Resize(float(screenWidth), float(screenHeight));
 
     startTime = boost::chrono::high_resolution_clock::now();
@@ -67,8 +68,7 @@ void CEApp::Loop()
     {
         lastTime = currentTime;
 
-        // TODO: This is actually Scene::Update, don't forget to remove it
-        App->Update(deltaTime.count(), totalTime.count());
+        App->CurrentActiveScene()->Update(deltaTime.count(), totalTime.count());
         renderingBackend->Update(deltaTime.count(), totalTime.count());
 
         currentTime = boost::chrono::high_resolution_clock::now();
@@ -79,12 +79,13 @@ void CEApp::Loop()
 
 void CEApp::Shutdown()
 {
+    delete currentScene;
     renderingBackend->Shutdown();
 }
 
 Scene* CEApp::CurrentActiveScene()
 {
-    return &currentScene;
+    return currentScene;
 }
 
 

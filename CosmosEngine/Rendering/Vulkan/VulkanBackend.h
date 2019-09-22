@@ -8,6 +8,8 @@
 #include "../../Export.h"
 
 #include "../RenderingBackend.h"
+#include "ReflectionalSpirV.h"
+#include "VulkanPipeline.h"
 
 #include <optional>
 #include <boost/container/vector.hpp>
@@ -34,62 +36,19 @@ struct ENGINE_LOCAL SwapChainSupportDetails
     boost::container::vector<VkPresentModeKHR> presentModes;
 };
 
-struct Vertex
+struct VulkanBufferWithMemory
 {
-    glm::vec3 pos;
-    glm::vec3 color;
-
-    static VkVertexInputBindingDescription getBindingDescription()
-    {
-        VkVertexInputBindingDescription bindingDescription = {};
-
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-
-    static boost::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
-    {
-        boost::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-        return attributeDescriptions;
-    }
-};
-
-const std::vector<Vertex> vertices = {
-        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f,  0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f,  0.0f, 0.5f},  {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.0f, 0.5f},  {1.0f, 1.0f, 1.0f}}
-};
-
-const std::vector<uint16_t> indices = {
-        0, 2, 1, 2, 0, 3, 0, 1, 2, 2, 3, 0
-};
-
-struct UniformBufferObject
-{
-    glm::mat4x4 model;
-    glm::mat4x4 view;
-    glm::mat4x4 proj;
+    VkBuffer buffer;
+    VkDeviceMemory deviceMemory;
 };
 
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
 public:
+    friend class ReflectionalSpirV;
+    friend class VulkanPipeline;
+
     VulkanBackend();
 
     ~VulkanBackend() final;
@@ -106,6 +65,30 @@ public:
                       VkDeviceMemory& bufferMemory);
 
     size_t GetSwapChainImageCount();
+
+    size_t GetCurrentFrame();
+
+    uint32_t GetCurrentImageIndex();
+
+    RenderingPipeline* CreateRenderingPipeline(Mesh* mesh, Material* material) final;
+
+    void DestroyRenderingPipeline(RenderingPipeline** pipeline) final;
+
+    ReflectionalShader* CreateVertexShader(const boost::container::string& filename) final;
+
+    void DestroyVertexShader(ReflectionalShader** shader) final;
+
+    ReflectionalShader* CreatePixelShader(const boost::container::string& filename) final;
+
+    void DestroyPixelShader(ReflectionalShader** shader) final;
+
+    void* CreateVertexBuffer(void* vertexData, size_t vertexSize, size_t vertexCount) final;
+
+    void DestroyVertexBuffer(void** vertexBuffer) final;
+
+    void* CreateIndexBuffer(uint16_t* indexData, size_t indexCount) final;
+
+    void DestroyIndexBuffer(void** indexBuffer) final;
 
 private:
     void createInstance();
@@ -134,15 +117,9 @@ private:
 
     void createRenderPass();
 
-    void createDescriptorSetLayout();
-
-    void createGraphicsPipeline();
-
     void createFramebuffers();
 
     void createCommandPool();
-
-    void createCommandBuffers();
 
     void createSyncObjects();
 
@@ -150,21 +127,30 @@ private:
 
     void cleanupSwapChain();
 
-    void createVertexBuffer();
-
-    void createIndexBuffer();
-
-    void createUniformBuffers();
-
-    void createDescriptorPool();
+    void createDepthResources();
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
-    void createDescriptorSets();
 
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+            VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    VkFormat findSupportedFormat(const boost::container::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+
+    VkFormat findDepthFormat();
+
+    bool hasStencilComponent(VkFormat format);
+
+    VkCommandBuffer beginSingleTimeCommands();
+
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     VkInstance vulkanInstance{};
 
@@ -192,17 +178,9 @@ private:
 
     VkRenderPass renderPass;
 
-    VkDescriptorSetLayout descriptorSetLayout;
-
-    VkPipelineLayout pipelineLayout;
-
-    VkPipeline graphicsPipeline;
-
     boost::container::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkCommandPool commandPool;
-
-    boost::container::vector<VkCommandBuffer> commandBuffers;
 
     boost::container::vector<VkSemaphore> imageAvailableSemaphores;
 
@@ -212,22 +190,13 @@ private:
 
     size_t currentFrame = 0;
 
-    VkBuffer vertexBuffer;
+    uint32_t imageIndex = 0;
 
-    VkDeviceMemory vertexBufferMemory;
-
-    VkBuffer indexBuffer;
-
-    VkDeviceMemory indexBufferMemory;
-
-    boost::container::vector<VkBuffer> uniformBuffers;
-
-    boost::container::vector<VkDeviceMemory> uniformBuffersMemory;
-
-    VkDescriptorPool descriptorPool;
-
-    boost::container::vector<VkDescriptorSet> descriptorSets;
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
 };
+
 
 extern ENGINE_LOCAL VulkanBackend* vulkanBackend;
 

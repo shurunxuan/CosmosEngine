@@ -47,12 +47,6 @@ public:
 
     virtual void Shutdown();
 
-    virtual void Update(float deltaTime, float totalTime) = 0;
-
-    Object* testObject;
-
-    Camera* testCamera;
-
     /**
      * @brief Get the current active scene
      *
@@ -73,7 +67,7 @@ private:
     /**
 	 * @brief Current active scene
 	 */
-    Scene currentScene;
+    Scene* currentScene;
 };
 
 ENGINE_EXTERNAL_VAR CEApp* App;

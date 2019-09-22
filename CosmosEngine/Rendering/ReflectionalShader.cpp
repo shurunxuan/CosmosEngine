@@ -11,11 +11,21 @@ ReflectionalShader::ReflectionalShader()
     constantBuffers = nullptr;
 }
 
+ReflectionalShader::~ReflectionalShader()
+{
+    delete[] constantBuffers;
+}
+
+size_t ReflectionalShader::GetBufferCount()
+{
+    return constantBufferCount;
+}
+
 bool ReflectionalShader::SetData(const boost::container::string& name, const void* data, unsigned int size)
 {
     // Look for the variable and verify
     ReflectionalShaderVariable* var = FindVariable(name, size);
-    if (var == 0)
+    if (var == nullptr)
         return false;
 
     // Set the data in the local data buffer
@@ -40,42 +50,55 @@ bool ReflectionalShader::SetFloat(const boost::container::string& name, float da
 
 bool ReflectionalShader::SetFloat2(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*) (&data), sizeof(float) * 2);
+    return SetData(name, (void*) (data), sizeof(float) * 2);
 }
 
-bool ReflectionalShader::SetFloat2(const boost::container::string& name, const Eigen::Vector2f& data)
+bool ReflectionalShader::SetFloat2(const boost::container::string& name, const glm::vec2& data)
 {
-    return SetData(name, (void*) (data.data()), sizeof(float) * 2);
+    return SetData(name, (void*) (&data), sizeof(float) * 2);
 }
 
 bool ReflectionalShader::SetFloat3(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*) (&data), sizeof(float) * 3);
+    return SetData(name, (void*) (data), sizeof(float) * 3);
 }
 
-bool ReflectionalShader::SetFloat3(const boost::container::string& name, const Eigen::Vector3f& data)
+bool ReflectionalShader::SetFloat3(const boost::container::string& name, const glm::vec3& data)
 {
-    return SetData(name, (void*) (data.data()), sizeof(float) * 3);
+    return SetData(name, (void*) (&data), sizeof(float) * 3);
 }
 
 bool ReflectionalShader::SetFloat4(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*) (&data), sizeof(float) * 4);
+    return SetData(name, (void*) (data), sizeof(float) * 4);
 }
 
-bool ReflectionalShader::SetFloat4(const boost::container::string& name, const Eigen::Vector4f& data)
+bool ReflectionalShader::SetFloat4(const boost::container::string& name, const glm::vec4& data)
 {
-    return SetData(name, (void*) (data.data()), sizeof(float) * 4);
+    return SetData(name, (void*) (&data), sizeof(float) * 4);
 }
 
 bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const float* data)
 {
-    return SetData(name, (void*) (&data), sizeof(float) * 16);
+    if (transposeMatrix)
+    {
+        glm::mat4 transposed(data[0], data[4], data[8], data[12],
+                             data[1], data[5], data[9], data[13],
+                             data[2], data[6], data[10], data[14],
+                             data[3], data[7], data[11], data[15]);
+        return SetData(name, (void*) (&transposed), sizeof(float) * 16);
+    }
+    return SetData(name, (void*) (data), sizeof(float) * 16);
 }
 
-bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const Eigen::Matrix4f& data)
+bool ReflectionalShader::SetMatrix4x4(const boost::container::string& name, const glm::mat4& data)
 {
-    return SetData(name, (void*) (data.data()), sizeof(float) * 16);
+    if (transposeMatrix)
+    {
+        glm::mat4 transposed = glm::transpose(data);
+        return SetData(name, (void*) (&transposed), sizeof(float) * 16);
+    }
+    return SetData(name, (void*) (&data), sizeof(float) * 16);
 }
 
 const ReflectionalShaderVariable* ReflectionalShader::GetVariableInfo(const boost::container::string& name)
@@ -104,11 +127,14 @@ ReflectionalShaderVariable* ReflectionalShader::FindVariable(const boost::contai
     return var;
 }
 
-ReflectionalConstantBuffer* ReflectionalShader::FindConstantBuffer(const boost::container::string& name)
+ReflectionalConstantBuffer* ReflectionalShader::FindConstantBuffer(const boost::container::string& name, size_t* index)
 {
     // Look for the key
     boost::unordered_map<boost::container::string, ReflectionalConstantBuffer*>::iterator result =
             cbTable.find(name);
+
+    if (index != nullptr)
+        *index = std::distance(cbTable.begin(), result);
 
     // Did we find the key?
     if (result == cbTable.end())
@@ -126,11 +152,6 @@ void ReflectionalShader::SetShader()
     // Set the shader and any relevant constant buffers, which
     // is an overloaded method in a subclass
     SetShaderAndCBs();
-}
-
-unsigned int ReflectionalShader::GetBufferCount()
-{
-    return constantBufferCount;
 }
 
 unsigned int ReflectionalShader::GetBufferSize(unsigned int index)

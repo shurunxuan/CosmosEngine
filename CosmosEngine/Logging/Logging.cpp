@@ -1,9 +1,6 @@
 //
 // Created by shuru on 7/13/2019.
 //
-
-#define BOOST_LOG_DYN_LINK
-
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
@@ -50,7 +47,7 @@ void MessageFormatter(logging::record_view const& rec, logging::formatting_ostre
         << logging::extract<int>("Line", rec) << ']';
     ss1 >> file;
 
-    stream << std::setw(55) << std::left << file;
+    stream << std::setw(63) << std::left << file;
 
     stream << rec[expr::smessage];
 }
