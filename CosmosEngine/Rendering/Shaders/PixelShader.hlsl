@@ -11,8 +11,12 @@ cbuffer colorData : register(b1)
     float4 color;
 };
 
+Texture2D diffuseTexture  : register(t2);
+SamplerState basicSampler : register(s3);
+
 float4 main(VertexToPixel input) : SV_TARGET0
 {
     float ndl = dot(input.normal, normalize(float3(1.0, 1.0, 0.0)));
-    return float4(color.rgb * ndl, 1.0);
+    float3 tex = diffuseTexture.Sample(basicSampler, input.uv).rgb;
+    return float4(color.rgb * ndl, 1.0 - tex.r);
 }

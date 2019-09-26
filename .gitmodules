@@ -7,3 +7,6 @@
 [submodule "ThirdParty/ShaderConductor"]
 	path = ThirdParty/ShaderConductor
 	url = https://github.com/microsoft/ShaderConductor.git
+[submodule "ThirdParty/stb"]
+	path = ThirdParty/stb
+	url = https://github.com/nothings/stb.git

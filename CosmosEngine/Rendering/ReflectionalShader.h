@@ -34,7 +34,7 @@ struct ReflectionalConstantBuffer
     uint32_t Type; // To enum D3D_CBUFFER_TYPE, not relevant in SPIR-V
     unsigned int Size;
     unsigned int BindIndex;
-    unsigned int SetIndex; // Not relevant in HLSL
+    unsigned int SetIndex;
     unsigned int LocationIndex; // Not relevant in HLSL
     void* ConstantBuffer; // void -> VkBuffer_T[3] / ID3D11Buffer
     unsigned char* LocalDataBuffer;

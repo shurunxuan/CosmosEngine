@@ -733,7 +733,6 @@ bool ReflectionalSpirV::CreateShader()
         setBindingLayout->second.push_back(binding);
 
 
-
         cbTable.insert(std::make_pair(constantBuffers[b].Name, constantBuffers + b));
 
         spirv_cross::SPIRType type = compiler->get_type(resource.base_type_id);
@@ -776,22 +775,33 @@ bool ReflectionalSpirV::CreateShader()
                          constantBuffersMemory[b][i]);
         }
 
+        ++b;
+    }
 
-        //parseSampler2Ds
-//        for (auto &resource : resources.sampled_images)
-//        {
-//            Sampler2D s;
-//            s.name = glsl.get_name(resource.id);
-//            s.set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-//            s.binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+    for (auto& resource : shaderResources.separate_images)
+    {
+//            spv::Sampler2D s;
+        LOG_DEBUG << "separate_images name: " << compiler->get_name(resource.id);
+        LOG_DEBUG << "separate_images set: " << compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        LOG_DEBUG << "separate_images binding: " << compiler->get_decoration(resource.id, spv::DecorationBinding);
 //            if (setCount < s.set)
 //            {
 //                setCount = s.set;
 //            }
 //            info->sampler2Ds.push_back(s);
-//        }
+    }
 
-        ++b;
+    for (auto& resource : shaderResources.separate_samplers)
+    {
+//            spv::Sampler2D s;
+        LOG_DEBUG << "separate_samplers name: " << compiler->get_name(resource.id);
+        LOG_DEBUG << "separate_samplers set: " << compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        LOG_DEBUG << "separate_samplers binding: " << compiler->get_decoration(resource.id, spv::DecorationBinding);
+//            if (setCount < s.set)
+//            {
+//                setCount = s.set;
+//            }
+//            info->sampler2Ds.push_back(s);
     }
 
     return true;
