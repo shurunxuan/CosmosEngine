@@ -687,7 +687,7 @@ void ReflectionalSpirV::CopyBufferData(const boost::container::string& bufferNam
 
 void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
 {
-    for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+    for (size_t i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
         vkDestroyBuffer(device, reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer)[i], nullptr);
 
     delete[] reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer);
@@ -739,12 +739,10 @@ bool ReflectionalSpirV::CreateShader()
 
         uint32_t ub_size = 0;
         size_t member_count = type.member_types.size();
-        for (uint32_t i = 0; i < member_count; i++)
+        for (size_t i = 0; i < member_count; i++)
         {
             ReflectionalShaderVariable ubm{};
             boost::container::string varName = compiler->get_member_name(resource.base_type_id, i).c_str();
-//            auto &member_type = glsl.get_type(type.member_types[i]);
-//            ubm.type = parseType(member_type);
 
             ubm.Size = static_cast<unsigned int>(compiler->get_declared_struct_member_size(type, i));
             ubm.ByteOffset = compiler->type_struct_member_offset(type, i);
@@ -767,7 +765,7 @@ bool ReflectionalSpirV::CreateShader()
 
         constantBuffers[b].ConstantBuffer = new VkBuffer[vulkanBackend->GetSwapChainImageCount()];
 
-        for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+        for (size_t i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
         {
             createBuffer(constantBuffers[b].Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -780,28 +778,72 @@ bool ReflectionalSpirV::CreateShader()
 
     for (auto& resource : shaderResources.separate_images)
     {
-//            spv::Sampler2D s;
-        LOG_DEBUG << "separate_images name: " << compiler->get_name(resource.id);
-        LOG_DEBUG << "separate_images set: " << compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
-        LOG_DEBUG << "separate_images binding: " << compiler->get_decoration(resource.id, spv::DecorationBinding);
-//            if (setCount < s.set)
-//            {
-//                setCount = s.set;
-//            }
-//            info->sampler2Ds.push_back(s);
+        ReflectionalTextureView* newTextureView = new ReflectionalTextureView;
+        boost::container::string name = compiler->get_name(resource.id).c_str();
+        newTextureView->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        newTextureView->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
+        newTextureView->Index = textureViews.size();
+
+        if (setCount < newTextureView->SetIndex)
+        {
+            setCount = newTextureView->SetIndex;
+        }
+
+        auto setBindingLayout = setBindingsLayoutMap.find(newTextureView->SetIndex);
+        if (setBindingLayout == setBindingsLayoutMap.end())
+        {
+            auto insertResult = setBindingsLayoutMap.insert(std::make_pair(newTextureView->SetIndex,
+                                                                           boost::container::vector<VkDescriptorSetLayoutBinding>()));
+            setBindingLayout = insertResult.first;
+        }
+
+        VkDescriptorSetLayoutBinding binding = {};
+        binding.binding = newTextureView->BindIndex;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        binding.descriptorCount = 1;
+        binding.stageFlags = shaderStageFlag;
+        //binding.stageFlags = VK_SHADER_STAGE_ALL;
+        binding.pImmutableSamplers = nullptr; // Optional
+
+        setBindingLayout->second.push_back(binding);
+
+        textureTable.insert(std::make_pair(name, newTextureView));
+        textureViews.push_back(newTextureView);
     }
 
     for (auto& resource : shaderResources.separate_samplers)
     {
-//            spv::Sampler2D s;
-        LOG_DEBUG << "separate_samplers name: " << compiler->get_name(resource.id);
-        LOG_DEBUG << "separate_samplers set: " << compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
-        LOG_DEBUG << "separate_samplers binding: " << compiler->get_decoration(resource.id, spv::DecorationBinding);
-//            if (setCount < s.set)
-//            {
-//                setCount = s.set;
-//            }
-//            info->sampler2Ds.push_back(s);
+        ReflectionalSampler* newSampler = new ReflectionalSampler;
+        boost::container::string name = compiler->get_name(resource.id).c_str();
+        newSampler->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        newSampler->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
+        newSampler->Index = samplerStates.size();
+
+        if (setCount < newSampler->SetIndex)
+        {
+            setCount = newSampler->SetIndex;
+        }
+
+        auto setBindingLayout = setBindingsLayoutMap.find(newSampler->SetIndex);
+        if (setBindingLayout == setBindingsLayoutMap.end())
+        {
+            auto insertResult = setBindingsLayoutMap.insert(std::make_pair(newSampler->SetIndex,
+                                                                           boost::container::vector<VkDescriptorSetLayoutBinding>()));
+            setBindingLayout = insertResult.first;
+        }
+
+        VkDescriptorSetLayoutBinding binding = {};
+        binding.binding = newSampler->BindIndex;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = shaderStageFlag;
+        //binding.stageFlags = VK_SHADER_STAGE_ALL;
+        binding.pImmutableSamplers = nullptr; // Optional
+
+        setBindingLayout->second.push_back(binding);
+
+        samplerTable.insert(std::make_pair(name, newSampler));
+        samplerStates.push_back(newSampler);
     }
 
     return true;

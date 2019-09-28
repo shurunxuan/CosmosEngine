@@ -38,6 +38,8 @@ private:
 
     boost::container::map<uint32_t, boost::container::vector<VkDescriptorSetLayoutBinding>> setBindingsLayoutMap;
     boost::container::vector<ReflectionalConstantBuffer*> uniformBuffers;
+    boost::container::vector<ReflectionalTextureView*> textureViews;
+    boost::container::vector<ReflectionalSampler*> samplers;
     boost::container::vector<VkDescriptorPool> descriptorPools;
     boost::container::vector<VkDescriptorSetLayout> setLayouts;
 

@@ -323,8 +323,10 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
 
     shaderStages.push_back(stageInfo);
 
-    if (shader->shaderResources.uniform_buffers.empty()) return;
-    // TODO: textures / samplers
+    if (shader->shaderResources.uniform_buffers.empty() &&
+        shader->shaderResources.separate_images.empty() &&
+        shader->shaderResources.separate_samplers.empty())
+        return;
 
     for (auto& itr : shader->setBindingsLayoutMap)
     {
@@ -332,7 +334,8 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
         if (findResult == setBindingsLayoutMap.end())
         {
             setBindingsLayoutMap.insert(std::make_pair(itr.first, itr.second));
-        } else
+        }
+        else
         {
             for (auto& b : itr.second)
             {
@@ -346,6 +349,16 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
         uniformBuffers.push_back(&(shader->constantBuffers[i]));
     }
 
+    for (size_t i = 0; i < shader->GetTextureViewCount(); ++i)
+    {
+        textureViews.push_back(shader->textureViews[i]);
+    }
+
+    for (size_t i = 0; i < shader->GetSamplerCount(); ++i)
+    {
+        samplers.push_back(shader->samplerStates[i]);
+    }
+
 }
 
 void VulkanPipeline::createDescriptorSets()
@@ -356,11 +369,22 @@ void VulkanPipeline::createDescriptorSets()
     for (auto& itr : setBindingsLayoutMap)
     {
         boost::container::vector<VkDescriptorPoolSize> poolSize;
-        poolSize.resize(uniformBuffers.size());
-        for (size_t i = 0; i < poolSize.size(); ++i)
+        poolSize.resize(uniformBuffers.size() + textureViews.size() + samplers.size());
+        size_t poolSizeIndex = 0;
+        for (size_t i = 0; i < uniformBuffers.size(); ++poolSizeIndex, ++i)
         {
-            poolSize[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            poolSize[i].descriptorCount = swapChainImageCount;
+            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
+        }
+        for (size_t i = 0; i < textureViews.size(); ++poolSizeIndex, ++i)
+        {
+            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
+        }
+        for (size_t i = 0; i < samplers.size(); ++poolSizeIndex, ++i)
+        {
+            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
         }
 
         VkDescriptorPoolCreateInfo poolInfo = {};
@@ -385,7 +409,7 @@ void VulkanPipeline::createDescriptorSets()
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(itr.second.size());
         layoutInfo.pBindings = itr.second.data();
-        // TODO: This still assumes one shader one descriptor set!!!!!!!!
+
         if (vkCreateDescriptorSetLayout(vulkanBackend->device, &layoutInfo, nullptr, &descriptorSetLayout) !=
             VK_SUCCESS)
         {
@@ -422,9 +446,9 @@ void VulkanPipeline::createDescriptorSets()
             //        bufferInfo.buffer = uniformBuffers[i];
             for (auto& uniformBuffer : uniformBuffers)
             {
-                VkDescriptorBufferInfo info = {};
                 if (uniformBuffer->SetIndex != itr.first)
                     continue;
+                VkDescriptorBufferInfo info = {};
 
                 info.buffer = reinterpret_cast<VkBuffer*>(uniformBuffer->ConstantBuffer)[i];
                 info.offset = 0;
@@ -432,12 +456,32 @@ void VulkanPipeline::createDescriptorSets()
                 bufferInfo.push_back(info);
             }
             // TODO: Samplers / Textures
+//            for (auto& texture : textureViews)
+//            {
+//                if (texture->SetIndex != itr.first)
+//                    continue;
+//                VkDescriptorImageInfo imageInfo = {};
+//                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+//                imageInfo.imageView = textureImageView;
+//                imageInfo.sampler = textureSampler;
+//            }
+//
+//            for (auto& sampler : samplers)
+//            {
+//                if (sampler->SetIndex != itr.first)
+//                    continue;
+//                VkDescriptorImageInfo imageInfo = {};
+//                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+//                imageInfo.imageView = textureImageView;
+//                imageInfo.sampler = textureSampler;
+//            }
 
 
             // Notice for the above todo: this already takes other descriptors into consideration.
             // but not the count (descriptorWrite.size())
             boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
-            descriptorWrite.resize(itr.second.size());
+//            descriptorWrite.resize(itr.second.size());
+            descriptorWrite.resize(bufferInfo.size());
 
             for (size_t w = 0; w < descriptorWrite.size(); ++w)
             {

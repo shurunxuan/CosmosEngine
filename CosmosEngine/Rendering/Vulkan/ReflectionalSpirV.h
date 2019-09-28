@@ -19,6 +19,7 @@ class ReflectionalSpirV : virtual public ReflectionalShader
 {
 public:
     friend class VulkanBackend;
+
     friend class VulkanPipeline;
 
     explicit ReflectionalSpirV(VkDevice device, VkPhysicalDevice physicalDevice);
@@ -41,6 +42,25 @@ public:
 
     VkShaderModule GetShaderModule();
 
+    bool SetImage(const boost::container::string& name, void* srv) override
+    { return false; }
+
+    // void* -> ID3D11SamplerState / VulkanSampler
+    bool SetSampler(const boost::container::string& name, void* samplerState) override
+    { return false; }
+
+    const ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) override
+    { return nullptr; }
+
+    const ReflectionalTextureView* GetTextureInfo(unsigned int index) override
+    { return nullptr; }
+
+    const ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) override
+    { return nullptr; }
+
+    const ReflectionalSampler* GetSamplerInfo(unsigned int index) override
+    { return nullptr; }
+
 protected:
     VkShaderModule shaderModule;
     VkDevice device;
@@ -61,7 +81,7 @@ protected:
 
     boost::container::map<uint32_t, boost::container::vector<VkDescriptorSetLayoutBinding>> setBindingsLayoutMap;
 
-	bool hasDescriptors;
+    bool hasDescriptors;
 };
 
 class VertexSpirV : public ReflectionalSpirV
