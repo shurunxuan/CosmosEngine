@@ -26,6 +26,10 @@ public:
 protected:
     Mesh* mesh;
     Material* material;
+
+    boost::unordered_map<boost::container::string, ReflectionalShader*> varTable;
+    boost::unordered_map<boost::container::string, ReflectionalShader*> imageTable;
+    boost::unordered_map<boost::container::string, ReflectionalShader*> samplerTable;
 };
 
 #endif //GAMEENGINE_RENDERINGPIPELINE_H

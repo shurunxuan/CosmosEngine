@@ -369,22 +369,34 @@ void VulkanPipeline::createDescriptorSets()
     for (auto& itr : setBindingsLayoutMap)
     {
         boost::container::vector<VkDescriptorPoolSize> poolSize;
-        poolSize.resize(uniformBuffers.size() + textureViews.size() + samplers.size());
+        poolSize.reserve(uniformBuffers.size() + textureViews.size() + samplers.size());
         size_t poolSizeIndex = 0;
         for (size_t i = 0; i < uniformBuffers.size(); ++poolSizeIndex, ++i)
         {
-            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
+            if (uniformBuffers[i]->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
         }
         for (size_t i = 0; i < textureViews.size(); ++poolSizeIndex, ++i)
         {
-            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
+            if (textureViews[i]->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
         }
         for (size_t i = 0; i < samplers.size(); ++poolSizeIndex, ++i)
         {
-            poolSize[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_SAMPLER;
-            poolSize[poolSizeIndex].descriptorCount = swapChainImageCount;
+            if (samplers[i]->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_SAMPLER;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
         }
 
         VkDescriptorPoolCreateInfo poolInfo = {};
