@@ -442,7 +442,7 @@ void VulkanPipeline::createDescriptorSets()
         for (size_t i = 0; i < swapChainImageCount; i++)
         {
             boost::container::vector<VkDescriptorBufferInfo> bufferInfo;
-
+            boost::container::vector<VkDescriptorImageInfo> imageInfo;
             //        bufferInfo.buffer = uniformBuffers[i];
             for (auto& uniformBuffer : uniformBuffers)
             {
@@ -456,25 +456,27 @@ void VulkanPipeline::createDescriptorSets()
                 bufferInfo.push_back(info);
             }
             // TODO: Samplers / Textures
-//            for (auto& texture : textureViews)
-//            {
-//                if (texture->SetIndex != itr.first)
-//                    continue;
-//                VkDescriptorImageInfo imageInfo = {};
-//                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//                imageInfo.imageView = textureImageView;
-//                imageInfo.sampler = textureSampler;
-//            }
-//
-//            for (auto& sampler : samplers)
-//            {
-//                if (sampler->SetIndex != itr.first)
-//                    continue;
-//                VkDescriptorImageInfo imageInfo = {};
-//                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//                imageInfo.imageView = textureImageView;
-//                imageInfo.sampler = textureSampler;
-//            }
+            for (auto& texture : textureViews)
+            {
+                if (texture->SetIndex != itr.first)
+                    continue;
+                VkDescriptorImageInfo info = {};
+                info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                info.imageView = nullptr;
+                info.sampler = nullptr;
+                imageInfo.push_back(info);
+            }
+
+            for (auto& sampler : samplers)
+            {
+                if (sampler->SetIndex != itr.first)
+                    continue;
+                VkDescriptorImageInfo info = {};
+                info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                info.imageView = nullptr;
+                info.sampler = nullptr;
+                imageInfo.push_back(info);
+            }
 
 
             // Notice for the above todo: this already takes other descriptors into consideration.
