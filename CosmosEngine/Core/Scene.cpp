@@ -5,6 +5,10 @@
 #include "Scene.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
+#include "Texture.h"
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 Scene::Scene()
 {
@@ -196,7 +200,8 @@ boost::container::list<Object*> Scene::FindObjectsByName(boost::container::strin
     return result;
 }
 
-Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, const aiScene * scene, aiNode * node, Object * parent)
+Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, const aiScene* scene, aiNode* node,
+                                 Object* parent)
 {
     Object* newObj = AddObject(node->mName.C_Str());
 
@@ -223,15 +228,15 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         for (unsigned int j = 0; j < aMesh->mNumVertices; j++)
         {
             DefaultVertex newVtx;
-            newVtx.position = { aMesh->mVertices[j].x, aMesh->mVertices[j].y, aMesh->mVertices[j].z };
+            newVtx.position = {aMesh->mVertices[j].x, aMesh->mVertices[j].y, aMesh->mVertices[j].z};
             if (aMesh->HasNormals())
-                newVtx.normal = { aMesh->mNormals[j].x, aMesh->mNormals[j].y, aMesh->mNormals[j].z };
+                newVtx.normal = {aMesh->mNormals[j].x, aMesh->mNormals[j].y, aMesh->mNormals[j].z};
             if (aMesh->HasTangentsAndBitangents())
             {
-                newVtx.tangent = { aMesh->mTangents[j].x, aMesh->mTangents[j].y, aMesh->mTangents[j].z };
+                newVtx.tangent = {aMesh->mTangents[j].x, aMesh->mTangents[j].y, aMesh->mTangents[j].z};
             }
             if (aMesh->HasTextureCoords(0))
-                newVtx.uv = { aMesh->mTextureCoords[0][j].x,aMesh->mTextureCoords[0][j].y };
+                newVtx.uv = {aMesh->mTextureCoords[0][j].x, aMesh->mTextureCoords[0][j].y};
 
             vertices.push_back(newVtx);
         }
@@ -241,39 +246,56 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
                 indices.push_back(uint16_t(aMesh->mFaces[c].mIndices[e]));
 
         // MeshRenderer
-        auto * meshRendererComponent = newObj->AddComponent<MeshRenderer>();
+        auto* meshRendererComponent = newObj->AddComponent<MeshRenderer>();
 
         // Material
         boost::shared_ptr<Material> defaultMaterial = boost::make_shared<Material>();
         defaultMaterial->LoadVertexShader("Shaders/VertexShader.hlsl");
         defaultMaterial->LoadPixelShader("Shaders/PixelShader.hlsl");
+        meshRendererComponent->SetMaterial(defaultMaterial);
+
+        auto pipeline = meshRendererComponent->GetPipeline();
 
         // Load Textures
         aiMaterial* aMaterial = scene->mMaterials[aMesh->mMaterialIndex];
 
         // Diffuse Texture
-//        unsigned int diffuseTextureCount = aMaterial->GetTextureCount(aiTextureType_DIFFUSE);
-//        if (diffuseTextureCount > 0)
-//        {
-//            aiString as;
-//            aiReturn ar;
-//            // Only get the first texture
-//            ar = aMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &as);
-//            if (ar == aiReturn_SUCCESS)
-//            {
-//                // Try load the texture assuming the path is absolute
-//                if (!pbrMaterial->LoadDiffuseTexture(as.C_Str()))
-//                {
-//                    // Try the path relative to model file
-//                    boost::filesystem::path modelPath(modelFileName.c_str());
-//                    boost::filesystem::path modelFolder = modelPath.parent_path();
-//                    boost::filesystem::path relativeTexture(as.C_Str());
-//                    relativeTexture = modelFolder / relativeTexture;
-//                    pbrMaterial->LoadDiffuseTexture(relativeTexture.generic_string());
-//                }
-//            }
-//        }
-//
+        unsigned int diffuseTextureCount = aMaterial->GetTextureCount(aiTextureType_DIFFUSE);
+        if (diffuseTextureCount > 0)
+        {
+            Texture diffuseTexture;
+            aiString as;
+            aiReturn ar;
+            // Only get the first texture
+            ar = aMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &as);
+            if (ar == aiReturn_SUCCESS)
+            {
+                boost::filesystem::path texturePath(as.C_Str());
+                // Try load the texture assuming the path is absolute
+                if (!boost::filesystem::exists(texturePath))
+                {
+                    // Try the path relative to model file
+                    boost::filesystem::path modelPath(modelFileName.c_str());
+                    boost::filesystem::path modelFolder = modelPath.parent_path();
+                    texturePath = modelFolder / texturePath;
+                    if (!boost::filesystem::exists(texturePath))
+                    {
+                        LOG_ERROR << "\"" << as.C_Str() << "\" doesn't exist!";
+                    }
+                }
+                diffuseTexture.LoadTexture(texturePath.generic_string().c_str());
+                diffuseTexture.SetSamplerMode(FILTER_MODE_LINEAR, SAMPLER_ADDRESS_MODE_REPEAT,
+                                              SAMPLER_MIPMAP_MODE_LINEAR, true, 16);
+
+
+                bool result1 = defaultMaterial->GetPixelShader()->SetImage("diffuseTexture",
+                                                                           reinterpret_cast<VulkanTextureData*>(diffuseTexture.GetTextureData())->textureImageView);
+                bool result2 = defaultMaterial->GetPixelShader()->SetSampler("basicSampler", diffuseTexture.GetSampler());
+
+                LOG_DEBUG << as.C_Str() << " tex: " << result1 << " sam: " << result2;
+            }
+        }
+
 //        // Normal Texture
 //        unsigned int normalTextureCount = aMaterial->GetTextureCount(aiTextureType_NORMALS);
 //        if (normalTextureCount > 0)
@@ -318,7 +340,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 //            pbrMaterial->SetBlendMode(blendDesc);
 //            pbrMaterial->parameters.transparency = 1 - opacity;
 //        }
-        meshRendererComponent->SetMaterial(defaultMaterial);
+
 
         // Mesh
         boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();

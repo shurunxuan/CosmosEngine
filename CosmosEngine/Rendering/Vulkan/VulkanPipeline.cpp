@@ -496,10 +496,10 @@ void VulkanPipeline::createDescriptorSets()
                     continue;
                 VkDescriptorImageInfo info = {};
                 info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                if (texture->data == nullptr)
+//                if (texture->data == nullptr)
                     info.imageView = vulkanBackend->nullImageView;
-                else
-                    info.imageView = VkImageView(texture->data);
+//                else
+//                    info.imageView = VkImageView(texture->data);
                 info.sampler = nullptr;
                 imageInfo.push_back(info);
 
@@ -526,10 +526,10 @@ void VulkanPipeline::createDescriptorSets()
                 VkDescriptorImageInfo info = {};
                 //info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 info.imageView = nullptr;
-                if (sampler->data == nullptr)
+//                if (sampler->data == nullptr)
                     info.sampler = vulkanBackend->nullSampler;
-                else
-                    info.sampler = VkSampler(sampler->data);
+//                else
+//                    info.sampler = VkSampler(sampler->data);
                 imageInfo.push_back(info);
 
                 VkWriteDescriptorSet d = {};
@@ -565,8 +565,12 @@ bool VulkanPipeline::SetTexture(const boost::container::string& name, const Text
     if (result == imageTable.end())
         return false;
 
-    return result->second->SetImage(name,
+    bool r = result->second->SetImage(name,
                                     reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
+
+    updateDescriptorSets();
+
+    return r;
 }
 
 bool VulkanPipeline::SetSampler(const boost::container::string& name, const Texture& texture)
@@ -579,13 +583,18 @@ bool VulkanPipeline::SetSampler(const boost::container::string& name, const Text
     if (result == samplerTable.end())
         return false;
 
-    return result->second->SetSampler(name, texture.GetSampler());
+    bool r = result->second->SetSampler(name, texture.GetSampler());
+
+    updateDescriptorSets();
+
+    return r;
 }
 
 void VulkanPipeline::updateDescriptorSets()
 {
     uint32_t swapChainImageCount = static_cast<uint32_t>(vulkanBackend->GetSwapChainImageCount());
     size_t s = 0;
+
     for (auto& itr : setBindingsLayoutMap)
     {
         for (size_t i = 0; i < swapChainImageCount; i++)

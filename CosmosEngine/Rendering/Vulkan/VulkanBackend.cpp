@@ -1766,6 +1766,7 @@ void VulkanBackend::DestroyTexture(void** texture)
     VulkanTextureData* textureData = reinterpret_cast<VulkanTextureData*>(*texture);
     vkDestroyImage(device, textureData->textureImage, nullptr);
     vkFreeMemory(device, textureData->textureImageMemory, nullptr);
+    vkDestroyImageView(device, textureData->textureImageView, nullptr);
 
     delete textureData;
     *texture = nullptr;
