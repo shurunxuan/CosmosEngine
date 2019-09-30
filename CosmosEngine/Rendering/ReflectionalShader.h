@@ -49,6 +49,7 @@ struct ReflectionalTextureView
     unsigned int Index;        // The raw index of the SRV
     unsigned int SetIndex;
     unsigned int BindIndex; // The register of the SRV
+    void* data = nullptr; // void* -> VkImageView(Vulkan)
 };
 
 // --------------------------------------------------------
@@ -59,6 +60,7 @@ struct ReflectionalSampler
     unsigned int Index;        // The raw index of the Sampler
     unsigned int SetIndex;
     unsigned int BindIndex; // The register of the Sampler
+    void* data = nullptr; // void* -> VkSampler(Vulkan)
 };
 
 // --------------------------------------------------------

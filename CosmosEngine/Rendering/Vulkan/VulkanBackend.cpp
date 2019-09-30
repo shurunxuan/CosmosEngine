@@ -153,6 +153,7 @@ bool VulkanBackend::Init()
     //createUniformBuffers();
     //createStartEndRenderCommandBuffer();
     createSyncObjects();
+    createNullResources();
 
     return true;
 }
@@ -179,6 +180,7 @@ void VulkanBackend::recreateSwapChain()
     createFramebuffers();
     //createUniformBuffers();
     //createStartEndRenderCommandBuffer();
+    createNullResources();
 
     boost::container::list<MeshRenderer*> presentedMeshRenderers;
     auto allObjects = App->CurrentActiveScene()->GetAllObjects();
@@ -226,6 +228,11 @@ void VulkanBackend::DeInit()
     vkDeviceWaitIdle(device);
 
     cleanupSwapChain();
+
+    vkDestroySampler(device, nullSampler, nullptr);
+    vkDestroyImageView(device, nullImageView, nullptr);
+    vkDestroyImage(device, nullImage, nullptr);
+    vkFreeMemory(device, nullImageMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
@@ -296,18 +303,18 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         proj[3][2] /= 2.0f;
         auto itModel = glm::transpose(glm::inverse(model));
 
-        meshRenderer->GetPipeline()->SetMatrix4x4("model", model);
-        meshRenderer->GetPipeline()->SetMatrix4x4("view", view);
-        meshRenderer->GetPipeline()->SetMatrix4x4("proj", proj);
-        meshRenderer->GetPipeline()->SetMatrix4x4("itModel", itModel);
+        auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
+
+        pipeline->SetMatrix4x4("model", model);
+        pipeline->SetMatrix4x4("view", view);
+        pipeline->SetMatrix4x4("proj", proj);
+        pipeline->SetMatrix4x4("itModel", itModel);
 
         meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
 
         glm::vec4 color = {1.0f, 1.0f, 0.0f, 1.0f};
-        meshRenderer->GetPipeline()->SetFloat4("color", color);
+        pipeline->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
-
-        auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
 
         frameCommandBuffers.push_back(pipeline->commandBuffers[imageIndex]);
     }
@@ -731,6 +738,11 @@ int VulkanBackend::rateDeviceSuitability(VkPhysicalDevice device)
         score += 1;
     }
 
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+    if (!supportedFeatures.samplerAnisotropy)
+        score -= 1000;
+
     // TODO: Choose device with capabilities and features
 
     return score;
@@ -793,6 +805,7 @@ void VulkanBackend::createLogicalDevice()
     }
 
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1565,6 +1578,133 @@ VulkanBackend::transitionImageLayout(VkImage image, VkFormat format, VkImageLayo
             0, nullptr,
             0, nullptr,
             1, &barrier
+    );
+
+    endSingleTimeCommands(commandBuffer);
+}
+
+void VulkanBackend::createNullResources()
+{
+    VkDeviceSize imageSize = 10 * 10 * 4;
+    unsigned char pixels[10 * 10 * 4];
+    for (int i = 0; i < 10 * 10; ++i)
+    {
+        pixels[i * 4 + 0] = 255;
+        pixels[i * 4 + 1] = 0;
+        pixels[i * 4 + 2] = 255;
+        pixels[i * 4 + 3] = 255;
+    }
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+                 stagingBufferMemory);
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    VkImageCreateInfo imageInfo = {};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = static_cast<uint32_t>(10);
+    imageInfo.extent.height = static_cast<uint32_t>(10);
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.flags = 0; // Optional
+
+    if (vkCreateImage(device, &imageInfo, nullptr, &nullImage) != VK_SUCCESS)
+    {
+        LOG_ERROR << "Failed to create null image!";
+        throw std::runtime_error("Failed to create null image!");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(device, nullImage, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &nullImageMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to allocate image memory!");
+    }
+
+    vkBindImageMemory(device, nullImage, nullImageMemory, 0);
+
+    transitionImageLayout(nullImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(stagingBuffer, nullImage, static_cast<uint32_t>(10), static_cast<uint32_t>(10));
+    transitionImageLayout(nullImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    nullImageView = createImageView(nullImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_NEAREST;
+    samplerInfo.minFilter = VK_FILTER_NEAREST;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 16;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &nullSampler) != VK_SUCCESS)
+    {
+        LOG_ERROR << "Failed to create null sampler!";
+        throw std::runtime_error("Failed to create null sampler!");
+    }
+}
+
+void VulkanBackend::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferImageCopy region = {};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {
+            width,
+            height,
+            1
+    };
+
+    vkCmdCopyBufferToImage(
+            commandBuffer,
+            buffer,
+            image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &region
     );
 
     endSingleTimeCommands(commandBuffer);

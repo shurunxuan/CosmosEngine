@@ -230,20 +230,6 @@ void VulkanPipeline::CreateRenderingPipeline()
             throw std::runtime_error("Failed to begin recording command buffer!");
         }
 
-        LOG_INFO << "Recording command buffer " << i << " started.";
-
-        //        VkRenderPassBeginInfo renderPassInfo = {};
-        //        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        //        renderPassInfo.renderPass = vulkanBackend->renderPass;
-        //        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-        //        renderPassInfo.renderArea.offset = {0, 0};
-        //        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
-        //        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        //        renderPassInfo.clearValueCount = 1;
-        //        renderPassInfo.pClearValues = &clearColor;
-        //
-        //        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
         VkBuffer vertexBuffers[] = {vBuffer->buffer};
@@ -283,6 +269,10 @@ void VulkanPipeline::cleanup()
     descriptorSets.clear();
 
     uniformBuffers.clear();
+    textureViews.clear();
+    samplers.clear();
+
+    varTable.clear();
 
     vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
                          static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -375,8 +365,8 @@ void VulkanPipeline::createDescriptorSets()
     {
         boost::container::vector<VkDescriptorPoolSize> poolSize;
         poolSize.reserve(uniformBuffers.size() + textureViews.size() + samplers.size());
-        size_t poolSizeIndex = 0;
-        for (size_t i = 0; i < uniformBuffers.size(); ++poolSizeIndex, ++i)
+
+        for (size_t i = 0; i < uniformBuffers.size(); ++i)
         {
             if (uniformBuffers[i]->SetIndex != itr.first)
                 continue;
@@ -385,7 +375,7 @@ void VulkanPipeline::createDescriptorSets()
             p.descriptorCount = swapChainImageCount;
             poolSize.push_back(p);
         }
-        for (size_t i = 0; i < textureViews.size(); ++poolSizeIndex, ++i)
+        for (size_t i = 0; i < textureViews.size(); ++i)
         {
             if (textureViews[i]->SetIndex != itr.first)
                 continue;
@@ -394,7 +384,7 @@ void VulkanPipeline::createDescriptorSets()
             p.descriptorCount = swapChainImageCount;
             poolSize.push_back(p);
         }
-        for (size_t i = 0; i < samplers.size(); ++poolSizeIndex, ++i)
+        for (size_t i = 0; i < samplers.size(); ++i)
         {
             if (samplers[i]->SetIndex != itr.first)
                 continue;
@@ -459,7 +449,10 @@ void VulkanPipeline::createDescriptorSets()
         for (size_t i = 0; i < swapChainImageCount; i++)
         {
             boost::container::vector<VkDescriptorBufferInfo> bufferInfo;
+            bufferInfo.reserve(uniformBuffers.size());
             boost::container::vector<VkDescriptorImageInfo> imageInfo;
+            imageInfo.reserve(textureViews.size() + samplers.size());
+            std::vector<VkWriteDescriptorSet> descriptorWrite;
             //        bufferInfo.buffer = uniformBuffers[i];
             for (auto& uniformBuffer : uniformBuffers)
             {
@@ -471,6 +464,21 @@ void VulkanPipeline::createDescriptorSets()
                 info.offset = 0;
                 info.range = uniformBuffer->Size;
                 bufferInfo.push_back(info);
+
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = uniformBuffer->BindIndex;
+                d.dstArrayElement = 0;
+
+                d.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = &bufferInfo.back();
+                d.pImageInfo = nullptr; // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
             }
             // TODO: Samplers / Textures
             for (auto& texture : textureViews)
@@ -479,9 +487,27 @@ void VulkanPipeline::createDescriptorSets()
                     continue;
                 VkDescriptorImageInfo info = {};
                 info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                info.imageView = nullptr;
+                if (texture->data == nullptr)
+                    info.imageView = vulkanBackend->nullImageView;
+                else
+                    info.imageView = VkImageView(texture->data);
                 info.sampler = nullptr;
                 imageInfo.push_back(info);
+
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = texture->BindIndex;
+                d.dstArrayElement = 0;
+
+                d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = nullptr;
+                d.pImageInfo = &imageInfo.back(); // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
             }
 
             for (auto& sampler : samplers)
@@ -489,33 +515,33 @@ void VulkanPipeline::createDescriptorSets()
                 if (sampler->SetIndex != itr.first)
                     continue;
                 VkDescriptorImageInfo info = {};
-                info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                //info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 info.imageView = nullptr;
-                info.sampler = nullptr;
+                if (sampler->data == nullptr)
+                    info.sampler = vulkanBackend->nullSampler;
+                else
+                    info.sampler = VkSampler(sampler->data);
                 imageInfo.push_back(info);
-            }
 
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = sampler->BindIndex;
+                d.dstArrayElement = 0;
+
+                d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = nullptr;
+                d.pImageInfo = &imageInfo.back(); // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
+            }
 
             // Notice for the above todo: this already takes other descriptors into consideration.
             // but not the count (descriptorWrite.size())
-            boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
 //            descriptorWrite.resize(itr.second.size());
-            descriptorWrite.resize(bufferInfo.size());
-
-            for (size_t w = 0; w < descriptorWrite.size(); ++w)
-            {
-                descriptorWrite[w].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrite[w].dstSet = set[i];
-                descriptorWrite[w].dstBinding = itr.second[w].binding;
-                descriptorWrite[w].dstArrayElement = 0;
-
-                descriptorWrite[w].descriptorType = itr.second[w].descriptorType;
-                descriptorWrite[w].descriptorCount = itr.second[w].descriptorCount;
-
-                descriptorWrite[w].pBufferInfo = &bufferInfo[w];
-                descriptorWrite[w].pImageInfo = nullptr; // Optional
-                descriptorWrite[w].pTexelBufferView = nullptr; // Optional
-            }
 
             vkUpdateDescriptorSets(vulkanBackend->device, static_cast<uint32_t>(descriptorWrite.size()),
                                    descriptorWrite.data(), 0, nullptr);
