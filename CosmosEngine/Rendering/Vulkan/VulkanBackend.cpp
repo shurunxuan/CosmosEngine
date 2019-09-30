@@ -296,15 +296,15 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         proj[3][2] /= 2.0f;
         auto itModel = glm::transpose(glm::inverse(model));
 
-        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("model", model);
-        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("view", view);
-        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("proj", proj);
-        meshRenderer->GetMaterial()->GetVertexShader()->SetMatrix4x4("itModel", itModel);
+        meshRenderer->GetPipeline()->SetMatrix4x4("model", model);
+        meshRenderer->GetPipeline()->SetMatrix4x4("view", view);
+        meshRenderer->GetPipeline()->SetMatrix4x4("proj", proj);
+        meshRenderer->GetPipeline()->SetMatrix4x4("itModel", itModel);
 
         meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
 
         glm::vec4 color = {1.0f, 1.0f, 0.0f, 1.0f};
-        meshRenderer->GetMaterial()->GetPixelShader()->SetFloat4("color", color);
+        meshRenderer->GetPipeline()->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
         auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetPipeline());

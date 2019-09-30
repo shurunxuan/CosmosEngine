@@ -359,6 +359,11 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
         samplers.push_back(shader->samplerStates[i]);
     }
 
+    for (auto& var : shader->varTable)
+    {
+        varTable.insert(std::make_pair(var.first, shader));
+    }
+
 }
 
 void VulkanPipeline::createDescriptorSets()
