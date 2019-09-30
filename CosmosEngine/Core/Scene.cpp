@@ -248,10 +248,10 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         defaultMaterial->LoadVertexShader("Shaders/VertexShader.hlsl");
         defaultMaterial->LoadPixelShader("Shaders/PixelShader.hlsl");
 
-//        // Load Textures
-//        aiMaterial * aMaterial = scene->mMaterials[aMesh->mMaterialIndex];
-//
-//        // Diffuse Texture
+        // Load Textures
+        aiMaterial* aMaterial = scene->mMaterials[aMesh->mMaterialIndex];
+
+        // Diffuse Texture
 //        unsigned int diffuseTextureCount = aMaterial->GetTextureCount(aiTextureType_DIFFUSE);
 //        if (diffuseTextureCount > 0)
 //        {
@@ -299,7 +299,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 //        aiColor3D color(0.f, 0.f, 0.f);
 //        aMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 //        pbrMaterial->parameters.albedo = DirectX::XMFLOAT3(color.r, color.g, color.b);
-//
+
 //        float opacity = 1.0f;
 //        aMaterial->Get(AI_MATKEY_OPACITY, opacity);
 //        if (opacity < 1.0f)

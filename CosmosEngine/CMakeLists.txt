@@ -40,7 +40,7 @@ set(SOURCE_FILES
         Core/MeshRenderer.cpp
         Core/Mesh.cpp
         Core/Material.cpp
-        )
+        Core/Texture.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -61,7 +61,7 @@ set(HEADER_FILES
         Core/MeshRenderer.h
         Core/Mesh.h
         Core/Material.h
-        )
+        Core/Texture.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

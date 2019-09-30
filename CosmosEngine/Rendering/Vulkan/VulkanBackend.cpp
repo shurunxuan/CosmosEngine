@@ -15,6 +15,10 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+
+#include <stb/stb_image.h>
+
 VulkanBackend* vulkanBackend = nullptr;
 
 const boost::container::vector<const char*> validationLayers = {
@@ -29,7 +33,7 @@ bool enableValidationLayers =
 #ifdef NDEBUG
         false;
 #else
-true;
+        true;
 #endif
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -1708,4 +1712,147 @@ void VulkanBackend::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t w
     );
 
     endSingleTimeCommands(commandBuffer);
+}
+
+void* VulkanBackend::CreateTexture(const boost::container::string& filename)
+{
+    VulkanTextureData* textureData = new VulkanTextureData;
+
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels = stbi_load(filename.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+    if (!pixels)
+    {
+        LOG_ERROR << "Failed to load texture image \"" << filename << "\"!";
+        throw std::runtime_error("Failed to load texture image!");
+    }
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
+    createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+                 stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    stbi_image_free(pixels);
+
+    createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                textureData->textureImage, textureData->textureImageMemory);
+    transitionImageLayout(textureData->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(stagingBuffer, textureData->textureImage, static_cast<uint32_t>(texWidth),
+                      static_cast<uint32_t>(texHeight));
+    transitionImageLayout(textureData->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    textureData->textureImageView = createImageView(textureData->textureImage, VK_FORMAT_R8G8B8A8_UNORM,
+                                                    VK_IMAGE_ASPECT_COLOR_BIT);
+
+    return textureData;
+}
+
+void VulkanBackend::DestroyTexture(void** texture)
+{
+    VulkanTextureData* textureData = reinterpret_cast<VulkanTextureData*>(*texture);
+    vkDestroyImage(device, textureData->textureImage, nullptr);
+    vkFreeMemory(device, textureData->textureImageMemory, nullptr);
+
+    delete textureData;
+    *texture = nullptr;
+}
+
+void* VulkanBackend::CreateSampler(SamplerFilterMode filter, SamplerAddressingMode address, SamplerMipmapMode mipmap,
+                                   bool anisotropyEnable, float maxAnisotropy)
+{
+    VkSampler textureSampler;
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    switch (filter)
+    {
+        case FILTER_MODE_NEAREST:
+            samplerInfo.magFilter = VK_FILTER_NEAREST;
+            samplerInfo.minFilter = VK_FILTER_NEAREST;
+            break;
+        case FILTER_MODE_LINEAR:
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            break;
+        case FILTER_CUBIC:
+            samplerInfo.magFilter = VK_FILTER_CUBIC_IMG;
+            samplerInfo.minFilter = VK_FILTER_CUBIC_IMG;
+            break;
+    }
+
+    switch (address)
+    {
+        case SAMPLER_ADDRESS_MODE_REPEAT:
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            break;
+        case SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT:
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            break;
+        case SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE:
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            break;
+        case SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER:
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+            break;
+        case SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+            break;
+    }
+    samplerInfo.anisotropyEnable = anisotropyEnable;
+    samplerInfo.maxAnisotropy = maxAnisotropy;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+    switch (mipmap)
+    {
+        case SAMPLER_MIPMAP_MODE_NEAREST:
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+            break;
+        case SAMPLER_MIPMAP_MODE_LINEAR:
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            break;
+    }
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
+    {
+        LOG_ERROR << "Failed to create texture sampler!";
+        throw std::runtime_error("failed to create texture sampler!");
+    }
+
+    return textureSampler;
+}
+
+void VulkanBackend::DestroySampler(void** sampler)
+{
+    VkSampler textureSampler = reinterpret_cast<VkSampler>(*sampler);
+    vkDestroySampler(device, textureSampler, nullptr);
+    *sampler = nullptr;
 }

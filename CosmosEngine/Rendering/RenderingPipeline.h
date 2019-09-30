@@ -12,6 +12,8 @@
 
 #include <boost/container/string.hpp>
 
+class Texture;
+
 class ENGINE_API RenderingPipeline
 {
 public:
@@ -45,6 +47,9 @@ public:
 
     bool SetMatrix4x4(const boost::container::string& name, const glm::mat4& data);
 
+    virtual bool SetTexture(const boost::container::string& name, const Texture& texture) = 0;
+
+    virtual bool SetSampler(const boost::container::string& name, const Texture& texture) = 0;
 protected:
     Mesh* mesh;
     Material* material;

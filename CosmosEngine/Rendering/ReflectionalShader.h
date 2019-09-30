@@ -123,16 +123,16 @@ public:
     // Getting data about variables and resources
     const ReflectionalShaderVariable* GetVariableInfo(const boost::container::string& name);
 
-    virtual const ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) = 0;
+    virtual ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) = 0;
 
-    virtual const ReflectionalTextureView* GetTextureInfo(unsigned int index) = 0;
+    virtual ReflectionalTextureView* GetTextureInfo(unsigned int index) = 0;
 
     size_t GetTextureViewCount()
     { return textureTable.size(); }
 
-    virtual const ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) = 0;
+    virtual ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) = 0;
 
-    virtual const ReflectionalSampler* GetSamplerInfo(unsigned int index) = 0;
+    virtual ReflectionalSampler* GetSamplerInfo(unsigned int index) = 0;
 
     size_t GetSamplerCount()
     { return samplerTable.size(); }

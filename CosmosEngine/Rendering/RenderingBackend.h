@@ -15,6 +15,28 @@
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
 
+enum SamplerFilterMode
+{
+    FILTER_MODE_NEAREST = 0,
+    FILTER_MODE_LINEAR = 1,
+    FILTER_CUBIC = 2
+};
+
+enum SamplerAddressingMode
+{
+    SAMPLER_ADDRESS_MODE_REPEAT = 0,
+    SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1,
+    SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2,
+    SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3,
+    SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE = 4
+};
+
+enum SamplerMipmapMode
+{
+    SAMPLER_MIPMAP_MODE_NEAREST = 0,
+    SAMPLER_MIPMAP_MODE_LINEAR = 1
+};
+
 class ENGINE_API RenderingBackend
 {
 public:
@@ -57,6 +79,15 @@ public:
     virtual void* CreateIndexBuffer(uint16_t* indexData, size_t indexCount) = 0;
 
     virtual void DestroyIndexBuffer(void** indexBuffer) = 0;
+
+    virtual void* CreateTexture(const boost::container::string& filename) = 0;
+
+    virtual void DestroyTexture(void** texture) = 0;
+
+    virtual void* CreateSampler(SamplerFilterMode filter, SamplerAddressingMode address, SamplerMipmapMode mipmap,
+                                bool anisotropyEnable, float maxAnisotropy) = 0;
+
+    virtual void DestroySampler(void** sampler) = 0;
 
 protected:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);

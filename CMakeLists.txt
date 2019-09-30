@@ -162,12 +162,16 @@ if (EXISTS ${STB_COLLECTION_SRC_PATH})
     file(GLOB STB_HEADERS
             LIST_DIRECTORIES false
             ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/stb/*.h)
+
+    if ("${STB_HEADERS}" STREQUAL "")
+        message(FATAL_ERROR "-- Can't find stb collection header files. Make sure the submodules are cloned.")
+    endif ()
+
     file(COPY ${STB_HEADERS}
             DESTINATION "${EXTERNAL_INSTALL_LOCATION}/include/stb")
 else ()
     message(FATAL_ERROR "-- Can't find stb collection header files. Make sure the submodules are cloned.")
 endif ()
-
 
 # Engine and Game
 add_subdirectory(CosmosEngine)

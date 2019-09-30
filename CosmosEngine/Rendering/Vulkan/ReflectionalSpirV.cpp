@@ -854,6 +854,80 @@ size_t ReflectionalSpirV::GetDescriptorCount()
     return shaderResources.uniform_buffers.size();
 }
 
+bool ReflectionalSpirV::SetImage(const boost::container::string& name, void* textureView)
+{
+    // Look for the variable and verify
+    ReflectionalTextureView* textureInfo = GetTextureInfo(name);
+    if (textureInfo == 0)
+        return false;
+
+    // Set the shader resource view
+    textureInfo->data = textureView;
+
+    // Success
+    return true;
+}
+
+bool ReflectionalSpirV::SetSampler(const boost::container::string& name, void* samplerState)
+{
+    // Look for the variable and verify
+    ReflectionalSampler* sampInfo = GetSamplerInfo(name);
+    if (sampInfo == 0)
+        return false;
+
+    // Set the shader resource view
+    sampInfo->data = samplerState;
+
+    // Success
+    return true;
+}
+
+ReflectionalTextureView* ReflectionalSpirV::GetTextureInfo(const boost::container::string& name)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalTextureView*>::iterator result =
+            textureTable.find(name);
+
+    // Did we find the key?
+    if (result == textureTable.end())
+        return nullptr;
+
+    // Success
+    return result->second;
+}
+
+ReflectionalTextureView* ReflectionalSpirV::GetTextureInfo(unsigned int index)
+{
+    // Valid index?
+    if (index >= textureViews.size()) return nullptr;
+
+    // Grab the bind index
+    return textureViews[index];
+}
+
+ReflectionalSampler* ReflectionalSpirV::GetSamplerInfo(const boost::container::string& name)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalSampler*>::iterator result =
+            samplerTable.find(name);
+
+    // Did we find the key?
+    if (result == samplerTable.end())
+        return 0;
+
+    // Success
+    return result->second;
+}
+
+ReflectionalSampler* ReflectionalSpirV::GetSamplerInfo(unsigned int index)
+{
+    // Valid index?
+    if (index >= samplerStates.size()) return 0;
+
+    // Grab the bind index
+    return samplerStates[index];
+}
+
 bool VertexSpirV::CreateShader()
 {
     bool uboResult = ReflectionalSpirV::CreateShader();

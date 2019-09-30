@@ -7,6 +7,8 @@
 
 #include "../RenderingPipeline.h"
 #include "ReflectionalSpirV.h"
+#include "VulkanBackend.h"
+
 
 class ENGINE_LOCAL VulkanPipeline : public RenderingPipeline
 {
@@ -23,12 +25,18 @@ public:
 
     VkPipeline& GetPipeline();
 
+    bool SetTexture(const boost::container::string& name, const Texture& texture) final;
+
+    bool SetSampler(const boost::container::string& name, const Texture& texture) final;
+
 private:
     void cleanup();
 
     void buildLayoutInfo(ReflectionalSpirV* shader);
 
     void createDescriptorSets();
+
+    void updateDescriptorSets();
 
     VkPipelineLayout pipelineLayout;
 
@@ -47,5 +55,4 @@ private:
     boost::container::vector<boost::container::vector<VkDescriptorSet>> descriptorSets;
 
 };
-
 #endif //GAMEENGINE_VULKANPIPELINE_H

@@ -42,24 +42,18 @@ public:
 
     VkShaderModule GetShaderModule();
 
-    bool SetImage(const boost::container::string& name, void* srv) override
-    { return false; }
+    bool SetImage(const boost::container::string& name, void* srv) override;
 
     // void* -> ID3D11SamplerState / VulkanSampler
-    bool SetSampler(const boost::container::string& name, void* samplerState) override
-    { return false; }
+    bool SetSampler(const boost::container::string& name, void* samplerState) override;
 
-    const ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) override
-    { return nullptr; }
+    ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) override;
 
-    const ReflectionalTextureView* GetTextureInfo(unsigned int index) override
-    { return nullptr; }
+    ReflectionalTextureView* GetTextureInfo(unsigned int index) override;
 
-    const ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) override
-    { return nullptr; }
+    ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) override;
 
-    const ReflectionalSampler* GetSamplerInfo(unsigned int index) override
-    { return nullptr; }
+    ReflectionalSampler* GetSamplerInfo(unsigned int index) override;
 
 protected:
     VkShaderModule shaderModule;
