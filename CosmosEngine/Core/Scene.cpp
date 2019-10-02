@@ -297,7 +297,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 //                                                                           reinterpret_cast<VulkanTextureData*>(diffuseTexture->GetTextureData())->textureImageView);
 //                defaultMaterial->GetPixelShader()->SetSampler("basicSampler", diffuseTexture->GetSampler());
 
-                pipeline->SetSamplerTexture("basicSampler", "diffuseTexture", *diffuseTexture);
+                pipeline->SetSamplerTexture("diffuseSampler", "diffuseTexture", *diffuseTexture);
             }
         }
 

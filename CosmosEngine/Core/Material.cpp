@@ -36,3 +36,11 @@ ReflectionalShader* Material::GetPixelShader()
 {
     return pixelShader;
 }
+
+//void Material::SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture)
+//{
+//    auto result = textures.insert(std::make_pair(textureName, texture));
+//    if (!result.second) return;
+//
+//    pipeline
+//}

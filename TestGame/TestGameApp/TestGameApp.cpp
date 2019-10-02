@@ -152,7 +152,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     movement->movementType = 0;
 
-    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
+    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/007_00_0/0.obj");
     testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
 
     ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();

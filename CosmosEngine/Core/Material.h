@@ -7,6 +7,7 @@
 
 #include "../Export.h"
 #include "../Rendering/ReflectionalShader.h"
+//#include "Texture.h"
 
 #include <boost/container/string.hpp>
 
@@ -35,6 +36,8 @@ public:
 
     ReflectionalShader* GetPixelShader();
 
+//    void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
+
 protected:
     /**
      * @brief Set other data needed by the shaders
@@ -48,7 +51,7 @@ protected:
 
     ReflectionalShader* pixelShader;
 
-
+//    boost::container::map<boost::container::string, boost::shared_ptr<Texture>> textures;
 };
 
 #endif //GAMEENGINE_MATERIAL_H

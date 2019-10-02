@@ -38,8 +38,6 @@ private:
 
     void createDescriptorSets();
 
-    void updateDescriptorSets();
-
     VkPipelineLayout pipelineLayout;
 
     VkPipeline graphicsPipeline;
