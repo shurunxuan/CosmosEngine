@@ -60,7 +60,7 @@ public:
 
     virtual boost::container::vector<char> loadShader(const boost::container::string& filename) = 0;
 
-    virtual RenderingPipeline* CreateRenderingPipeline(Mesh* mesh, Material* material) = 0;
+    virtual RenderingPipeline* CreateRenderingPipeline(Material* material) = 0;
 
     virtual void DestroyRenderingPipeline(RenderingPipeline** pipeline) = 0;
 
@@ -88,6 +88,10 @@ public:
                                 bool anisotropyEnable, float maxAnisotropy) = 0;
 
     virtual void DestroySampler(void** sampler) = 0;
+
+    virtual CommandBuffer* CreateCommandBuffer(MeshRenderer* meshRenderer) = 0;
+
+    virtual void DestroyCommandBuffer(CommandBuffer** commandBuffer) = 0;
 
 protected:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);

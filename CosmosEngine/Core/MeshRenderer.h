@@ -9,6 +9,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "../Rendering/RenderingPipeline.h"
+#include "../Rendering/CommandBuffer.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -41,8 +42,6 @@ public:
 
     boost::shared_ptr<Mesh>& GetMesh();
 
-    RenderingPipeline* GetPipeline();
-
     /**
      * @brief Will be called as soon as the component is created
      *
@@ -57,15 +56,19 @@ public:
      */
     void Update(float deltaTime, float totalTime) final;
 
+    void RecreateRenderingResources();
+
+    CommandBuffer* GetCommandBuffer();
+
 private:
 
     boost::shared_ptr<Mesh> mesh;
 
     boost::shared_ptr<Material> material;
 
-    RenderingPipeline* pipeline;
+    CommandBuffer* commandBuffer;
 
-    void generateRenderingPipeline();
+    void createCommandBuffer();
 };
 
 #endif //GAMEENGINE_MESHRENDERER_H

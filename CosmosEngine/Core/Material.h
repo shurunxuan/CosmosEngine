@@ -11,6 +11,8 @@
 
 #include <boost/container/string.hpp>
 
+class RenderingPipeline;
+
 class ENGINE_API Material
 {
 public:
@@ -36,6 +38,8 @@ public:
 
     ReflectionalShader* GetPixelShader();
 
+    RenderingPipeline* GetPipeline();
+
 //    void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
 
 protected:
@@ -47,9 +51,13 @@ protected:
      */
     //virtual void SetShaderData() = 0;
 
+    void generateRenderingPipeline();
+
     ReflectionalShader* vertexShader;
 
     ReflectionalShader* pixelShader;
+
+    RenderingPipeline* pipeline;
 
 //    boost::container::map<boost::container::string, boost::shared_ptr<Texture>> textures;
 };

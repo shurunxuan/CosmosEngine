@@ -15,7 +15,9 @@ class ENGINE_LOCAL VulkanPipeline : public RenderingPipeline
 public:
     friend class VulkanBackend;
 
-    VulkanPipeline(Mesh* mesh, Material* material);
+    friend class VulkanCommandBuffer;
+
+    VulkanPipeline(Material* material);
 
     ~VulkanPipeline() final;
 
@@ -24,6 +26,8 @@ public:
     void CreateRenderingPipeline() final;
 
     VkPipeline& GetPipeline();
+
+    VkPipelineLayout& GetPipelineLayout();
 
     bool SetTexture(const boost::container::string& name, const Texture& texture) final;
 
@@ -38,6 +42,8 @@ private:
 
     void createDescriptorSets();
 
+    bool recreated;
+
     VkPipelineLayout pipelineLayout;
 
     VkPipeline graphicsPipeline;
@@ -51,7 +57,6 @@ private:
     boost::container::vector<VkDescriptorPool> descriptorPools;
     boost::container::vector<VkDescriptorSetLayout> setLayouts;
 
-    boost::container::vector<VkCommandBuffer> commandBuffers;
     boost::container::vector<boost::container::vector<VkDescriptorSet>> descriptorSets;
 
 };

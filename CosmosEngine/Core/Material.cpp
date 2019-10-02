@@ -4,11 +4,13 @@
 
 #include "Material.h"
 #include "../Rendering/RenderingBackend.h"
+#include "../Rendering/RenderingPipeline.h"
 
 Material::Material()
 {
     vertexShader = nullptr;
     pixelShader = nullptr;
+    pipeline = nullptr;
 }
 
 Material::~Material()
@@ -20,11 +22,19 @@ Material::~Material()
 void Material::LoadVertexShader(const boost::container::string& filename)
 {
     vertexShader = presentedRenderingBackend->CreateVertexShader(filename);
+    if (pixelShader != nullptr)
+    {
+        generateRenderingPipeline();
+    }
 }
 
 void Material::LoadPixelShader(const boost::container::string& filename)
 {
     pixelShader = presentedRenderingBackend->CreatePixelShader(filename);
+    if (vertexShader != nullptr)
+    {
+        generateRenderingPipeline();
+    }
 }
 
 ReflectionalShader* Material::GetVertexShader()
@@ -35,6 +45,22 @@ ReflectionalShader* Material::GetVertexShader()
 ReflectionalShader* Material::GetPixelShader()
 {
     return pixelShader;
+}
+
+RenderingPipeline* Material::GetPipeline()
+{
+    return pipeline;
+}
+
+void Material::generateRenderingPipeline()
+{
+    if (pipeline != nullptr)
+    {
+        presentedRenderingBackend->DestroyRenderingPipeline(&pipeline);
+    }
+
+    pipeline = presentedRenderingBackend->CreateRenderingPipeline(this);
+    pipeline->CreateRenderingPipeline();
 }
 
 //void Material::SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture)

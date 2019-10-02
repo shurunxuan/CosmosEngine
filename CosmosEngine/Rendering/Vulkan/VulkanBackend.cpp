@@ -7,6 +7,7 @@
 #include "../../App/App.h"
 #include "ReflectionalSpirV.h"
 #include "VulkanPipeline.h"
+#include "VulkanCommandBuffer.h"
 
 #include <set>
 #include <algorithm>
@@ -195,8 +196,7 @@ void VulkanBackend::recreateSwapChain()
 
     for (auto meshRenderer : presentedMeshRenderers)
     {
-        auto pipeline = static_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
-        pipeline->RecreatePipeline();
+        meshRenderer->RecreateRenderingResources();
     }
 }
 
@@ -287,6 +287,21 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         presentedMeshRenderers.merge(object->GetComponents<MeshRenderer>());
     }
 
+    for (auto& meshRenderer : presentedMeshRenderers)
+    {
+        VulkanPipeline* vkPipeline= reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
+        if (vkPipeline->recreated)
+        {
+            meshRenderer->GetCommandBuffer()->RecreateCommandBuffer();
+        }
+    }
+
+    for (auto& meshRenderer : presentedMeshRenderers)
+    {
+        VulkanPipeline* vkPipeline= reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
+        vkPipeline->recreated = false;
+    }
+
     boost::container::vector<VkCommandBuffer> frameCommandBuffers;
     frameCommandBuffers.reserve(presentedMeshRenderers.size() + 2);
 
@@ -307,7 +322,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         proj[3][2] /= 2.0f;
         auto itModel = glm::transpose(glm::inverse(model));
 
-        auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetPipeline());
+        auto pipeline = dynamic_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
 
         pipeline->SetMatrix4x4("model", model);
         pipeline->SetMatrix4x4("view", view);
@@ -320,7 +335,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         pipeline->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
-        frameCommandBuffers.push_back(pipeline->commandBuffers[imageIndex]);
+        frameCommandBuffers.push_back(reinterpret_cast<VulkanCommandBuffer*>(meshRenderer->GetCommandBuffer())->commandBuffers[imageIndex]);
     }
 
     // Record new command buffer
@@ -1242,9 +1257,9 @@ uint32_t VulkanBackend::GetCurrentImageIndex()
     return imageIndex;
 }
 
-RenderingPipeline* VulkanBackend::CreateRenderingPipeline(Mesh* mesh, Material* material)
+RenderingPipeline* VulkanBackend::CreateRenderingPipeline(Material* material)
 {
-    auto* newPipeline = new VulkanPipeline(mesh, material);
+    auto* newPipeline = new VulkanPipeline(material);
     newPipeline->CreateRenderingPipeline();
     return reinterpret_cast<RenderingPipeline*>(newPipeline);
 }
@@ -1823,4 +1838,18 @@ void VulkanBackend::DestroySampler(void** sampler)
     VkSampler textureSampler = reinterpret_cast<VkSampler>(*sampler);
     vkDestroySampler(device, textureSampler, nullptr);
     *sampler = nullptr;
+}
+
+CommandBuffer* VulkanBackend::CreateCommandBuffer(MeshRenderer* meshRenderer)
+{
+    VulkanCommandBuffer* commandBuffer = new VulkanCommandBuffer(meshRenderer);
+    return commandBuffer;
+}
+
+void VulkanBackend::DestroyCommandBuffer(CommandBuffer** commandBuffer)
+{
+    VulkanCommandBuffer* vulkanCommandBuffer = reinterpret_cast<VulkanCommandBuffer*>(*commandBuffer);
+    delete vulkanCommandBuffer;
+
+    *commandBuffer = nullptr;
 }

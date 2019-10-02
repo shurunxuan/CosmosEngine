@@ -9,12 +9,15 @@ MeshRenderer::MeshRenderer(Object* owner) : Component(owner)
 {
     mesh = nullptr;
     material = nullptr;
-    pipeline = nullptr;
+    commandBuffer = nullptr;
 }
 
 MeshRenderer::~MeshRenderer()
 {
-
+    if (commandBuffer != nullptr)
+    {
+        presentedRenderingBackend->DestroyCommandBuffer(&commandBuffer);
+    }
 }
 
 void MeshRenderer::Start()
@@ -32,7 +35,7 @@ void MeshRenderer::SetMesh(const boost::shared_ptr<Mesh>& m)
     mesh = m;
     if (material != nullptr)
     {
-        generateRenderingPipeline();
+        createCommandBuffer();
     }
 }
 
@@ -41,18 +44,8 @@ void MeshRenderer::SetMaterial(const boost::shared_ptr<Material>& m)
     material = m;
     if (mesh != nullptr)
     {
-        generateRenderingPipeline();
+        createCommandBuffer();
     }
-}
-
-void MeshRenderer::generateRenderingPipeline()
-{
-    if (pipeline != nullptr)
-    {
-        presentedRenderingBackend->DestroyRenderingPipeline(&pipeline);
-    }
-
-    pipeline = presentedRenderingBackend->CreateRenderingPipeline(mesh.get(), material.get());
 }
 
 boost::shared_ptr<Material>& MeshRenderer::GetMaterial()
@@ -65,7 +58,20 @@ boost::shared_ptr<Mesh>& MeshRenderer::GetMesh()
     return mesh;
 }
 
-RenderingPipeline* MeshRenderer::GetPipeline()
+void MeshRenderer::RecreateRenderingResources()
 {
-    return pipeline;
+    material->GetPipeline()->RecreatePipeline();
+    commandBuffer->RecreateCommandBuffer();
 }
+
+void MeshRenderer::createCommandBuffer()
+{
+    commandBuffer = presentedRenderingBackend->CreateCommandBuffer(this);
+    commandBuffer->RecordCommandBuffer();
+}
+
+CommandBuffer* MeshRenderer::GetCommandBuffer()
+{
+    return commandBuffer;
+}
+

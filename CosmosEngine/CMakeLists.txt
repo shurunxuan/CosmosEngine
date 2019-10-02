@@ -40,7 +40,7 @@ set(SOURCE_FILES
         Core/MeshRenderer.cpp
         Core/Mesh.cpp
         Core/Material.cpp
-        Core/Texture.cpp)
+        Core/Texture.cpp Rendering/CommandBuffer.cpp Rendering/Vulkan/VulkanCommandBuffer.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -61,7 +61,7 @@ set(HEADER_FILES
         Core/MeshRenderer.h
         Core/Mesh.h
         Core/Material.h
-        Core/Texture.h)
+        Core/Texture.h Rendering/CommandBuffer.h Rendering/Vulkan/VulkanCommandBuffer.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

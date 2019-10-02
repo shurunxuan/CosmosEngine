@@ -7,7 +7,6 @@
 
 #include "../Export.h"
 #include "ReflectionalShader.h"
-#include "../Core/Mesh.h"
 #include "../Core/Material.h"
 
 #include <boost/container/string.hpp>
@@ -17,7 +16,7 @@ class Texture;
 class ENGINE_API RenderingPipeline
 {
 public:
-    RenderingPipeline(Mesh* mesh, Material* material);
+    RenderingPipeline(Material* material);
 
     virtual ~RenderingPipeline();
 
@@ -55,7 +54,6 @@ public:
     SetSamplerTexture(const boost::container::string& samplerName, const boost::container::string& textureName,
                       const Texture& texture) = 0;
 protected:
-    Mesh* mesh;
     Material* material;
 
     boost::unordered_map<boost::container::string, ReflectionalShader*> varTable;

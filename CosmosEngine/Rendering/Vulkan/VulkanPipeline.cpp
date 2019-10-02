@@ -8,10 +8,11 @@
 #include "../../Logging/Logging.h"
 #include "../../Core/Texture.h"
 
-VulkanPipeline::VulkanPipeline(Mesh* mesh, Material* material)
-        : RenderingPipeline(mesh, material)
+VulkanPipeline::VulkanPipeline(Material* material)
+        : RenderingPipeline(material)
 {
     graphicsPipeline = VK_NULL_HANDLE;
+    recreated = false;
 }
 
 VulkanPipeline::~VulkanPipeline()
@@ -33,18 +34,6 @@ void VulkanPipeline::CreateRenderingPipeline()
     buildLayoutInfo(fragmentSpirV);
 
     createDescriptorSets();
-
-    boost::container::vector<boost::container::vector<VkDescriptorSet>> transposedDescriptorSets;
-    transposedDescriptorSets.resize(vulkanBackend->GetSwapChainImageCount());
-    transposedDescriptorSets[0].reserve(descriptorSets.size());
-    transposedDescriptorSets[1].reserve(descriptorSets.size());
-    transposedDescriptorSets[2].reserve(descriptorSets.size());
-    for (int i = 0; i < descriptorSets.size(); ++i)
-    {
-        transposedDescriptorSets[0].push_back(descriptorSets[i][0]);
-        transposedDescriptorSets[1].push_back(descriptorSets[i][1]);
-        transposedDescriptorSets[2].push_back(descriptorSets[i][2]);
-    }
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -193,71 +182,17 @@ void VulkanPipeline::CreateRenderingPipeline()
 
     LOG_INFO << "Created graphics pipeline.";
 
-    // Create and Record Command Buffers
 
-    VulkanBufferWithMemory* vBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetVertexBuffer());
-    VulkanBufferWithMemory* iBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetIndexBuffer());
-
-    commandBuffers.resize(vulkanBackend->swapChainFramebuffers.size());
-
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = vulkanBackend->commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-    allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(vulkanBackend->device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to allocate command buffers!";
-        throw std::runtime_error("Failed to allocate command buffers!");
-    }
-
-    LOG_INFO << "Allocated command buffers.";
-
-    for (size_t i = 0; i < commandBuffers.size(); i++)
-    {
-        VkCommandBufferInheritanceInfo inheritanceInfo = {};
-        inheritanceInfo.renderPass = vulkanBackend->renderPass;
-        inheritanceInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-        beginInfo.pInheritanceInfo = &inheritanceInfo; // Optional
-
-        if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to begin recording command buffer " << i;
-            throw std::runtime_error("Failed to begin recording command buffer!");
-        }
-
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkBuffer vertexBuffers[] = {vBuffer->buffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-
-        vkCmdBindIndexBuffer(commandBuffers[i], iBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
-
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-                                static_cast<uint32_t>(transposedDescriptorSets[i].size()),
-                                transposedDescriptorSets[i].data(), 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffers[i], mesh->GetIndexCount(), 1, 0, 0, 0);
-
-        //        vkCmdEndRenderPass(commandBuffers[i]);
-
-        if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to record command buffer!";
-            throw std::runtime_error("Failed to record command buffer!");
-        }
-    }
 }
 
 VkPipeline& VulkanPipeline::GetPipeline()
 {
     return graphicsPipeline;
+}
+
+VkPipelineLayout& VulkanPipeline::GetPipelineLayout()
+{
+    return pipelineLayout;
 }
 
 void VulkanPipeline::cleanup()
@@ -274,9 +209,6 @@ void VulkanPipeline::cleanup()
     samplers.clear();
 
     varTable.clear();
-
-    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
-                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
@@ -296,6 +228,8 @@ void VulkanPipeline::RecreatePipeline()
     cleanup();
 
     CreateRenderingPipeline();
+
+    recreated = true;
 }
 
 

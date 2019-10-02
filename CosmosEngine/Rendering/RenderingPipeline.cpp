@@ -5,9 +5,8 @@
 #include "RenderingPipeline.h"
 
 
-RenderingPipeline::RenderingPipeline(Mesh* mesh, Material* material)
+RenderingPipeline::RenderingPipeline(Material* material)
 {
-    this->mesh = mesh;
     this->material = material;
 }
 

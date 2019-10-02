@@ -252,6 +252,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         boost::shared_ptr<Material> defaultMaterial = boost::make_shared<Material>();
         defaultMaterial->LoadVertexShader("Shaders/VertexShader.hlsl");
         defaultMaterial->LoadPixelShader("Shaders/PixelShader.hlsl");
+
         meshRendererComponent->SetMaterial(defaultMaterial);
         // Mesh
         boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
@@ -259,7 +260,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         mesh->LoadIndexData((uint16_t*) (&*indices.begin()), indices.size());
         meshRendererComponent->SetMesh(mesh);
 
-        auto pipeline = meshRendererComponent->GetPipeline();
+        auto pipeline = meshRendererComponent->GetMaterial()->GetPipeline();
 
         // Load Textures
         aiMaterial* aMaterial = scene->mMaterials[aMesh->mMaterialIndex];

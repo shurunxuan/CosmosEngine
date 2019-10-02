@@ -57,6 +57,8 @@ public:
 
     friend class VulkanPipeline;
 
+    friend class VulkanCommandBuffer;
+
     VulkanBackend();
 
     ~VulkanBackend() final;
@@ -78,9 +80,13 @@ public:
 
     uint32_t GetCurrentImageIndex();
 
-    RenderingPipeline* CreateRenderingPipeline(Mesh* mesh, Material* material) final;
+    RenderingPipeline* CreateRenderingPipeline(Material* material) final;
 
     void DestroyRenderingPipeline(RenderingPipeline** pipeline) final;
+
+    CommandBuffer* CreateCommandBuffer(MeshRenderer* meshRenderer) final;
+
+    void DestroyCommandBuffer(CommandBuffer** commandBuffer) final;
 
     ReflectionalShader* CreateVertexShader(const boost::container::string& filename) final;
 
