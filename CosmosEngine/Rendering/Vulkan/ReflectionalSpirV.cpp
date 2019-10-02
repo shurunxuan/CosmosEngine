@@ -858,7 +858,7 @@ bool ReflectionalSpirV::SetImage(const boost::container::string& name, void* tex
 {
     // Look for the variable and verify
     ReflectionalTextureView* textureInfo = GetTextureInfo(name);
-    if (textureInfo == 0)
+    if (textureInfo == nullptr)
         return false;
 
     // Set the shader resource view
@@ -872,7 +872,7 @@ bool ReflectionalSpirV::SetSampler(const boost::container::string& name, void* s
 {
     // Look for the variable and verify
     ReflectionalSampler* sampInfo = GetSamplerInfo(name);
-    if (sampInfo == 0)
+    if (sampInfo == nullptr)
         return false;
 
     // Set the shader resource view

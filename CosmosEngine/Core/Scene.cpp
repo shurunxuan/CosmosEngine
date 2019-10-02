@@ -253,6 +253,11 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         defaultMaterial->LoadVertexShader("Shaders/VertexShader.hlsl");
         defaultMaterial->LoadPixelShader("Shaders/PixelShader.hlsl");
         meshRendererComponent->SetMaterial(defaultMaterial);
+        // Mesh
+        boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
+        mesh->LoadVertexData((void*) (&*vertices.begin()), sizeof(DefaultVertex), vertices.size());
+        mesh->LoadIndexData((uint16_t*) (&*indices.begin()), indices.size());
+        meshRendererComponent->SetMesh(mesh);
 
         auto pipeline = meshRendererComponent->GetPipeline();
 
@@ -263,7 +268,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         unsigned int diffuseTextureCount = aMaterial->GetTextureCount(aiTextureType_DIFFUSE);
         if (diffuseTextureCount > 0)
         {
-            Texture diffuseTexture;
+            Texture* diffuseTexture = new Texture;
             aiString as;
             aiReturn ar;
             // Only get the first texture
@@ -283,16 +288,16 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
                         LOG_ERROR << "\"" << as.C_Str() << "\" doesn't exist!";
                     }
                 }
-                diffuseTexture.LoadTexture(texturePath.generic_string().c_str());
-                diffuseTexture.SetSamplerMode(FILTER_MODE_LINEAR, SAMPLER_ADDRESS_MODE_REPEAT,
+                diffuseTexture->LoadTexture(texturePath.generic_string().c_str());
+                diffuseTexture->SetSamplerMode(FILTER_MODE_LINEAR, SAMPLER_ADDRESS_MODE_REPEAT,
                                               SAMPLER_MIPMAP_MODE_LINEAR, true, 16);
 
 
-                bool result1 = defaultMaterial->GetPixelShader()->SetImage("diffuseTexture",
-                                                                           reinterpret_cast<VulkanTextureData*>(diffuseTexture.GetTextureData())->textureImageView);
-                bool result2 = defaultMaterial->GetPixelShader()->SetSampler("basicSampler", diffuseTexture.GetSampler());
+//                defaultMaterial->GetPixelShader()->SetImage("diffuseTexture",
+//                                                                           reinterpret_cast<VulkanTextureData*>(diffuseTexture->GetTextureData())->textureImageView);
+//                defaultMaterial->GetPixelShader()->SetSampler("basicSampler", diffuseTexture->GetSampler());
 
-                LOG_DEBUG << as.C_Str() << " tex: " << result1 << " sam: " << result2;
+                pipeline->SetSamplerTexture("basicSampler", "diffuseTexture", *diffuseTexture);
             }
         }
 
@@ -342,11 +347,6 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 //        }
 
 
-        // Mesh
-        boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
-        mesh->LoadVertexData((void*) (&*vertices.begin()), sizeof(DefaultVertex), vertices.size());
-        mesh->LoadIndexData((uint16_t*) (&*indices.begin()), indices.size());
-        meshRendererComponent->SetMesh(mesh);
     }
 
     // Add child nodes

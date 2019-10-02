@@ -50,6 +50,10 @@ public:
     virtual bool SetTexture(const boost::container::string& name, const Texture& texture) = 0;
 
     virtual bool SetSampler(const boost::container::string& name, const Texture& texture) = 0;
+
+    virtual bool
+    SetSamplerTexture(const boost::container::string& samplerName, const boost::container::string& textureName,
+                      const Texture& texture) = 0;
 protected:
     Mesh* mesh;
     Material* material;

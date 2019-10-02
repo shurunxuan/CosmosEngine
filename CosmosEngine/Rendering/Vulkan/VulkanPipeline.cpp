@@ -377,27 +377,27 @@ void VulkanPipeline::createDescriptorSets()
         boost::container::vector<VkDescriptorPoolSize> poolSize;
         poolSize.reserve(uniformBuffers.size() + textureViews.size() + samplers.size());
 
-        for (size_t i = 0; i < uniformBuffers.size(); ++i)
+        for (auto& uniformBuffer : uniformBuffers)
         {
-            if (uniformBuffers[i]->SetIndex != itr.first)
+            if (uniformBuffer->SetIndex != itr.first)
                 continue;
             VkDescriptorPoolSize p = {};
             p.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             p.descriptorCount = swapChainImageCount;
             poolSize.push_back(p);
         }
-        for (size_t i = 0; i < textureViews.size(); ++i)
+        for (auto& textureView : textureViews)
         {
-            if (textureViews[i]->SetIndex != itr.first)
+            if (textureView->SetIndex != itr.first)
                 continue;
             VkDescriptorPoolSize p = {};
             p.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             p.descriptorCount = swapChainImageCount;
             poolSize.push_back(p);
         }
-        for (size_t i = 0; i < samplers.size(); ++i)
+        for (auto& sampler : samplers)
         {
-            if (samplers[i]->SetIndex != itr.first)
+            if (sampler->SetIndex != itr.first)
                 continue;
             VkDescriptorPoolSize p = {};
             p.type = VK_DESCRIPTOR_TYPE_SAMPLER;
@@ -496,10 +496,10 @@ void VulkanPipeline::createDescriptorSets()
                     continue;
                 VkDescriptorImageInfo info = {};
                 info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//                if (texture->data == nullptr)
+                if (texture->data == nullptr)
                     info.imageView = vulkanBackend->nullImageView;
-//                else
-//                    info.imageView = VkImageView(texture->data);
+                else
+                    info.imageView = VkImageView(texture->data);
                 info.sampler = nullptr;
                 imageInfo.push_back(info);
 
@@ -526,10 +526,10 @@ void VulkanPipeline::createDescriptorSets()
                 VkDescriptorImageInfo info = {};
                 //info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 info.imageView = nullptr;
-//                if (sampler->data == nullptr)
+                if (sampler->data == nullptr)
                     info.sampler = vulkanBackend->nullSampler;
-//                else
-//                    info.sampler = VkSampler(sampler->data);
+                else
+                    info.sampler = VkSampler(sampler->data);
                 imageInfo.push_back(info);
 
                 VkWriteDescriptorSet d = {};
@@ -566,9 +566,9 @@ bool VulkanPipeline::SetTexture(const boost::container::string& name, const Text
         return false;
 
     bool r = result->second->SetImage(name,
-                                    reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
+                                      reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
 
-    updateDescriptorSets();
+    RecreatePipeline();
 
     return r;
 }
@@ -585,7 +585,39 @@ bool VulkanPipeline::SetSampler(const boost::container::string& name, const Text
 
     bool r = result->second->SetSampler(name, texture.GetSampler());
 
-    updateDescriptorSets();
+    RecreatePipeline();
+
+    return r;
+}
+
+bool VulkanPipeline::SetSamplerTexture(const boost::container::string& samplerName,
+                                       const boost::container::string& textureName, const Texture& texture)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalShader*>::iterator result =
+            samplerTable.find(samplerName);
+
+    // Did we find the key?
+    if (result == samplerTable.end())
+        return false;
+
+    bool r = result->second->SetSampler(samplerName, texture.GetSampler());
+
+    if (!r) return false;
+
+    // Look for the key
+    result = imageTable.find(textureName);
+
+    // Did we find the key?
+    if (result == imageTable.end())
+        return false;
+
+    r = result->second->SetImage(textureName,
+                                 reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
+
+    if (!r) return false;
+
+    RecreatePipeline();
 
     return r;
 }
@@ -637,8 +669,12 @@ void VulkanPipeline::updateDescriptorSets()
                     continue;
                 VkDescriptorImageInfo info = {};
                 info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                LOG_DEBUG << texture->data;
                 if (texture->data == nullptr)
+                {
                     info.imageView = vulkanBackend->nullImageView;
+                    LOG_DEBUG << "null texture";
+                }
                 else
                     info.imageView = VkImageView(texture->data);
                 info.sampler = nullptr;
@@ -668,7 +704,10 @@ void VulkanPipeline::updateDescriptorSets()
                 //info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 info.imageView = nullptr;
                 if (sampler->data == nullptr)
+                {
                     info.sampler = vulkanBackend->nullSampler;
+                    LOG_DEBUG << "null sampler";
+                }
                 else
                     info.sampler = VkSampler(sampler->data);
                 imageInfo.push_back(info);

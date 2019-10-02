@@ -29,6 +29,8 @@ public:
 
     bool SetSampler(const boost::container::string& name, const Texture& texture) final;
 
+    bool SetSamplerTexture(const boost::container::string& samplerName, const boost::container::string& textureName,
+                           const Texture& texture);
 private:
     void cleanup();
 
