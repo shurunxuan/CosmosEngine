@@ -26,7 +26,7 @@ const boost::container::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
 };
 
-const std::vector<const char*> deviceExtensions = {
+const boost::container::vector<const char*> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -446,13 +446,13 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
     vkFreeCommandBuffers(device, commandPool, 1, &cBuffer);
 }
 
-std::vector<const char*> getRequiredExtensions()
+boost::container::vector<const char*> getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    boost::container::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
     if (enableValidationLayers)
     {
@@ -510,7 +510,7 @@ void VulkanBackend::createInstance()
 
     LOG_INFO << extensionCount << " extensions supported";
 
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    boost::container::vector<VkExtensionProperties> availableExtensions(extensionCount);
 
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
@@ -577,7 +577,7 @@ bool VulkanBackend::checkValidationLayerSupport()
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-    std::vector<VkLayerProperties> availableLayers(layerCount);
+    boost::container::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
     for (const char* layerName : validationLayers)
@@ -611,7 +611,7 @@ QueueFamilyIndices VulkanBackend::findQueueFamilies(VkPhysicalDevice device)
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    boost::container::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
     int i = 0;
@@ -674,7 +674,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    boost::container::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
@@ -778,7 +778,7 @@ void VulkanBackend::pickPhysicalDevice()
         throw std::runtime_error("Failed to find GPUs with Vulkan support!");
     }
 
-    std::vector<VkPhysicalDevice> devices(deviceCount);
+    boost::container::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, devices.data());
 
     // Use an ordered map to automatically sort candidates by increasing score
@@ -809,7 +809,7 @@ void VulkanBackend::createLogicalDevice()
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    boost::container::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     float queuePriority = 1.0f;

@@ -396,7 +396,7 @@ void VulkanPipeline::createDescriptorSets()
             bufferInfo.reserve(uniformBuffers.size());
             boost::container::vector<VkDescriptorImageInfo> imageInfo;
             imageInfo.reserve(textureViews.size() + samplers.size());
-            std::vector<VkWriteDescriptorSet> descriptorWrite;
+            boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
             //        bufferInfo.buffer = uniformBuffers[i];
             for (auto& uniformBuffer : uniformBuffers)
             {
