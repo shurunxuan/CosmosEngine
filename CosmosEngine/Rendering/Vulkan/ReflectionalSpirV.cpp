@@ -739,7 +739,7 @@ bool ReflectionalSpirV::CreateShader()
 
         uint32_t ub_size = 0;
         size_t member_count = type.member_types.size();
-        for (size_t i = 0; i < member_count; i++)
+        for (uint32_t i = 0; i < member_count; i++)
         {
             ReflectionalShaderVariable ubm{};
             boost::container::string varName = compiler->get_member_name(resource.base_type_id, i).c_str();
@@ -782,7 +782,7 @@ bool ReflectionalSpirV::CreateShader()
         boost::container::string name = compiler->get_name(resource.id).c_str();
         newTextureView->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
         newTextureView->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
-        newTextureView->Index = textureViews.size();
+        newTextureView->Index = static_cast<unsigned int>(textureViews.size());
 
         if (setCount < newTextureView->SetIndex)
         {
@@ -817,7 +817,7 @@ bool ReflectionalSpirV::CreateShader()
         boost::container::string name = compiler->get_name(resource.id).c_str();
         newSampler->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
         newSampler->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
-        newSampler->Index = samplerStates.size();
+        newSampler->Index = static_cast<unsigned int>(samplerStates.size());
 
         if (setCount < newSampler->SetIndex)
         {

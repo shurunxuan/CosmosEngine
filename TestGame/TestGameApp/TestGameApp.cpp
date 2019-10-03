@@ -32,8 +32,8 @@ struct Vertex
 void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV)
 {
     float fC = fV * fS; // Chroma
-    float fHPrime = fmod(fH / 60.0, 6);
-    float fX = fC * (1 - fabs(fmod(fHPrime, 2) - 1));
+    float fHPrime = fmod(fH / 60.0f, 6);
+    float fX = fC * (1 - float(fabs(fmod(fHPrime, 2) - 1)));
     float fM = fV - fC;
 
     if (0 <= fHPrime && fHPrime < 1)

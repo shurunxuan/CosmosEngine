@@ -46,7 +46,7 @@ private:
 
     VkPipeline graphicsPipeline;
 
-    boost::container::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
     boost::container::map<uint32_t, boost::container::vector<VkDescriptorSetLayoutBinding>> setBindingsLayoutMap;
     boost::container::vector<ReflectionalConstantBuffer*> uniformBuffers;

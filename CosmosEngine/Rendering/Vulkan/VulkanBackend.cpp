@@ -1844,6 +1844,7 @@ void VulkanBackend::DestroySampler(void** sampler)
 CommandBuffer* VulkanBackend::CreateCommandBuffer(MeshRenderer* meshRenderer)
 {
     VulkanCommandBuffer* commandBuffer = new VulkanCommandBuffer(meshRenderer);
+    commandBuffer->RecordCommandBuffer();
     return commandBuffer;
 }
 

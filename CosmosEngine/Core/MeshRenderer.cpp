@@ -68,7 +68,6 @@ void MeshRenderer::RecreateRenderingResources()
 void MeshRenderer::createCommandBuffer()
 {
     commandBuffer = presentedRenderingBackend->CreateCommandBuffer(this);
-    commandBuffer->RecordCommandBuffer();
 }
 
 CommandBuffer* MeshRenderer::GetCommandBuffer()

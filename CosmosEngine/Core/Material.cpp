@@ -60,7 +60,6 @@ void Material::generateRenderingPipeline()
     }
 
     pipeline = presentedRenderingBackend->CreateRenderingPipeline(this);
-    pipeline->CreateRenderingPipeline();
 }
 
 void Material::SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture)
