@@ -15,7 +15,7 @@ link_directories(${ASSIMP_LIBRARY_DIRS})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
-else()
+else ()
     set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARIES})
 endif ()
 
@@ -40,7 +40,10 @@ set(SOURCE_FILES
         Core/MeshRenderer.cpp
         Core/Mesh.cpp
         Core/Material.cpp
-        Core/Texture.cpp Rendering/CommandBuffer.cpp Rendering/Vulkan/VulkanCommandBuffer.cpp)
+        Core/Texture.cpp Rendering/CommandBuffer.cpp
+        Rendering/Vulkan/VulkanCommandBuffer.cpp
+        #        Input/InputBackend.cpp
+        )
 
 set(HEADER_FILES
         Export.h
@@ -61,7 +64,11 @@ set(HEADER_FILES
         Core/MeshRenderer.h
         Core/Mesh.h
         Core/Material.h
-        Core/Texture.h Rendering/CommandBuffer.h Rendering/Vulkan/VulkanCommandBuffer.h)
+        Core/Texture.h
+        Rendering/CommandBuffer.h
+        Rendering/Vulkan/VulkanCommandBuffer.h
+        #        Input/InputBackend.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
