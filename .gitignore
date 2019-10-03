@@ -1,6 +1,7 @@
 build/
 .idea/
 .DS_Store
+.vscode/
 
 # Prerequisites
 *.d
@@ -473,4 +474,3 @@ CTestTestfile.cmake
 _deps
 
 Downloads/
-ThirdParty/

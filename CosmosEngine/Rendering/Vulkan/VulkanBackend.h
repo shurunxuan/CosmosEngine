@@ -42,12 +42,22 @@ struct VulkanBufferWithMemory
     VkDeviceMemory deviceMemory;
 };
 
+struct ENGINE_API VulkanTextureData
+{
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+};
+
 class ENGINE_API VulkanBackend final
         : public RenderingBackend
 {
 public:
     friend class ReflectionalSpirV;
+
     friend class VulkanPipeline;
+
+    friend class VulkanCommandBuffer;
 
     VulkanBackend();
 
@@ -70,9 +80,13 @@ public:
 
     uint32_t GetCurrentImageIndex();
 
-    RenderingPipeline* CreateRenderingPipeline(Mesh* mesh, Material* material) final;
+    RenderingPipeline* CreateRenderingPipeline(Material* material) final;
 
     void DestroyRenderingPipeline(RenderingPipeline** pipeline) final;
+
+    CommandBuffer* CreateCommandBuffer(MeshRenderer* meshRenderer) final;
+
+    void DestroyCommandBuffer(CommandBuffer** commandBuffer) final;
 
     ReflectionalShader* CreateVertexShader(const boost::container::string& filename) final;
 
@@ -89,6 +103,15 @@ public:
     void* CreateIndexBuffer(uint16_t* indexData, size_t indexCount) final;
 
     void DestroyIndexBuffer(void** indexBuffer) final;
+
+    void* CreateTexture(const boost::container::string& filename) final;
+
+    void DestroyTexture(void** texture) final;
+
+    void* CreateSampler(SamplerFilterMode filter, SamplerAddressingMode address, SamplerMipmapMode mipmap,
+                        bool anisotropyEnable, float maxAnisotropy) final;
+
+    void DestroySampler(void** sampler) final;
 
 private:
     void createInstance();
@@ -129,20 +152,25 @@ private:
 
     void createDepthResources();
 
+    void createNullResources();
+
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
     VkShaderModule createShaderModule(const boost::container::vector<char>& code);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
-            VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+                     VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
-    VkFormat findSupportedFormat(const boost::container::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    VkFormat findSupportedFormat(const boost::container::vector<VkFormat>& candidates, VkImageTiling tiling,
+                                 VkFormatFeatureFlags features);
 
     VkFormat findDepthFormat();
 
@@ -195,6 +223,12 @@ private:
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
+
+    VkImage nullImage;
+    VkDeviceMemory nullImageMemory;
+    VkImageView nullImageView;
+
+    VkSampler nullSampler;
 };
 
 

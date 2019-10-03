@@ -6,11 +6,13 @@
 #include "ReflectionalSpirV.h"
 #include "VulkanBackend.h"
 #include "../../Logging/Logging.h"
+#include "../../Core/Texture.h"
 
-VulkanPipeline::VulkanPipeline(Mesh* mesh, Material* material)
-        : RenderingPipeline(mesh, material)
+VulkanPipeline::VulkanPipeline(Material* material)
+        : RenderingPipeline(material)
 {
     graphicsPipeline = VK_NULL_HANDLE;
+    recreated = false;
 }
 
 VulkanPipeline::~VulkanPipeline()
@@ -32,18 +34,6 @@ void VulkanPipeline::CreateRenderingPipeline()
     buildLayoutInfo(fragmentSpirV);
 
     createDescriptorSets();
-
-    boost::container::vector<boost::container::vector<VkDescriptorSet>> transposedDescriptorSets;
-    transposedDescriptorSets.resize(vulkanBackend->GetSwapChainImageCount());
-    transposedDescriptorSets[0].reserve(descriptorSets.size());
-    transposedDescriptorSets[1].reserve(descriptorSets.size());
-    transposedDescriptorSets[2].reserve(descriptorSets.size());
-    for (int i = 0; i < descriptorSets.size(); ++i)
-    {
-        transposedDescriptorSets[0].push_back(descriptorSets[i][0]);
-        transposedDescriptorSets[1].push_back(descriptorSets[i][1]);
-        transposedDescriptorSets[2].push_back(descriptorSets[i][2]);
-    }
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -192,85 +182,17 @@ void VulkanPipeline::CreateRenderingPipeline()
 
     LOG_INFO << "Created graphics pipeline.";
 
-    // Create and Record Command Buffers
 
-    VulkanBufferWithMemory* vBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetVertexBuffer());
-    VulkanBufferWithMemory* iBuffer = reinterpret_cast<VulkanBufferWithMemory*>(mesh->GetIndexBuffer());
-
-    commandBuffers.resize(vulkanBackend->swapChainFramebuffers.size());
-
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = vulkanBackend->commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-    allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(vulkanBackend->device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
-    {
-        LOG_FATAL << "Failed to allocate command buffers!";
-        throw std::runtime_error("Failed to allocate command buffers!");
-    }
-
-    LOG_INFO << "Allocated command buffers.";
-
-    for (size_t i = 0; i < commandBuffers.size(); i++)
-    {
-        VkCommandBufferInheritanceInfo inheritanceInfo = {};
-        inheritanceInfo.renderPass = vulkanBackend->renderPass;
-        inheritanceInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-        beginInfo.pInheritanceInfo = &inheritanceInfo; // Optional
-
-        if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to begin recording command buffer " << i;
-            throw std::runtime_error("Failed to begin recording command buffer!");
-        }
-
-        LOG_INFO << "Recording command buffer " << i << " started.";
-
-        //        VkRenderPassBeginInfo renderPassInfo = {};
-        //        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        //        renderPassInfo.renderPass = vulkanBackend->renderPass;
-        //        renderPassInfo.framebuffer = vulkanBackend->swapChainFramebuffers[i];
-        //        renderPassInfo.renderArea.offset = {0, 0};
-        //        renderPassInfo.renderArea.extent = vulkanBackend->swapChainExtent;
-        //        VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        //        renderPassInfo.clearValueCount = 1;
-        //        renderPassInfo.pClearValues = &clearColor;
-        //
-        //        vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkBuffer vertexBuffers[] = {vBuffer->buffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-
-        vkCmdBindIndexBuffer(commandBuffers[i], iBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
-
-        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
-                                static_cast<uint32_t>(transposedDescriptorSets[i].size()),
-                                transposedDescriptorSets[i].data(), 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffers[i], mesh->GetIndexCount(), 1, 0, 0, 0);
-
-        //        vkCmdEndRenderPass(commandBuffers[i]);
-
-        if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-        {
-            LOG_FATAL << "Failed to record command buffer!";
-            throw std::runtime_error("Failed to record command buffer!");
-        }
-    }
 }
 
 VkPipeline& VulkanPipeline::GetPipeline()
 {
     return graphicsPipeline;
+}
+
+VkPipelineLayout& VulkanPipeline::GetPipelineLayout()
+{
+    return pipelineLayout;
 }
 
 void VulkanPipeline::cleanup()
@@ -283,9 +205,10 @@ void VulkanPipeline::cleanup()
     descriptorSets.clear();
 
     uniformBuffers.clear();
+    textureViews.clear();
+    samplers.clear();
 
-    vkFreeCommandBuffers(vulkanBackend->device, vulkanBackend->commandPool,
-                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    varTable.clear();
 
     vkDestroyPipeline(vulkanBackend->device, graphicsPipeline, nullptr);
 
@@ -305,6 +228,8 @@ void VulkanPipeline::RecreatePipeline()
     cleanup();
 
     CreateRenderingPipeline();
+
+    recreated = true;
 }
 
 
@@ -323,8 +248,10 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
 
     shaderStages.push_back(stageInfo);
 
-    if (shader->shaderResources.uniform_buffers.empty()) return;
-    // TODO: textures / samplers
+    if (shader->shaderResources.uniform_buffers.empty() &&
+        shader->shaderResources.separate_images.empty() &&
+        shader->shaderResources.separate_samplers.empty())
+        return;
 
     for (auto& itr : shader->setBindingsLayoutMap)
     {
@@ -332,7 +259,8 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
         if (findResult == setBindingsLayoutMap.end())
         {
             setBindingsLayoutMap.insert(std::make_pair(itr.first, itr.second));
-        } else
+        }
+        else
         {
             for (auto& b : itr.second)
             {
@@ -346,6 +274,31 @@ void VulkanPipeline::buildLayoutInfo(ReflectionalSpirV* shader)
         uniformBuffers.push_back(&(shader->constantBuffers[i]));
     }
 
+    for (size_t i = 0; i < shader->GetTextureViewCount(); ++i)
+    {
+        textureViews.push_back(shader->textureViews[i]);
+    }
+
+    for (size_t i = 0; i < shader->GetSamplerCount(); ++i)
+    {
+        samplers.push_back(shader->samplerStates[i]);
+    }
+
+    for (auto& var : shader->varTable)
+    {
+        varTable.insert(std::make_pair(var.first, shader));
+    }
+
+    for (auto& var : shader->textureTable)
+    {
+        imageTable.insert(std::make_pair(var.first, shader));
+    }
+
+    for (auto& var : shader->samplerTable)
+    {
+        samplerTable.insert(std::make_pair(var.first, shader));
+    }
+
 }
 
 void VulkanPipeline::createDescriptorSets()
@@ -356,11 +309,34 @@ void VulkanPipeline::createDescriptorSets()
     for (auto& itr : setBindingsLayoutMap)
     {
         boost::container::vector<VkDescriptorPoolSize> poolSize;
-        poolSize.resize(uniformBuffers.size());
-        for (size_t i = 0; i < poolSize.size(); ++i)
+        poolSize.reserve(uniformBuffers.size() + textureViews.size() + samplers.size());
+
+        for (auto& uniformBuffer : uniformBuffers)
         {
-            poolSize[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            poolSize[i].descriptorCount = swapChainImageCount;
+            if (uniformBuffer->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
+        }
+        for (auto& textureView : textureViews)
+        {
+            if (textureView->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
+        }
+        for (auto& sampler : samplers)
+        {
+            if (sampler->SetIndex != itr.first)
+                continue;
+            VkDescriptorPoolSize p = {};
+            p.type = VK_DESCRIPTOR_TYPE_SAMPLER;
+            p.descriptorCount = swapChainImageCount;
+            poolSize.push_back(p);
         }
 
         VkDescriptorPoolCreateInfo poolInfo = {};
@@ -385,7 +361,7 @@ void VulkanPipeline::createDescriptorSets()
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(itr.second.size());
         layoutInfo.pBindings = itr.second.data();
-        // TODO: This still assumes one shader one descriptor set!!!!!!!!
+
         if (vkCreateDescriptorSetLayout(vulkanBackend->device, &layoutInfo, nullptr, &descriptorSetLayout) !=
             VK_SUCCESS)
         {
@@ -414,46 +390,97 @@ void VulkanPipeline::createDescriptorSets()
 
         descriptorSets.push_back(set);
 
-
         for (size_t i = 0; i < swapChainImageCount; i++)
         {
             boost::container::vector<VkDescriptorBufferInfo> bufferInfo;
-
+            bufferInfo.reserve(uniformBuffers.size());
+            boost::container::vector<VkDescriptorImageInfo> imageInfo;
+            imageInfo.reserve(textureViews.size() + samplers.size());
+            boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
             //        bufferInfo.buffer = uniformBuffers[i];
             for (auto& uniformBuffer : uniformBuffers)
             {
-                VkDescriptorBufferInfo info = {};
                 if (uniformBuffer->SetIndex != itr.first)
                     continue;
+                VkDescriptorBufferInfo info = {};
 
                 info.buffer = reinterpret_cast<VkBuffer*>(uniformBuffer->ConstantBuffer)[i];
                 info.offset = 0;
                 info.range = uniformBuffer->Size;
                 bufferInfo.push_back(info);
+
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = uniformBuffer->BindIndex;
+                d.dstArrayElement = 0;
+
+                d.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = &bufferInfo.back();
+                d.pImageInfo = nullptr; // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
             }
-            // TODO: Samplers / Textures
-
-
-            // Notice for the above todo: this already takes other descriptors into consideration.
-            // but not the count (descriptorWrite.size())
-            boost::container::vector<VkWriteDescriptorSet> descriptorWrite;
-            descriptorWrite.resize(itr.second.size());
-
-            for (size_t w = 0; w < descriptorWrite.size(); ++w)
+            for (auto& texture : textureViews)
             {
-                descriptorWrite[w].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrite[w].dstSet = set[i];
-                descriptorWrite[w].dstBinding = itr.second[w].binding;
-                descriptorWrite[w].dstArrayElement = 0;
+                if (texture->SetIndex != itr.first)
+                    continue;
+                VkDescriptorImageInfo info = {};
+                info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                if (texture->data == nullptr)
+                    info.imageView = vulkanBackend->nullImageView;
+                else
+                    info.imageView = VkImageView(texture->data);
+                info.sampler = nullptr;
+                imageInfo.push_back(info);
 
-                descriptorWrite[w].descriptorType = itr.second[w].descriptorType;
-                descriptorWrite[w].descriptorCount = itr.second[w].descriptorCount;
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = texture->BindIndex;
+                d.dstArrayElement = 0;
 
-                descriptorWrite[w].pBufferInfo = &bufferInfo[w];
-                descriptorWrite[w].pImageInfo = nullptr; // Optional
-                descriptorWrite[w].pTexelBufferView = nullptr; // Optional
+                d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = nullptr;
+                d.pImageInfo = &imageInfo.back(); // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
             }
 
+            for (auto& sampler : samplers)
+            {
+                if (sampler->SetIndex != itr.first)
+                    continue;
+                VkDescriptorImageInfo info = {};
+                //info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                info.imageView = nullptr;
+                if (sampler->data == nullptr)
+                    info.sampler = vulkanBackend->nullSampler;
+                else
+                    info.sampler = VkSampler(sampler->data);
+                imageInfo.push_back(info);
+
+                VkWriteDescriptorSet d = {};
+                d.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                d.dstSet = set[i];
+                d.dstBinding = sampler->BindIndex;
+                d.dstArrayElement = 0;
+
+                d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+                d.descriptorCount = 1;
+
+                d.pBufferInfo = nullptr;
+                d.pImageInfo = &imageInfo.back(); // Optional
+                d.pTexelBufferView = nullptr; // Optional
+
+                descriptorWrite.push_back(d);
+            }
             vkUpdateDescriptorSets(vulkanBackend->device, static_cast<uint32_t>(descriptorWrite.size()),
                                    descriptorWrite.data(), 0, nullptr);
         }
@@ -461,5 +488,73 @@ void VulkanPipeline::createDescriptorSets()
     }
 
 }
+
+bool VulkanPipeline::SetTexture(const boost::container::string& name, const Texture& texture)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalShader*>::iterator result =
+            imageTable.find(name);
+
+    // Did we find the key?
+    if (result == imageTable.end())
+        return false;
+
+    bool r = result->second->SetImage(name,
+                                      reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
+
+    RecreatePipeline();
+
+    return r;
+}
+
+bool VulkanPipeline::SetSampler(const boost::container::string& name, const Texture& texture)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalShader*>::iterator result =
+            samplerTable.find(name);
+
+    // Did we find the key?
+    if (result == samplerTable.end())
+        return false;
+
+    bool r = result->second->SetSampler(name, texture.GetSampler());
+
+    RecreatePipeline();
+
+    return r;
+}
+
+bool VulkanPipeline::SetSamplerTexture(const boost::container::string& samplerName,
+                                       const boost::container::string& textureName, const Texture& texture)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalShader*>::iterator result =
+            samplerTable.find(samplerName);
+
+    // Did we find the key?
+    if (result == samplerTable.end())
+        return false;
+
+    bool r = result->second->SetSampler(samplerName, texture.GetSampler());
+
+    if (!r) return false;
+
+    // Look for the key
+    result = imageTable.find(textureName);
+
+    // Did we find the key?
+    if (result == imageTable.end())
+        return false;
+
+    r = result->second->SetImage(textureName,
+                                 reinterpret_cast<VulkanTextureData*>(texture.GetTextureData())->textureImageView);
+
+    if (!r) return false;
+
+    RecreatePipeline();
+
+    return r;
+}
+
 
 

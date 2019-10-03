@@ -19,9 +19,17 @@ else ()
     add_compile_definitions(BOOST_LOG_DYN_LINK)
 endif ()
 
-# Find glslangValidator
 find_package(Vulkan REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+find_package(Git REQUIRED)
 
+include(ExternalProject)
+
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+# Find glslangValidator
 get_filename_component(VULKAN_LIBRARY_PATH ${Vulkan_LIBRARY} DIRECTORY)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -47,8 +55,6 @@ else ()
 endif ()
 
 # Get ShaderConductor
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
 set(SHADER_CONDUCTOR_DIR_FOUND FALSE)
 set(SHADER_CONDUCTOR_CLI_EXECUTABLE_FOUND FALSE)
 
@@ -119,12 +125,6 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif ()
 
 # SPRIV-Cross
-include(ExternalProject)
-find_package(Git REQUIRED)
-
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
 ExternalProject_Add(
         SPIRV-Cross
@@ -154,6 +154,24 @@ ExternalProject_Add(
         LOG_DOWNLOAD ON
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
+
+# stb Collection
+set(STB_COLLECTION_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/stb)
+if (EXISTS ${STB_COLLECTION_SRC_PATH})
+    #    include_directories(${STB_COLLECTION_SRC_PATH})
+    file(GLOB STB_HEADERS
+            LIST_DIRECTORIES false
+            ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/stb/*.h)
+
+    if ("${STB_HEADERS}" STREQUAL "")
+        message(FATAL_ERROR "-- Can't find stb collection header files. Make sure the submodules are cloned.")
+    endif ()
+
+    file(COPY ${STB_HEADERS}
+            DESTINATION "${EXTERNAL_INSTALL_LOCATION}/include/stb")
+else ()
+    message(FATAL_ERROR "-- Can't find stb collection header files. Make sure the submodules are cloned.")
+endif ()
 
 # Engine and Game
 add_subdirectory(CosmosEngine)

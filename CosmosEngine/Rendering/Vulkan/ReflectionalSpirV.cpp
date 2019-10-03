@@ -687,7 +687,7 @@ void ReflectionalSpirV::CopyBufferData(const boost::container::string& bufferNam
 
 void ReflectionalSpirV::ReleaseConstantBuffer(size_t index)
 {
-    for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+    for (size_t i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
         vkDestroyBuffer(device, reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer)[i], nullptr);
 
     delete[] reinterpret_cast<VkBuffer*>(constantBuffers[index].ConstantBuffer);
@@ -733,7 +733,6 @@ bool ReflectionalSpirV::CreateShader()
         setBindingLayout->second.push_back(binding);
 
 
-
         cbTable.insert(std::make_pair(constantBuffers[b].Name, constantBuffers + b));
 
         spirv_cross::SPIRType type = compiler->get_type(resource.base_type_id);
@@ -744,8 +743,6 @@ bool ReflectionalSpirV::CreateShader()
         {
             ReflectionalShaderVariable ubm{};
             boost::container::string varName = compiler->get_member_name(resource.base_type_id, i).c_str();
-//            auto &member_type = glsl.get_type(type.member_types[i]);
-//            ubm.type = parseType(member_type);
 
             ubm.Size = static_cast<unsigned int>(compiler->get_declared_struct_member_size(type, i));
             ubm.ByteOffset = compiler->type_struct_member_offset(type, i);
@@ -768,7 +765,7 @@ bool ReflectionalSpirV::CreateShader()
 
         constantBuffers[b].ConstantBuffer = new VkBuffer[vulkanBackend->GetSwapChainImageCount()];
 
-        for (int i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
+        for (size_t i = 0; i < vulkanBackend->GetSwapChainImageCount(); ++i)
         {
             createBuffer(constantBuffers[b].Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -776,22 +773,77 @@ bool ReflectionalSpirV::CreateShader()
                          constantBuffersMemory[b][i]);
         }
 
-
-        //parseSampler2Ds
-//        for (auto &resource : resources.sampled_images)
-//        {
-//            Sampler2D s;
-//            s.name = glsl.get_name(resource.id);
-//            s.set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-//            s.binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-//            if (setCount < s.set)
-//            {
-//                setCount = s.set;
-//            }
-//            info->sampler2Ds.push_back(s);
-//        }
-
         ++b;
+    }
+
+    for (auto& resource : shaderResources.separate_images)
+    {
+        ReflectionalTextureView* newTextureView = new ReflectionalTextureView;
+        boost::container::string name = compiler->get_name(resource.id).c_str();
+        newTextureView->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        newTextureView->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
+        newTextureView->Index = static_cast<unsigned int>(textureViews.size());
+
+        if (setCount < newTextureView->SetIndex)
+        {
+            setCount = newTextureView->SetIndex;
+        }
+
+        auto setBindingLayout = setBindingsLayoutMap.find(newTextureView->SetIndex);
+        if (setBindingLayout == setBindingsLayoutMap.end())
+        {
+            auto insertResult = setBindingsLayoutMap.insert(std::make_pair(newTextureView->SetIndex,
+                                                                           boost::container::vector<VkDescriptorSetLayoutBinding>()));
+            setBindingLayout = insertResult.first;
+        }
+
+        VkDescriptorSetLayoutBinding binding = {};
+        binding.binding = newTextureView->BindIndex;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        binding.descriptorCount = 1;
+        binding.stageFlags = shaderStageFlag;
+        //binding.stageFlags = VK_SHADER_STAGE_ALL;
+        binding.pImmutableSamplers = nullptr; // Optional
+
+        setBindingLayout->second.push_back(binding);
+
+        textureTable.insert(std::make_pair(name, newTextureView));
+        textureViews.push_back(newTextureView);
+    }
+
+    for (auto& resource : shaderResources.separate_samplers)
+    {
+        ReflectionalSampler* newSampler = new ReflectionalSampler;
+        boost::container::string name = compiler->get_name(resource.id).c_str();
+        newSampler->SetIndex = compiler->get_decoration(resource.id, spv::DecorationDescriptorSet);
+        newSampler->BindIndex = compiler->get_decoration(resource.id, spv::DecorationBinding);
+        newSampler->Index = static_cast<unsigned int>(samplerStates.size());
+
+        if (setCount < newSampler->SetIndex)
+        {
+            setCount = newSampler->SetIndex;
+        }
+
+        auto setBindingLayout = setBindingsLayoutMap.find(newSampler->SetIndex);
+        if (setBindingLayout == setBindingsLayoutMap.end())
+        {
+            auto insertResult = setBindingsLayoutMap.insert(std::make_pair(newSampler->SetIndex,
+                                                                           boost::container::vector<VkDescriptorSetLayoutBinding>()));
+            setBindingLayout = insertResult.first;
+        }
+
+        VkDescriptorSetLayoutBinding binding = {};
+        binding.binding = newSampler->BindIndex;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = shaderStageFlag;
+        //binding.stageFlags = VK_SHADER_STAGE_ALL;
+        binding.pImmutableSamplers = nullptr; // Optional
+
+        setBindingLayout->second.push_back(binding);
+
+        samplerTable.insert(std::make_pair(name, newSampler));
+        samplerStates.push_back(newSampler);
     }
 
     return true;
@@ -800,6 +852,80 @@ bool ReflectionalSpirV::CreateShader()
 size_t ReflectionalSpirV::GetDescriptorCount()
 {
     return shaderResources.uniform_buffers.size();
+}
+
+bool ReflectionalSpirV::SetImage(const boost::container::string& name, void* textureView)
+{
+    // Look for the variable and verify
+    ReflectionalTextureView* textureInfo = GetTextureInfo(name);
+    if (textureInfo == nullptr)
+        return false;
+
+    // Set the shader resource view
+    textureInfo->data = textureView;
+
+    // Success
+    return true;
+}
+
+bool ReflectionalSpirV::SetSampler(const boost::container::string& name, void* samplerState)
+{
+    // Look for the variable and verify
+    ReflectionalSampler* sampInfo = GetSamplerInfo(name);
+    if (sampInfo == nullptr)
+        return false;
+
+    // Set the shader resource view
+    sampInfo->data = samplerState;
+
+    // Success
+    return true;
+}
+
+ReflectionalTextureView* ReflectionalSpirV::GetTextureInfo(const boost::container::string& name)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalTextureView*>::iterator result =
+            textureTable.find(name);
+
+    // Did we find the key?
+    if (result == textureTable.end())
+        return nullptr;
+
+    // Success
+    return result->second;
+}
+
+ReflectionalTextureView* ReflectionalSpirV::GetTextureInfo(unsigned int index)
+{
+    // Valid index?
+    if (index >= textureViews.size()) return nullptr;
+
+    // Grab the bind index
+    return textureViews[index];
+}
+
+ReflectionalSampler* ReflectionalSpirV::GetSamplerInfo(const boost::container::string& name)
+{
+    // Look for the key
+    boost::unordered_map<boost::container::string, ReflectionalSampler*>::iterator result =
+            samplerTable.find(name);
+
+    // Did we find the key?
+    if (result == samplerTable.end())
+        return 0;
+
+    // Success
+    return result->second;
+}
+
+ReflectionalSampler* ReflectionalSpirV::GetSamplerInfo(unsigned int index)
+{
+    // Valid index?
+    if (index >= samplerStates.size()) return 0;
+
+    // Grab the bind index
+    return samplerStates[index];
 }
 
 bool VertexSpirV::CreateShader()

@@ -7,8 +7,12 @@
 
 #include "../Export.h"
 #include "../Rendering/ReflectionalShader.h"
+#include "Texture.h"
 
 #include <boost/container/string.hpp>
+#include <boost/container/map.hpp>
+
+class RenderingPipeline;
 
 class ENGINE_API Material
 {
@@ -35,6 +39,10 @@ public:
 
     ReflectionalShader* GetPixelShader();
 
+    RenderingPipeline* GetPipeline();
+
+    void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
+
 protected:
     /**
      * @brief Set other data needed by the shaders
@@ -44,11 +52,15 @@ protected:
      */
     //virtual void SetShaderData() = 0;
 
+    void generateRenderingPipeline();
+
     ReflectionalShader* vertexShader;
 
     ReflectionalShader* pixelShader;
 
+    RenderingPipeline* pipeline;
 
+    boost::container::map<boost::container::string, boost::shared_ptr<Texture>> textures;
 };
 
 #endif //GAMEENGINE_MATERIAL_H

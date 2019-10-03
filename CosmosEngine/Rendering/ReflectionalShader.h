@@ -6,12 +6,11 @@
 #define GAMEENGINE_REFLECTIONALSHADER_H
 
 #include "../Export.h"
-
 #include <glm/glm.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
-
+#include <boost/shared_ptr.hpp>
 // --------------------------------------------------------
 // Used by reflectional shaders to store information about
 // specific variables in constant/uniform buffers
@@ -34,7 +33,7 @@ struct ReflectionalConstantBuffer
     uint32_t Type; // To enum D3D_CBUFFER_TYPE, not relevant in SPIR-V
     unsigned int Size;
     unsigned int BindIndex;
-    unsigned int SetIndex; // Not relevant in HLSL
+    unsigned int SetIndex;
     unsigned int LocationIndex; // Not relevant in HLSL
     void* ConstantBuffer; // void -> VkBuffer_T[3] / ID3D11Buffer
     unsigned char* LocalDataBuffer;
@@ -42,24 +41,26 @@ struct ReflectionalConstantBuffer
 };
 
 // --------------------------------------------------------
-// TODO: Wait for confirmation
-// Contains info about a single SRV in a shader
+// Contains info about a single Texture View in a shader
 // --------------------------------------------------------
-//struct ReflectionalSRV
-//{
-//    unsigned int Index;		// The raw index of the SRV
-//    unsigned int BindIndex; // The register of the SRV
-//};
+struct ReflectionalTextureView
+{
+    unsigned int Index;        // The raw index of the SRV
+    unsigned int SetIndex;
+    unsigned int BindIndex; // The register of the SRV
+    void* data = nullptr; // void* -> VkImageView(Vulkan)
+};
 
 // --------------------------------------------------------
-// TODO: Wait for confirmation
 // Contains info about a single Sampler in a shader
 // --------------------------------------------------------
-//struct ReflectionalSampler
-//{
-//    unsigned int Index;		// The raw index of the Sampler
-//    unsigned int BindIndex; // The register of the Sampler
-//};
+struct ReflectionalSampler
+{
+    unsigned int Index;        // The raw index of the Sampler
+    unsigned int SetIndex;
+    unsigned int BindIndex; // The register of the Sampler
+    void* data = nullptr; // void* -> VkSampler(Vulkan)
+};
 
 // --------------------------------------------------------
 // Base abstract class for simplifying shader handling
@@ -111,20 +112,28 @@ public:
     bool SetMatrix4x4(const boost::container::string& name, const glm::mat4& data);
 
     // Setting shader resources
-    // TODO: Declare this after class Texture is well defined
-    //virtual bool SetImage(const boost::container::string& name, ID3D11ShaderResourceView* srv) = 0;
-    //virtual bool SetSampler(const boost::container::string& name, ID3D11SamplerState* samplerState) = 0;
+    // void* -> ID3D11ShaderResourceView / VulkanImage
+    virtual bool SetImage(const boost::container::string& name, void* srv) = 0;
+
+    // void* -> ID3D11SamplerState / VulkanSampler
+    virtual bool SetSampler(const boost::container::string& name, void* samplerState) = 0;
 
     // Getting data about variables and resources
     const ReflectionalShaderVariable* GetVariableInfo(const boost::container::string& name);
 
-    //virtual const ReflectionalSRV* GetShaderResourceViewInfo(const boost::container::string& name) = 0;
-    //virtual const ReflectionalSRV* GetShaderResourceViewInfo(unsigned int index) = 0;
-    //size_t GetShaderResourceViewCount() { return textureTable.size(); }
+    virtual ReflectionalTextureView* GetTextureInfo(const boost::container::string& name) = 0;
 
-    //virtual const ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) = 0;
-    //virtual const ReflectionalSampler* GetSamplerInfo(unsigned int index) = 0;
-    //size_t GetSamplerCount() { return samplerTable.size(); }
+    virtual ReflectionalTextureView* GetTextureInfo(unsigned int index) = 0;
+
+    size_t GetTextureViewCount()
+    { return textureTable.size(); }
+
+    virtual ReflectionalSampler* GetSamplerInfo(const boost::container::string& name) = 0;
+
+    virtual ReflectionalSampler* GetSamplerInfo(unsigned int index) = 0;
+
+    size_t GetSamplerCount()
+    { return samplerTable.size(); }
 
     // Get data about constant buffers
     size_t GetBufferCount();
@@ -147,12 +156,12 @@ protected:
 
     // Maps for variables and buffers
     ReflectionalConstantBuffer* constantBuffers = nullptr; // For index-based lookup
-//    boost::container::vector<ReflectionalSRV*>		shaderResourceViews;
-//    boost::container::vector<ReflectionalSampler*>	samplerStates;
+    boost::container::vector<ReflectionalTextureView*> textureViews;
+    boost::container::vector<ReflectionalSampler*> samplerStates;
     boost::unordered_map<boost::container::string, ReflectionalConstantBuffer*> cbTable;
     boost::unordered_map<boost::container::string, ReflectionalShaderVariable> varTable;
-//    boost::unordered_map<boost::container::string, ReflectionalSRV*> textureTable;
-//    boost::unordered_map<boost::container::string, ReflectionalSampler*> samplerTable;
+    boost::unordered_map<boost::container::string, ReflectionalTextureView*> textureTable;
+    boost::unordered_map<boost::container::string, ReflectionalSampler*> samplerTable;
 
     // Pure virtual functions for dealing with shader types
     virtual void SetShaderAndCBs() = 0;

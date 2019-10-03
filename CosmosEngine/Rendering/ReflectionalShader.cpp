@@ -181,7 +181,7 @@ const ReflectionalConstantBuffer* ReflectionalShader::GetBufferInfo(unsigned int
 void ReflectionalShader::CleanUp()
 {
     // Handle constant buffers and local data buffers
-    for (unsigned int i = 0; i < constantBufferCount; i++)
+    for (size_t i = 0; i < constantBufferCount; i++)
     {
         ReleaseConstantBuffer(i);
         delete[] constantBuffers[i].LocalDataBuffer;
@@ -193,15 +193,15 @@ void ReflectionalShader::CleanUp()
         constantBufferCount = 0;
     }
 
-//    for (unsigned int i = 0; i < shaderResourceViews.size(); i++)
-//        delete shaderResourceViews[i];
-//
-//    for (unsigned int i = 0; i < samplerStates.size(); i++)
-//        delete samplerStates[i];
+    for (auto& textureView : textureViews)
+        delete textureView;
+
+    for (auto& samplerState : samplerStates)
+        delete samplerState;
 
     // Clean up tables
     varTable.clear();
     cbTable.clear();
-//    samplerTable.clear();
-//    textureTable.clear();
+    samplerTable.clear();
+    textureTable.clear();
 }
