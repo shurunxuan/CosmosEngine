@@ -8,6 +8,7 @@
 #include "ReflectionalSpirV.h"
 #include "VulkanPipeline.h"
 #include "VulkanCommandBuffer.h"
+#include "../../Core/MeshRenderer.h"
 
 #include <set>
 #include <algorithm>

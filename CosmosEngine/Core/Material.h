@@ -7,9 +7,10 @@
 
 #include "../Export.h"
 #include "../Rendering/ReflectionalShader.h"
-//#include "Texture.h"
+#include "Texture.h"
 
 #include <boost/container/string.hpp>
+#include <boost/container/map.hpp>
 
 class RenderingPipeline;
 
@@ -40,7 +41,7 @@ public:
 
     RenderingPipeline* GetPipeline();
 
-//    void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
+    void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
 
 protected:
     /**
@@ -59,7 +60,7 @@ protected:
 
     RenderingPipeline* pipeline;
 
-//    boost::container::map<boost::container::string, boost::shared_ptr<Texture>> textures;
+    boost::container::map<boost::container::string, boost::shared_ptr<Texture>> textures;
 };
 
 #endif //GAMEENGINE_MATERIAL_H

@@ -6,8 +6,7 @@
 #define GAMEENGINE_TEXTURE_H
 
 #include "../Export.h"
-#include "../Rendering/Vulkan/VulkanBackend.h"
-#include "../Rendering/Vulkan/VulkanPipeline.h"
+#include "../Rendering/RenderingBackend.h"
 
 class ENGINE_API Texture
 {

@@ -5,6 +5,8 @@
 #include "RenderingBackend.h"
 #include "../Logging/Logging.h"
 #include "../App/App.h"
+#include "../Core/MeshRenderer.h"
+#include "RenderingPipeline.h"
 
 RenderingBackend* presentedRenderingBackend = nullptr;
 

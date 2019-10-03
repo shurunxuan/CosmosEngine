@@ -8,10 +8,9 @@
 #include "../Export.h"
 #include "ReflectionalShader.h"
 #include "../Core/Material.h"
+#include "../Core/Texture.h"
 
 #include <boost/container/string.hpp>
-
-class Texture;
 
 class ENGINE_API RenderingPipeline
 {

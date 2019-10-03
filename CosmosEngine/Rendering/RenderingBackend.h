@@ -6,8 +6,6 @@
 #define COSMOSENGINE_RENDERINGBACKEND_H
 
 #include "../Export.h"
-#include "RenderingPipeline.h"
-#include "../Core/MeshRenderer.h"
 
 #define GLFW_INCLUDE_VULKAN
 
@@ -36,6 +34,12 @@ enum SamplerMipmapMode
     SAMPLER_MIPMAP_MODE_NEAREST = 0,
     SAMPLER_MIPMAP_MODE_LINEAR = 1
 };
+
+class MeshRenderer;
+class Material;
+class CommandBuffer;
+class ReflectionalShader;
+class RenderingPipeline;
 
 class ENGINE_API RenderingBackend
 {

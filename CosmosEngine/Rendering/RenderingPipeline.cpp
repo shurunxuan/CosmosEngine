@@ -4,7 +4,6 @@
 
 #include "RenderingPipeline.h"
 
-
 RenderingPipeline::RenderingPipeline(Material* material)
 {
     this->material = material;

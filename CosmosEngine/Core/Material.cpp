@@ -63,10 +63,13 @@ void Material::generateRenderingPipeline()
     pipeline->CreateRenderingPipeline();
 }
 
-//void Material::SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture)
-//{
-//    auto result = textures.insert(std::make_pair(textureName, texture));
-//    if (!result.second) return;
-//
-//    pipeline
-//}
+void Material::SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture)
+{
+    auto result = textures.insert(std::make_pair(textureName, texture));
+    if (!result.second)
+    {
+        result.first->second = texture;
+    }
+
+    pipeline->SetSamplerTexture(textureName + "Sampler", textureName + "Texture", *texture);
+}

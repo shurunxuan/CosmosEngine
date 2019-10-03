@@ -7,8 +7,6 @@
 
 #include "../RenderingPipeline.h"
 #include "ReflectionalSpirV.h"
-#include "VulkanBackend.h"
-
 
 class ENGINE_LOCAL VulkanPipeline : public RenderingPipeline
 {

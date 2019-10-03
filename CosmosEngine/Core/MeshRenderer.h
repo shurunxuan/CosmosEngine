@@ -8,7 +8,6 @@
 #include "Component.h"
 #include "Mesh.h"
 #include "Material.h"
-#include "../Rendering/RenderingPipeline.h"
 #include "../Rendering/CommandBuffer.h"
 
 #include <boost/shared_ptr.hpp>

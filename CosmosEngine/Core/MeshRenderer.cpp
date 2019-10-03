@@ -4,6 +4,7 @@
 
 #include "MeshRenderer.h"
 #include "../Rendering/RenderingBackend.h"
+#include "../Rendering/RenderingPipeline.h"
 
 MeshRenderer::MeshRenderer(Object* owner) : Component(owner)
 {

@@ -3,6 +3,7 @@
 //
 
 #include "Texture.h"
+#include "../Logging/Logging.h"
 
 Texture::Texture()
 {

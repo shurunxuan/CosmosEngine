@@ -6,12 +6,11 @@
 #define GAMEENGINE_REFLECTIONALSHADER_H
 
 #include "../Export.h"
-
 #include <glm/glm.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
-
+#include <boost/shared_ptr.hpp>
 // --------------------------------------------------------
 // Used by reflectional shaders to store information about
 // specific variables in constant/uniform buffers
@@ -113,7 +112,6 @@ public:
     bool SetMatrix4x4(const boost::container::string& name, const glm::mat4& data);
 
     // Setting shader resources
-    // TODO: Declare this after class Texture is well defined
     // void* -> ID3D11ShaderResourceView / VulkanImage
     virtual bool SetImage(const boost::container::string& name, void* srv) = 0;
 

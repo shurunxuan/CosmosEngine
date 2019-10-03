@@ -269,7 +269,7 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         unsigned int diffuseTextureCount = aMaterial->GetTextureCount(aiTextureType_DIFFUSE);
         if (diffuseTextureCount > 0)
         {
-            Texture* diffuseTexture = new Texture;
+            boost::shared_ptr<Texture> diffuseTexture = boost::make_shared<Texture>();
             aiString as;
             aiReturn ar;
             // Only get the first texture
@@ -298,7 +298,8 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
 //                                                                           reinterpret_cast<VulkanTextureData*>(diffuseTexture->GetTextureData())->textureImageView);
 //                defaultMaterial->GetPixelShader()->SetSampler("basicSampler", diffuseTexture->GetSampler());
 
-                pipeline->SetSamplerTexture("diffuseSampler", "diffuseTexture", *diffuseTexture);
+                //pipeline->SetSamplerTexture("diffuseSampler", "diffuseTexture", *diffuseTexture);
+                defaultMaterial->SetTexture("diffuse", diffuseTexture);
             }
         }
 
