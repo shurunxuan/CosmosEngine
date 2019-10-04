@@ -70,3 +70,8 @@ bool RenderingBackend::ShouldTerminate()
 {
     return glfwWindowShouldClose(window);
 }
+
+GLFWwindow* RenderingBackend::GetWindow()
+{
+    return window;
+}

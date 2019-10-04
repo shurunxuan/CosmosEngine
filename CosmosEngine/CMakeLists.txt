@@ -43,7 +43,7 @@ set(SOURCE_FILES
         Core/Texture.cpp Rendering/CommandBuffer.cpp
         Rendering/Vulkan/VulkanCommandBuffer.cpp
         Input/InputBackend.cpp
-        )
+        Input/GLFW/GLFWInputBackend.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -68,7 +68,7 @@ set(HEADER_FILES
         Rendering/CommandBuffer.h
         Rendering/Vulkan/VulkanCommandBuffer.h
         Input/InputBackend.h
-        )
+        Input/GLFW/GLFWInputBackend.h Input/GLFW/GLFWInputBackend.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

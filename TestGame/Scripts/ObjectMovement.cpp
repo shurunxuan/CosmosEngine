@@ -4,6 +4,7 @@
 
 #include "ObjectMovement.h"
 #include <CosmosEngine/Core/Object.h>
+#include <CosmosEngine/Input/InputBackend.h>
 
 ObjectMovement::ObjectMovement(Object* owner) : Component(owner)
 {
@@ -28,7 +29,8 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         auto position = object->transform->GetLocalTranslation();
         position.y = -0.5f;
         object->transform->SetLocalTranslation(position);
-    } else
+    }
+    else
     {
         auto quaternion = object->transform->GetLocalRotation();
         quaternion = quaternion * glm::angleAxis(deltaTime * glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));

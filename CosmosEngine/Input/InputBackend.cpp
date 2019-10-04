@@ -47,7 +47,7 @@ JoystickButtonCode GetJoystickButtonCodeFromName(const boost::container::string&
     return Reserved0;
 }
 
-KeyCode GetVirtualKeyCodeFromName(const boost::container::string& keyName)
+KeyCode GetKeyCodeFromName(const boost::container::string& keyName)
 {
     if (keyName == "backspace") return Backspace;
     if (keyName == "delete") return Delete;
@@ -111,7 +111,7 @@ KeyCode GetVirtualKeyCodeFromName(const boost::container::string& keyName)
     if (keyName == "period") return Period;
     if (keyName == "slash") return Slash;
     if (keyName == "semicolon") return Semicolon;
-    if (keyName == "equals") return Equals;
+    if (keyName == "equals") return Equal;
     if (keyName == "left bracket") return LeftBracket;
     if (keyName == "backslash") return Backslash;
     if (keyName == "right bracket") return RightBracket;
@@ -298,7 +298,7 @@ void InputAxis::BindButtonCallback(const boost::container::string& buttonName, i
     else
     {
         // keyboard
-        KeyCode keyCode = GetVirtualKeyCodeFromName(buttonName);
+        KeyCode keyCode = GetKeyCodeFromName(buttonName);
 
         if (keyCode < 0)
         {
@@ -553,6 +553,11 @@ float InputBackend::GetRawAxis(const boost::container::string& name)
             result += input.getRawAxis();
     }
     return result;
+}
+
+void InputBackend::GetMousePosition(float* x, float* y) const
+{
+
 }
 
 

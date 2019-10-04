@@ -5,6 +5,7 @@
 #include "App.h"
 
 #include "../Rendering/Vulkan/VulkanBackend.h"
+#include "../Input/GLFW/GLFWInputBackend.h"
 #include "../Logging/Logging.h"
 
 #include <boost/version.hpp>
@@ -26,11 +27,13 @@ CEApp::CEApp()
     App = this;
     InitLogger();
     renderingBackend = nullptr;
+    inputBackend = nullptr;
 }
 
 CEApp::~CEApp()
 {
     delete renderingBackend;
+    delete inputBackend;
     StopLogger();
 }
 
@@ -51,6 +54,10 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     renderingBackend->StartUp(screenWidth, screenHeight);
 
+    inputBackend = new GLFWInputBackend();
+
+    inputBackend->StartUp(renderingBackend->GetWindow());
+
     currentScene = new Scene();
     CurrentActiveScene()->mainCamera->Resize(float(screenWidth), float(screenHeight));
 
@@ -68,6 +75,7 @@ void CEApp::Loop()
     {
         lastTime = currentTime;
 
+        inputBackend->SyncUpdate(deltaTime.count());
         App->CurrentActiveScene()->Update(deltaTime.count(), totalTime.count());
         renderingBackend->Update(deltaTime.count(), totalTime.count());
 

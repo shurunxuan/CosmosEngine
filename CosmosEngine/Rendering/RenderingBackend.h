@@ -97,6 +97,8 @@ public:
 
     virtual void DestroyCommandBuffer(CommandBuffer** commandBuffer) = 0;
 
+    GLFWwindow* GetWindow();
+
 protected:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 

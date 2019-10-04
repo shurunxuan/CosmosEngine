@@ -144,7 +144,7 @@ enum KeyCode
     Period,
     Slash,
     Semicolon,
-    Equals,
+    Equal,
     LeftBracket,
     Backslash,
     RightBracket,
@@ -189,6 +189,8 @@ enum KeyCode
     Menu,
     ErrorKey
 };
+
+class InputBackend;
 
 /**
  * @brief Class that represents a input
@@ -359,7 +361,7 @@ public:
      *
      * Should delete or release or free all pointers
      */
-    ~InputBackend();
+    virtual ~InputBackend();
 
     /**
      * @brief Copy constructor of InputBackend is deleted
@@ -398,19 +400,19 @@ public:
      *
      * @param userData Any useful data for initialize the input backend
      */
-    virtual void Init(void* userData) = 0;
+    virtual void StartUp(void* userData) = 0;
 
     /**
-     * @brief Asynchronized Update of the input system for polls
+     * @brief Asynchronized Update of the input backend for polls
      *
      * @param deltaTime The time between two asynchronized input backend updates
      */
     virtual void AsyncUpdate(float deltaTime) = 0;
 
     /**
-     * @brief Synchronized Update of the input system for callbacks
+     * @brief Synchronized Update of the input backend for callbacks
      *
-     * @param deltaTime The time between two synchronized input system updates
+     * @param deltaTime The time between two synchronized input backend updates
      */
     virtual void SyncUpdate(float deltaTime) = 0;
 
@@ -460,7 +462,7 @@ public:
      * @param[out] x The x position of the mouse pointer
      * @param[out] y The y position of the mouse pointer
      */
-    virtual void GetMousePosition(float* x, float* y) const = 0;
+    void GetMousePosition(float* x, float* y) const;
 
     /**
      * @brief Register a new input into the input system

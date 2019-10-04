@@ -7,6 +7,7 @@
 
 #include "../Export.h"
 #include "../Rendering/RenderingBackend.h"
+#include "../Input/InputBackend.h"
 #include "../Core/Object.h"
 #include "../Core/Camera.h"
 #include "../Core/Scene.h"
@@ -57,6 +58,7 @@ public:
 private:
 
     RenderingBackend* renderingBackend;
+    InputBackend* inputBackend;
 
     boost::chrono::high_resolution_clock::time_point startTime;
     boost::chrono::high_resolution_clock::time_point currentTime;
