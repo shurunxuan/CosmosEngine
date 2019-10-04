@@ -37,7 +37,7 @@ enum AxisCode
     JoystickLY,                // Left Thumb Vertical
     JoystickRX,                // Right Thumb Horizontal
     JoystickRY,                // Right Thumb Vertical
-    ErrorAxis                // Doesn't exist
+    ErrorAxisCode                // Doesn't exist
 };
 
 
@@ -47,22 +47,22 @@ enum AxisCode
  */
 enum JoystickButtonCode
 {
-    DPAD_UP = 0x0001,            // DPad Up
-    DPAD_DOWN = 0x0002,            // DPad Down
-    DPAD_LEFT = 0x0004,        // DPad Left
-    DPAD_RIGHT = 0x0008,        // DPad Right
-    START = 0x0010,                // Start / Menu
-    BACK = 0x0020,                // Back / View
-    LEFT_THUMB = 0x0040,        // Left Thumb Button
-    RIGHT_THUMB = 0x0080,        // Right Thumb Button
-    LEFT_SHOULDER = 0x0100,        // Left Shoulder Button / LB
-    RIGHT_SHOULDER = 0x0200,    // Right Shoulder Button / RB
-    RESERVED_0 = 0x0400,        // Reserved
-    RESERVED_1 = 0x0800,        // Reserved
-    A = 0x1000,                    // A Button
-    B = 0x2000,                    // B Button
-    X = 0x4000,                    // X Button
-    Y = 0x8000                    // Y Button
+    DPadUp = 0x0001,            // DPad Up
+    DPadDown = 0x0002,            // DPad Down
+    DPadLeft = 0x0004,        // DPad Left
+    DPadRight = 0x0008,        // DPad Right
+    Start = 0x0010,                // Start / Menu
+    Back = 0x0020,                // Back / View
+    LeftThumb = 0x0040,        // Left Thumb Button
+    RightThumb = 0x0080,        // Right Thumb Button
+    LeftShoulder = 0x0100,        // Left Shoulder Button / LB
+    RightShoulder = 0x0200,    // Right Shoulder Button / RB
+    Reserved0 = 0x0400,        // Reserved
+    Reserved1 = 0x0800,        // Reserved
+    ButtonA = 0x1000,                    // A Button
+    ButtonB = 0x2000,                    // B Button
+    ButtonX = 0x4000,                    // X Button
+    ButtonY = 0x8000                    // Y Button
 };
 
 /**
@@ -77,7 +77,117 @@ enum JoystickAxisCode
     LY,                // Left Thumb Vertical
     RX,                // Right Thumb Horizontal
     RY,                // Right Thumb Vertical
-    ERROR_AXIS        // Doesn't exist
+    ErrorAxis        // Doesn't exist
+};
+
+enum KeyCode
+{
+    Backspace,
+    Delete,
+    Tab,
+    Return,
+    Escape,
+    Space,
+    Keypad0,
+    Keypad1,
+    Keypad2,
+    Keypad3,
+    Keypad4,
+    Keypad5,
+    Keypad6,
+    Keypad7,
+    Keypad8,
+    Keypad9,
+    KeypadPeriod,
+    KeypadDivide,
+    KeypadMultiply,
+    KeypadMinus,
+    KeypadPlus,
+    KeypadEnter,
+    Up,
+    Down,
+    Right,
+    Left,
+    Insert,
+    Home,
+    End,
+    PageUp,
+    PageDown,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    F13,
+    F14,
+    F15,
+    Number0,
+    Number1,
+    Number2,
+    Number3,
+    Number4,
+    Number5,
+    Number6,
+    Number7,
+    Number8,
+    Number9,
+    Quote,
+    Comma,
+    Minus,
+    Period,
+    Slash,
+    Semicolon,
+    Equals,
+    LeftBracket,
+    Backslash,
+    RightBracket,
+    BackQuote,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    NumLock,
+    CapsLock,
+    ScrollLock,
+    RightShift,
+    LeftShift,
+    RightControl,
+    LeftControl,
+    RightAlt,
+    LeftAlt,
+    LeftWindows,
+    RightWindows,
+    Menu,
+    ErrorKey
 };
 
 /**
@@ -225,9 +335,9 @@ public:
      * @param joyNum The number of the joystick
      * @param system The input system pointer
      */
-    InputAxis(const boost::container::string& name, const boost::container::string& posButton,
-              const boost::container::string& negButton, const boost::container::string& altPosButton,
-              const boost::container::string& altNegButton, float gravity, float dead, float sensitivity, bool invert,
+    InputAxis(boost::container::string name, boost::container::string posButton,
+              boost::container::string negButton, boost::container::string altPosButton,
+              boost::container::string altNegButton, float gravity, float dead, float sensitivity, bool invert,
               InputType type, AxisCode axis, int joyNum, InputBackend* backend);
 };
 
@@ -369,9 +479,35 @@ public:
      * @param joyNum The number of the joystick
      */
     void RegisterInput(const boost::container::string& name, const boost::container::string& posButton,
-                  const boost::container::string& negButton, const boost::container::string& altPosButton,
-                  const boost::container::string& altNegButton, float gravity, float dead, float sensitivity,
-                  bool invert, InputType type, AxisCode axis, int joyNum);
+                       const boost::container::string& negButton, const boost::container::string& altPosButton,
+                       const boost::container::string& altNegButton, float gravity, float dead, float sensitivity,
+                       bool invert, InputType type, AxisCode axis, int joyNum);
+
+    virtual bool GetMouseButton(int mouseButtonCode) = 0;
+
+    virtual bool GetMouseButtonDown(int mouseButtonCode) = 0;
+
+    virtual bool GetMouseButtonUp(int mouseButtonCode) = 0;
+
+    virtual bool GetButton(JoystickButtonCode joystickButtonCode, int joystickNumber) = 0;
+
+    virtual bool GetButtonDown(JoystickButtonCode joystickButtonCode, int joystickNumber) = 0;
+
+    virtual bool GetButtonUp(JoystickButtonCode joystickButtonCode, int joystickNumber) = 0;
+
+    virtual bool GetKey(KeyCode keyCode) = 0;
+
+    virtual bool GetKeyDown(KeyCode keyCode) = 0;
+
+    virtual bool GetKeyUp(KeyCode keyCode) = 0;
+
+    virtual float GetRawAxis(JoystickAxisCode axisCode, int joystickNumber) = 0;
+
+    virtual long GetMouseDeltaX() = 0;
+
+    virtual long GetMouseDeltaY() = 0;
+
+    virtual long GetMouseDeltaWheel() = 0;
 
 private:
 //    /**

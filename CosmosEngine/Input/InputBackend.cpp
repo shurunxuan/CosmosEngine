@@ -9,16 +9,194 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <utility>
 #include <boost/container/vector.hpp>
 
+InputBackend* presentedInputBackend = nullptr;
 
-InputAxis::InputAxis(const boost::container::string& name, const boost::container::string& posButton,
-                     const boost::container::string& negButton, const boost::container::string& altPosButton,
-                     const boost::container::string& altNegButton, float gravity, float dead, float sensitivity,
-                     bool invert, InputType type, AxisCode axis, int joyNum, InputBackend* backend)
-        : name(name), posButton(posButton), negButton(negButton), altPosButton(altPosButton),
-          altNegButton(altNegButton), gravity(gravity), dead(dead), sensitivity(sensitivity), invert(invert),
-          type(type), axis(axis), joyNum(joyNum), inputBackend(backend)
+JoystickButtonCode GetJoystickButtonCodeFromName(const boost::container::string& buttonName)
+{
+    if (buttonName == "up")
+        return DPadUp;
+    if (buttonName == "down")
+        return DPadDown;
+    if (buttonName == "left")
+        return DPadLeft;
+    if (buttonName == "right")
+        return DPadRight;
+    if (buttonName == "start")
+        return Start;
+    if (buttonName == "back")
+        return Back;
+    if (buttonName == "ls")
+        return LeftThumb;
+    if (buttonName == "rs")
+        return RightThumb;
+    if (buttonName == "lb")
+        return LeftShoulder;
+    if (buttonName == "rb")
+        return RightShoulder;
+    if (buttonName == "a")
+        return ButtonA;
+    if (buttonName == "b")
+        return ButtonB;
+    if (buttonName == "x")
+        return ButtonX;
+    if (buttonName == "y")
+        return ButtonY;
+    return Reserved0;
+}
+
+KeyCode GetVirtualKeyCodeFromName(const boost::container::string& keyName)
+{
+    if (keyName == "backspace") return Backspace;
+    if (keyName == "delete") return Delete;
+    if (keyName == "tab") return Tab;
+    if (keyName == "return") return Return;
+    if (keyName == "escape") return Escape;
+    if (keyName == "space") return Space;
+    if (keyName == "keypad 0") return Keypad0;
+    if (keyName == "keypad 1") return Keypad1;
+    if (keyName == "keypad 2") return Keypad2;
+    if (keyName == "keypad 3") return Keypad3;
+    if (keyName == "keypad 4") return Keypad4;
+    if (keyName == "keypad 5") return Keypad5;
+    if (keyName == "keypad 6") return Keypad6;
+    if (keyName == "keypad 7") return Keypad7;
+    if (keyName == "keypad 8") return Keypad8;
+    if (keyName == "keypad 9") return Keypad9;
+    if (keyName == "keypad period") return KeypadPeriod;
+    if (keyName == "keypad divide") return KeypadDivide;
+    if (keyName == "keypad multiply") return KeypadMultiply;
+    if (keyName == "keypad minus") return KeypadMinus;
+    if (keyName == "keypad plus") return KeypadPlus;
+    if (keyName == "keypad enter") return KeypadEnter;
+    if (keyName == "up") return Up;
+    if (keyName == "down") return Down;
+    if (keyName == "right") return Right;
+    if (keyName == "left") return Left;
+    if (keyName == "insert") return Insert;
+    if (keyName == "home") return Home;
+    if (keyName == "end") return End;
+    if (keyName == "page up") return PageUp;
+    if (keyName == "page down") return PageDown;
+    if (keyName == "f1") return F1;
+    if (keyName == "f2") return F2;
+    if (keyName == "f3") return F3;
+    if (keyName == "f4") return F4;
+    if (keyName == "f5") return F5;
+    if (keyName == "f6") return F6;
+    if (keyName == "f7") return F7;
+    if (keyName == "f8") return F8;
+    if (keyName == "f9") return F9;
+    if (keyName == "f10") return F10;
+    if (keyName == "f11") return F11;
+    if (keyName == "f12") return F12;
+    if (keyName == "f13") return F13;
+    if (keyName == "f14") return F14;
+    if (keyName == "f15") return F15;
+    if (keyName == "0") return Number0;
+    if (keyName == "1") return Number1;
+    if (keyName == "2") return Number2;
+    if (keyName == "3") return Number3;
+    if (keyName == "4") return Number4;
+    if (keyName == "5") return Number5;
+    if (keyName == "6") return Number6;
+    if (keyName == "7") return Number7;
+    if (keyName == "8") return Number8;
+    if (keyName == "9") return Number9;
+    if (keyName == "quote") return Quote;
+    if (keyName == "comma") return Comma;
+    if (keyName == "minus") return Minus;
+    if (keyName == "period") return Period;
+    if (keyName == "slash") return Slash;
+    if (keyName == "semicolon") return Semicolon;
+    if (keyName == "equals") return Equals;
+    if (keyName == "left bracket") return LeftBracket;
+    if (keyName == "backslash") return Backslash;
+    if (keyName == "right bracket") return RightBracket;
+    if (keyName == "back quote") return BackQuote;
+    if (keyName == "a") return A;
+    if (keyName == "b") return B;
+    if (keyName == "c") return C;
+    if (keyName == "d") return D;
+    if (keyName == "e") return E;
+    if (keyName == "f") return F;
+    if (keyName == "g") return G;
+    if (keyName == "h") return H;
+    if (keyName == "i") return I;
+    if (keyName == "j") return J;
+    if (keyName == "k") return K;
+    if (keyName == "l") return L;
+    if (keyName == "m") return M;
+    if (keyName == "n") return N;
+    if (keyName == "o") return O;
+    if (keyName == "p") return P;
+    if (keyName == "q") return Q;
+    if (keyName == "r") return R;
+    if (keyName == "s") return S;
+    if (keyName == "t") return T;
+    if (keyName == "u") return U;
+    if (keyName == "v") return V;
+    if (keyName == "w") return W;
+    if (keyName == "x") return X;
+    if (keyName == "y") return Y;
+    if (keyName == "z") return Z;
+    if (keyName == "num lock") return NumLock;
+    if (keyName == "caps lock") return CapsLock;
+    if (keyName == "scroll lock") return ScrollLock;
+    if (keyName == "right shift") return RightShift;
+    if (keyName == "left shift") return LeftShift;
+    if (keyName == "right control") return RightControl;
+    if (keyName == "left control") return LeftControl;
+    if (keyName == "right alt") return RightAlt;
+    if (keyName == "left alt") return LeftAlt;
+    if (keyName == "left windows") return LeftWindows;
+    if (keyName == "right windows") return RightWindows;
+    if (keyName == "menu") return Menu;
+
+    return ErrorKey;
+}
+
+int GetMouseButtonFromName(const boost::container::string& mouseButtonName)
+{
+    if (mouseButtonName == "0") return 0;
+    if (mouseButtonName == "1") return 1;
+    if (mouseButtonName == "2") return 2;
+    if (mouseButtonName == "3") return 3;
+    if (mouseButtonName == "4") return 4;
+    if (mouseButtonName == "5") return 5;
+    return -1;
+}
+
+JoystickAxisCode GetJoystickAxisCodeFromAxisCode(AxisCode axisCode)
+{
+    switch (axisCode)
+    {
+        case JoystickLT:
+            return LT;
+        case JoystickRT:
+            return RT;
+        case JoystickLX:
+            return LX;
+        case JoystickLY:
+            return LY;
+        case JoystickRX:
+            return RX;
+        case JoystickRY:
+            return RY;
+        default:
+            return ErrorAxis;
+    }
+}
+
+InputAxis::InputAxis(boost::container::string name, boost::container::string posButton,
+                     boost::container::string negButton, boost::container::string altPosButton,
+                     boost::container::string altNegButton, float gravity, float dead, float sensitivity, bool invert,
+                     InputType type, AxisCode axis, int joyNum, InputBackend* backend)
+        : name(std::move(name)), posButton(std::move(posButton)), negButton(std::move(negButton)),
+          altPosButton(std::move(altPosButton)), altNegButton(std::move(altNegButton)), gravity(gravity), dead(dead),
+          sensitivity(sensitivity), invert(invert), type(type), axis(axis), joyNum(joyNum), inputBackend(backend)
 {
     processedAxisValue = 0;
 
@@ -70,11 +248,9 @@ void InputAxis::BindButtonCallback(const boost::container::string& buttonName, i
         }
         else
         {
-            getButton[buttonFuncIndex] = boost::bind(&DSFRawInput::GetMouseButton, &inputBackend->rawInput, buttonCode);
-            getButtonDown[buttonFuncIndex] = boost::bind(&DSFRawInput::GetMouseButtonDown, &inputBackend->rawInput,
-                                                         buttonCode);
-            getButtonUp[buttonFuncIndex] = boost::bind(&DSFRawInput::GetMouseButtonUp, &inputBackend->rawInput,
-                                                       buttonCode);
+            getButton[buttonFuncIndex] = boost::bind(&InputBackend::GetMouseButton, inputBackend, buttonCode);
+            getButtonDown[buttonFuncIndex] = boost::bind(&InputBackend::GetMouseButtonDown, inputBackend, buttonCode);
+            getButtonUp[buttonFuncIndex] = boost::bind(&InputBackend::GetMouseButtonUp, inputBackend, buttonCode);
         }
     }
     else if (boost::starts_with(buttonName, "joystick"))
@@ -87,7 +263,7 @@ void InputAxis::BindButtonCallback(const boost::container::string& buttonName, i
 
         JoystickButtonCode buttonCode = GetJoystickButtonCodeFromName(strs[1]);
 
-        if (buttonCode == RESERVED_0)
+        if (buttonCode == Reserved0)
         {
             getButton[buttonFuncIndex] = [buttonName]()
             {
@@ -107,17 +283,22 @@ void InputAxis::BindButtonCallback(const boost::container::string& buttonName, i
         }
         else
         {
-            getButton[buttonFuncIndex] = std::bind(&DSFXInput::GetButton, &inputBackend->xInput, buttonCode, joyNum);
-            getButtonDown[buttonFuncIndex] = std::bind(&DSFXInput::GetButtonDown, &inputBackend->xInput, buttonCode,
-                                                       joyNum);
-            getButtonUp[buttonFuncIndex] = std::bind(&DSFXInput::GetButtonUp, &inputBackend->xInput, buttonCode,
-                                                     joyNum);
+            getButton[buttonFuncIndex] = boost::bind(
+                    (bool (InputBackend::*)(JoystickButtonCode, int)) &InputBackend::GetButton, inputBackend,
+                    buttonCode, joyNum);
+            getButtonDown[buttonFuncIndex] = boost::bind(
+                    (bool (InputBackend::*)(JoystickButtonCode, int)) &InputBackend::GetButtonDown, inputBackend,
+                    buttonCode,
+                    joyNum);
+            getButtonUp[buttonFuncIndex] = boost::bind(
+                    (bool (InputBackend::*)(JoystickButtonCode, int)) &InputBackend::GetButtonUp, inputBackend,
+                    buttonCode, joyNum);
         }
     }
     else
     {
         // keyboard
-        int keyCode = GetVirtualKeyCodeFromName(buttonName);
+        KeyCode keyCode = GetVirtualKeyCodeFromName(buttonName);
 
         if (keyCode < 0)
         {
@@ -139,9 +320,9 @@ void InputAxis::BindButtonCallback(const boost::container::string& buttonName, i
         }
         else
         {
-            getButton[buttonFuncIndex] = boost::bind(&DSFRawInput::GetKey, &inputBackend->rawInput, keyCode);
-            getButtonDown[buttonFuncIndex] = boost::bind(&DSFRawInput::GetKeyDown, &inputBackend->rawInput, keyCode);
-            getButtonUp[buttonFuncIndex] = boost::bind(&DSFRawInput::GetKeyUp, &inputBackend->rawInput, keyCode);
+            getButton[buttonFuncIndex] = boost::bind(&InputBackend::GetKey, inputBackend, keyCode);
+            getButtonDown[buttonFuncIndex] = boost::bind(&InputBackend::GetKeyDown, inputBackend, keyCode);
+            getButtonUp[buttonFuncIndex] = boost::bind(&InputBackend::GetKeyUp, inputBackend, keyCode);
         }
     }
 }
@@ -200,7 +381,7 @@ void InputAxis::BindCallbackFunctions()
 
         getRawAxis = [this, joystickAxisCode]()
         {
-            return inputBackend->xInput.GetRawAxis(joystickAxisCode, joyNum) * (invert ? -1 : 1);
+            return inputBackend->GetRawAxis(joystickAxisCode, joyNum) * (invert ? -1 : 1);
         };
     }
     else if (type == Movement)
@@ -229,15 +410,15 @@ void InputAxis::BindCallbackFunctions()
         switch (axis)
         {
             case MouseX:
-                getMouseDelta = boost::bind(&DSFRawInput::GetMouseDeltaX, &inputBackend->rawInput);
+                getMouseDelta = boost::bind(&InputBackend::GetMouseDeltaX, inputBackend);
                 break;
             case MouseY:
-                getMouseDelta = boost::bind(&DSFRawInput::GetMouseDeltaY, &inputBackend->rawInput);
+                getMouseDelta = boost::bind(&InputBackend::GetMouseDeltaY, inputBackend);
                 break;
             case MouseWheel:
                 getMouseDelta = [this]()
                 {
-                    return long(inputBackend->rawInput.GetMouseWheelDelta());
+                    return long(inputBackend->GetMouseDeltaWheel());
                 };
                 break;
             default:
