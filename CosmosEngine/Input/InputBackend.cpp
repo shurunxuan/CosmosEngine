@@ -560,4 +560,12 @@ void InputBackend::GetMousePosition(float* x, float* y) const
 
 }
 
+void InputBackend::SyncUpdate(float deltaTime)
+{
+    for (auto& input : inputs)
+    {
+        input.Update(deltaTime);
+    }
+}
+
 

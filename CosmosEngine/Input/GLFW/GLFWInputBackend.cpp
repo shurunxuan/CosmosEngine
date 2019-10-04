@@ -387,6 +387,8 @@ void GLFWInputBackend::AsyncUpdate(float deltaTime)
 
 void GLFWInputBackend::SyncUpdate(float deltaTime)
 {
+    InputBackend::SyncUpdate(deltaTime);
+    
     glfwPollEvents();
 
     for (auto& k : keyHoldStates)

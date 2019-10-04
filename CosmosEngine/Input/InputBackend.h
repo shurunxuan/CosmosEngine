@@ -414,7 +414,7 @@ public:
      *
      * @param deltaTime The time between two synchronized input backend updates
      */
-    virtual void SyncUpdate(float deltaTime) = 0;
+    virtual void SyncUpdate(float deltaTime);
 
     /**
      * @brief Get if the input button is being held

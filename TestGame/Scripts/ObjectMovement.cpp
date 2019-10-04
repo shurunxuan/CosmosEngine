@@ -37,7 +37,13 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         object->transform->SetLocalRotation(quaternion);
 
         auto position = object->transform->GetLocalTranslation();
-        position.y = 0.5f;
+
+        float horizontal = presentedInputBackend->GetAxis("Horizontal");
+        float vertical = presentedInputBackend->GetAxis("Vertical");
+
+        position.x += horizontal * deltaTime;
+        position.y += vertical * deltaTime;
+
         object->transform->SetLocalTranslation(position);
     }
 }
