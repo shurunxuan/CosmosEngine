@@ -405,7 +405,7 @@ void InputAxis::BindCallbackFunctions()
             };
         }
 
-        boost::function<long()> getMouseDelta;
+        boost::function<double()> getMouseDelta;
 
         switch (axis)
         {
@@ -418,14 +418,14 @@ void InputAxis::BindCallbackFunctions()
             case MouseWheel:
                 getMouseDelta = [this]()
                 {
-                    return long(inputBackend->GetMouseDeltaWheel());
+                    return inputBackend->GetMouseDeltaWheel();
                 };
                 break;
             default:
                 getMouseDelta = []()
                 {
                     LOG_ERROR << "Can't get joystick axis with input type movement!";
-                    return long(0);
+                    return 0.0;
                 };
                 break;
         }

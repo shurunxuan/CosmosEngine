@@ -4,6 +4,8 @@
 
 #include "GLFWInputBackend.h"
 #include "../../Logging/Logging.h"
+#include <limits>
+#include <cmath>
 
 GLFWInputBackend* glfwInputBackend = nullptr;
 
@@ -224,6 +226,7 @@ int GetFrameworkKeyCode(KeyCode keyCode)
         case ErrorKey:
             return GLFW_KEY_UNKNOWN;
     }
+    return GLFW_KEY_UNKNOWN;
 }
 
 void SetupKeyStatesMap(boost::unordered_map<KeyCode, bool>& map)
@@ -338,6 +341,7 @@ void SetupKeyStatesMap(boost::unordered_map<KeyCode, bool>& map)
 
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
+    glfwInputBackend->CursorPositionCallback(xpos, ypos);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -354,6 +358,12 @@ GLFWInputBackend::GLFWInputBackend()
 {
     glfwInputBackend = this;
     window = nullptr;
+    mouseX = 0.0;
+    mouseY = 0.0;
+    lastMouseX = std::numeric_limits<double>::quiet_NaN();
+    lastMouseY = std::numeric_limits<double>::quiet_NaN();
+    mouseDeltaX = 0.0;
+    mouseDeltaY = 0.0;
 }
 
 GLFWInputBackend::~GLFWInputBackend()
@@ -374,6 +384,9 @@ void GLFWInputBackend::StartUp(void* userData)
     mouseButtonPressStates.resize(6, false);
     mouseButtonHoldStates.resize(6, false);
     mouseButtonReleaseStates.resize(6, false);
+
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
     glfwSetCursorPosCallback(window, cursorPosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -405,7 +418,7 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
 
     for (size_t i = 0; i < 6; ++i)
     {
-        int buttonCode = i;
+        int buttonCode = static_cast<int>(i);
 
         bool press = glfwGetMouseButton(window, buttonCode) == GLFW_PRESS;
 
@@ -415,6 +428,14 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
         mouseButtonHoldStates[i] = press;
     }
 
+    if (!std::isnan(lastMouseX) && !std::isnan(lastMouseY))
+    {
+        mouseDeltaX = mouseX - lastMouseX;
+        mouseDeltaY = mouseY - lastMouseY;
+
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
+    }
 }
 
 bool GLFWInputBackend::GetMouseButton(int mouseButtonCode)
@@ -467,17 +488,25 @@ float GLFWInputBackend::GetRawAxis(JoystickAxisCode axisCode, int joystickNumber
     return 0;
 }
 
-long GLFWInputBackend::GetMouseDeltaX()
+double GLFWInputBackend::GetMouseDeltaX()
+{
+    return mouseDeltaX;
+}
+
+double GLFWInputBackend::GetMouseDeltaY()
+{
+    return mouseDeltaY;
+}
+
+double GLFWInputBackend::GetMouseDeltaWheel()
 {
     return 0;
 }
 
-long GLFWInputBackend::GetMouseDeltaY()
+void GLFWInputBackend::CursorPositionCallback(double xPos, double yPos)
 {
-    return 0;
-}
-
-long GLFWInputBackend::GetMouseDeltaWheel()
-{
-    return 0;
+    mouseX = xPos;
+    mouseY = yPos;
+    if (std::isnan(lastMouseX)) lastMouseX = xPos;
+    if (std::isnan(lastMouseY)) lastMouseY = yPos;
 }

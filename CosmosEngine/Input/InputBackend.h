@@ -505,11 +505,11 @@ public:
 
     virtual float GetRawAxis(JoystickAxisCode axisCode, int joystickNumber) = 0;
 
-    virtual long GetMouseDeltaX() = 0;
+    virtual double GetMouseDeltaX() = 0;
 
-    virtual long GetMouseDeltaY() = 0;
+    virtual double GetMouseDeltaY() = 0;
 
-    virtual long GetMouseDeltaWheel() = 0;
+    virtual double GetMouseDeltaWheel() = 0;
 
 private:
 //    /**

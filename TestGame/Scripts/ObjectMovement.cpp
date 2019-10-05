@@ -38,8 +38,8 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
 
         auto position = object->transform->GetLocalTranslation();
 
-        float horizontal = presentedInputBackend->GetAxis("Horizontal");
-        float vertical = presentedInputBackend->GetAxis("Vertical");
+        float horizontal = presentedInputBackend->GetAxis("CameraHorizontal");
+        float vertical = presentedInputBackend->GetAxis("CameraVertical");
 
         position.x += horizontal * deltaTime;
         position.y += vertical * deltaTime;

@@ -61,15 +61,25 @@ public:
 
     float GetRawAxis(JoystickAxisCode axisCode, int joystickNumber) final;
 
-    long GetMouseDeltaX() final;
+    double GetMouseDeltaX() final;
 
-    long GetMouseDeltaY() final;
+    double GetMouseDeltaY() final;
 
-    long GetMouseDeltaWheel() final;
+    double GetMouseDeltaWheel() final;
+
+    void CursorPositionCallback(double xPos, double yPos);
 
 private:
 
     GLFWwindow* window;
+
+    double mouseX;
+    double mouseY;
+    double lastMouseX;
+    double lastMouseY;
+
+    double mouseDeltaX;
+    double mouseDeltaY;
 
     boost::unordered_map<KeyCode, bool> keyPressStates;
     boost::unordered_map<KeyCode, bool> keyHoldStates;
