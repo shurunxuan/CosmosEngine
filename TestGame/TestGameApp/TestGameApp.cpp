@@ -94,25 +94,32 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     CEApp::StartUp(screenWidth, screenHeight);
 
     presentedInputBackend->RegisterInput("Horizontal", "d", "a", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-//    presentedInputBackend->RegisterInput("Horizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickLX, -1);
+    presentedInputBackend->RegisterInput("Horizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickLX, -1);
     presentedInputBackend->RegisterInput("Vertical", "w", "s", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-//    presentedInputBackend->RegisterInput("Vertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickLY, -1);
-//    presentedInputBackend->RegisterInput("CameraHorizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRX, -1);
+    presentedInputBackend->RegisterInput("Vertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickLY, -1);
+    presentedInputBackend->RegisterInput("CameraHorizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis,
+                                         JoystickRX, -1);
     presentedInputBackend->RegisterInput("CameraHorizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement,
                                          MouseX, -1);
-//    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRY, -1);
+    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRY,
+                                         -1);
     presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, true, Movement, MouseY,
                                          -1);
     presentedInputBackend->RegisterInput("CameraHorizontal", "h", "f", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("CameraVertical", "t", "g", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-//    presentedInputBackend->RegisterInput("ArrowHorizontal", "joystick right", "joystick left", "right", "left", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-//    presentedInputBackend->RegisterInput("ArrowVertical", "joystick up", "joystick down", "up", "down", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("TestButtonZ", "z", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
+    presentedInputBackend->RegisterInput("ArrowHorizontal", "joystick right", "joystick left", "right", "left", 10.0f,
+                                         0.1f, 10.0f, false, Button, MouseX, -1);
+    presentedInputBackend->RegisterInput("ArrowVertical", "joystick up", "joystick down", "up", "down", 10.0f, 0.1f,
+                                         10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("TestMouseLeft", "mouse 0", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("TestMouseRight", "mouse 1", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("Wheel", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement, MouseWheel,
                                          -1);
+    presentedInputBackend->RegisterInput("ZoomIn", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRT, -1);
+    presentedInputBackend->RegisterInput("ZoomOut", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickLT, -1);
     presentedInputBackend->RegisterInput("Exit", "escape", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
+    presentedInputBackend->RegisterInput("Exit", "joystick b", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX,
+                                         -1);
 
 
     presentedInputBackend->DisableCursor();

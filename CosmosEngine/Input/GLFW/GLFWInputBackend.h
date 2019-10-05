@@ -12,15 +12,6 @@
 #include <boost/container/vector.hpp>
 #include <GLFW/glfw3.h>
 
-enum JoystickType
-{
-    XboxController,
-    DualShock4,
-    SwitchPro,
-    Generic,
-    Disconnected
-};
-
 class ENGINE_LOCAL GLFWInputBackend : public InputBackend
 {
 public:
@@ -80,6 +71,8 @@ public:
 
     void CursorWheelCallback(double offset);
 
+    void JoystickConnectionCallback(int jid, bool connect);
+
     void GetMousePosition(float* x, float* y) final;
 
     void DisableCursor() final;
@@ -112,7 +105,11 @@ private:
     boost::container::vector<bool> mouseButtonReleaseStates;
 
     boost::container::vector<bool> joystickConnected;
-    boost::container::vector<JoystickType> joystickType;
+    boost::container::vector<boost::container::string> joystickName;
+    boost::container::vector<boost::unordered_map<JoystickAxisCode, float>> joystickAxes;
+    boost::container::vector<boost::unordered_map<JoystickButtonCode, bool>> joystickButtonPressStates;
+    boost::container::vector<boost::unordered_map<JoystickButtonCode, bool>> joystickButtonHoldStates;
+    boost::container::vector<boost::unordered_map<JoystickButtonCode, bool>> joystickButtonReleaseStates;
 };
 
 extern ENGINE_LOCAL GLFWInputBackend* glfwInputBackend;

@@ -339,33 +339,94 @@ void SetupKeyStatesMap(boost::unordered_map<KeyCode, bool>& map)
     map.insert(std::make_pair(ErrorKey, false));
 }
 
-JoystickType IdentifyJoystickTypeFromName(const boost::container::string& name)
+void SetupJoystickAxesMap(boost::unordered_map<JoystickAxisCode, float>& map)
 {
-    if (name == "Xbox Controller")
-        return JoystickType::XboxController;
-    if (name == "Wireless Controller")
-        return JoystickType::DualShock4;
-    if (name == "Pro Controller")
-        return JoystickType::SwitchPro;
-    return JoystickType::Generic;
+    map.insert(std::make_pair(LT, 0.0f));
+    map.insert(std::make_pair(RT, 0.0f));
+    map.insert(std::make_pair(LX, 0.0f));
+    map.insert(std::make_pair(LY, 0.0f));
+    map.insert(std::make_pair(RX, 0.0f));
+    map.insert(std::make_pair(RY, 0.0f));
 }
 
-boost::container::string GetJoystickNameFromType(JoystickType type)
+void SetupJoystickButtonStatesMap(boost::unordered_map<JoystickButtonCode, bool>& map)
 {
-    switch (type)
+    map.insert(std::make_pair(DPadUp, false));
+    map.insert(std::make_pair(DPadDown, false));
+    map.insert(std::make_pair(DPadLeft, false));
+    map.insert(std::make_pair(DPadRight, false));
+    map.insert(std::make_pair(Start, false));
+    map.insert(std::make_pair(Back, false));
+    map.insert(std::make_pair(LeftThumb, false));
+    map.insert(std::make_pair(RightThumb, false));
+    map.insert(std::make_pair(LeftShoulder, false));
+    map.insert(std::make_pair(RightShoulder, false));
+    map.insert(std::make_pair(ButtonA, false));
+    map.insert(std::make_pair(ButtonB, false));
+    map.insert(std::make_pair(ButtonX, false));
+    map.insert(std::make_pair(ButtonY, false));
+}
+
+int GetFrameworkButtonCode(JoystickButtonCode buttonCode)
+{
+    switch (buttonCode)
     {
-        case XboxController:
-            return "Microsoft Xbox Controller";
-        case DualShock4:
-            return "Sony DualShock 4 Controller";
-        case SwitchPro:
-            return "Nintendo Switch Pro Controller";
-        case Generic:
-            return "Generic Game Controller";
-        case Disconnected:
-            return "Disconnected Controller";
+        case ButtonA:
+            return GLFW_GAMEPAD_BUTTON_A;
+        case ButtonB:
+            return GLFW_GAMEPAD_BUTTON_B;
+        case ButtonX:
+            return GLFW_GAMEPAD_BUTTON_X;
+        case ButtonY:
+            return GLFW_GAMEPAD_BUTTON_Y;
+        case LeftShoulder:
+            return GLFW_GAMEPAD_BUTTON_LEFT_BUMPER;
+        case RightShoulder:
+            return GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER;
+        case Back:
+            return GLFW_GAMEPAD_BUTTON_BACK;
+        case Start:
+            return GLFW_GAMEPAD_BUTTON_START;
+        case LeftThumb:
+            return GLFW_GAMEPAD_BUTTON_LEFT_THUMB;
+        case RightThumb:
+            return GLFW_GAMEPAD_BUTTON_RIGHT_THUMB;
+        case DPadUp:
+            return GLFW_GAMEPAD_BUTTON_DPAD_UP;
+        case DPadRight:
+            return GLFW_GAMEPAD_BUTTON_DPAD_RIGHT;
+        case DPadDown:
+            return GLFW_GAMEPAD_BUTTON_DPAD_DOWN;
+        case DPadLeft:
+            return GLFW_GAMEPAD_BUTTON_DPAD_LEFT;
+        case Reserved0:
+            return GLFW_INVALID_ENUM;
+        case Reserved1:
+            return GLFW_INVALID_ENUM;
     }
-    return "Unknown Controller";
+    return GLFW_INVALID_ENUM;
+}
+
+int GetFrameworkAxisCode(JoystickAxisCode axisCode)
+{
+    switch (axisCode)
+    {
+        case LX:
+            return GLFW_GAMEPAD_AXIS_LEFT_X;
+        case LY:
+            return GLFW_GAMEPAD_AXIS_LEFT_Y;
+        case RX:
+            return GLFW_GAMEPAD_AXIS_RIGHT_X;
+        case RY:
+            return GLFW_GAMEPAD_AXIS_RIGHT_Y;
+        case LT:
+            return GLFW_GAMEPAD_AXIS_LEFT_TRIGGER;
+        case RT:
+            return GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER;
+        case ErrorAxis:
+            return GLFW_INVALID_ENUM;
+    }
+    return GLFW_INVALID_ENUM;
 }
 
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
@@ -383,6 +444,11 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
     glfwInputBackend->CursorWheelCallback(yoffset);
 }
 
+void joystickCallback(int jid, int event)
+{
+    glfwInputBackend->JoystickConnectionCallback(jid, event == GLFW_CONNECTED);
+}
+
 GLFWInputBackend::GLFWInputBackend()
         : InputBackend()
 {
@@ -396,8 +462,6 @@ GLFWInputBackend::GLFWInputBackend()
     mouseDeltaY = 0.0;
     mouseDeltaWheel = 0.0;
     mouseWheelUpdated = false;
-    joystickConnected.resize(GLFW_JOYSTICK_LAST, false);
-    joystickType.resize(GLFW_JOYSTICK_LAST, Disconnected);
 }
 
 GLFWInputBackend::~GLFWInputBackend()
@@ -425,6 +489,19 @@ void GLFWInputBackend::StartUp(void* userData)
     glfwSetCursorPosCallback(window, cursorPosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetScrollCallback(window, scrollCallback);
+    glfwSetJoystickCallback(joystickCallback);
+
+    joystickConnected.resize(GLFW_JOYSTICK_LAST + 1, false);
+    joystickName.resize(GLFW_JOYSTICK_LAST + 1, "");
+    joystickAxes.resize(GLFW_JOYSTICK_LAST + 1);
+    joystickButtonPressStates.resize(GLFW_JOYSTICK_LAST + 1);
+    joystickButtonHoldStates.resize(GLFW_JOYSTICK_LAST + 1);
+    joystickButtonReleaseStates.resize(GLFW_JOYSTICK_LAST + 1);
+
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; ++jid)
+    {
+        JoystickConnectionCallback(jid, glfwJoystickIsGamepad(jid));
+    }
 }
 
 void GLFWInputBackend::AsyncUpdate(float deltaTime)
@@ -462,6 +539,32 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
         mouseButtonHoldStates[i] = press;
     }
 
+    for (size_t i = 0; i < joystickButtonHoldStates.size(); ++i)
+    {
+        if (!joystickConnected[i]) continue;
+        GLFWgamepadstate gamepadState = {};
+        glfwGetGamepadState(static_cast<int>(i), &gamepadState);
+
+        for (auto& a : joystickAxes[i])
+        {
+            a.second = gamepadState.axes[GetFrameworkAxisCode(a.first)];
+        }
+
+        for (auto& b : joystickButtonHoldStates[i])
+        {
+            int fwButtonCode = GetFrameworkButtonCode(b.first);
+
+            bool press = gamepadState.buttons[fwButtonCode] == GLFW_PRESS;
+
+            joystickButtonPressStates[i][b.first] =
+                    press && !b.second && !joystickButtonPressStates[i][b.first];
+            joystickButtonReleaseStates[i][b.first] =
+                    !press && b.second && !joystickButtonReleaseStates[i][b.first];
+
+            b.second = press;
+        }
+    }
+
     if (!std::isnan(lastMouseX) && !std::isnan(lastMouseY))
     {
         mouseDeltaX = mouseX - lastMouseX;
@@ -478,22 +581,6 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
     else
     {
         mouseWheelUpdated = false;
-    }
-
-    for (int i = GLFW_JOYSTICK_1; i < GLFW_JOYSTICK_LAST; ++i)
-    {
-        if (!joystickConnected[i] && glfwJoystickPresent(i) == GLFW_TRUE)
-        {
-            joystickConnected[i] = true;
-            joystickType[i] = IdentifyJoystickTypeFromName(glfwGetJoystickName(i));
-            LOG_INFO << GetJoystickNameFromType(joystickType[i]) << " Connected as Controller " << i;
-        }
-        else if (joystickConnected[i] && glfwJoystickPresent(i) == GLFW_FALSE)
-        {
-            joystickConnected[i] = false;
-            LOG_INFO << GetJoystickNameFromType(joystickType[i]) << " at " << i << " Disconnected";
-            joystickType[i] = Disconnected;
-        }
     }
 }
 
@@ -514,17 +601,56 @@ bool GLFWInputBackend::GetMouseButtonUp(int mouseButtonCode)
 
 bool GLFWInputBackend::GetButton(JoystickButtonCode joystickButtonCode, int joystickNumber)
 {
-    return false;
+    if (joystickNumber == -1)
+    {
+        bool state = false;
+        for (size_t i = 0; i < joystickButtonHoldStates.size(); ++i)
+        {
+            if (!joystickConnected[i]) continue;
+            state |= joystickButtonHoldStates[i][joystickButtonCode];
+        }
+        return state;
+    }
+    if (joystickNumber < 0) return false;
+    if (static_cast<size_t>(joystickNumber) >= joystickConnected.size()) return false;
+    if (!joystickConnected[joystickNumber]) return false;
+    return joystickButtonHoldStates[joystickNumber][joystickButtonCode];
 }
 
 bool GLFWInputBackend::GetButtonDown(JoystickButtonCode joystickButtonCode, int joystickNumber)
 {
-    return false;
+    if (joystickNumber == -1)
+    {
+        bool state = false;
+        for (size_t i = 0; i < joystickButtonPressStates.size(); ++i)
+        {
+            if (!joystickConnected[i]) continue;
+            state |= joystickButtonPressStates[i][joystickButtonCode];
+        }
+        return state;
+    }
+    if (joystickNumber < 0) return false;
+    if (static_cast<size_t>(joystickNumber) >= joystickConnected.size()) return false;
+    if (!joystickConnected[joystickNumber]) return false;
+    return joystickButtonPressStates[joystickNumber][joystickButtonCode];
 }
 
 bool GLFWInputBackend::GetButtonUp(JoystickButtonCode joystickButtonCode, int joystickNumber)
 {
-    return false;
+    if (joystickNumber == -1)
+    {
+        bool state = false;
+        for (size_t i = 0; i < joystickButtonReleaseStates.size(); ++i)
+        {
+            if (!joystickConnected[i]) continue;
+            state |= joystickButtonReleaseStates[i][joystickButtonCode];
+        }
+        return state;
+    }
+    if (joystickNumber < 0) return false;
+    if (static_cast<size_t>(joystickNumber) >= joystickConnected.size()) return false;
+    if (!joystickConnected[joystickNumber]) return false;
+    return joystickButtonReleaseStates[joystickNumber][joystickButtonCode];
 }
 
 bool GLFWInputBackend::GetKey(KeyCode keyCode)
@@ -544,7 +670,25 @@ bool GLFWInputBackend::GetKeyUp(KeyCode keyCode)
 
 float GLFWInputBackend::GetRawAxis(JoystickAxisCode axisCode, int joystickNumber)
 {
-    return 0;
+    if (joystickNumber == -1)
+    {
+        float number = 0.0f;
+        for (size_t i = 0; i < joystickAxes.size(); ++i)
+        {
+            if (!joystickConnected[i]) continue;
+            number += joystickAxes[i][axisCode];
+        }
+        if (axisCode == LY || axisCode == RY) number *= -1.0f;
+        else if (axisCode == LT || axisCode == RT) number = (number + 1.0f) * 0.5f;
+        return number;
+    }
+    if (joystickNumber < 0) return false;
+    if (static_cast<size_t>(joystickNumber) >= joystickConnected.size()) return false;
+    if (!joystickConnected[joystickNumber]) return 0.0f;
+    float result = joystickAxes[joystickNumber][axisCode];
+    if (axisCode == LY || axisCode == RY) result *= -1.0f;
+    else if (axisCode == LT || axisCode == RT) result = (result + 1.0f) * 0.5f;
+    return result;
 }
 
 double GLFWInputBackend::GetMouseDeltaX()
@@ -578,8 +722,8 @@ void GLFWInputBackend::CursorWheelCallback(double offset)
 
 void GLFWInputBackend::GetMousePosition(float* x, float* y)
 {
-    *x = mouseX;
-    *y = mouseY;
+    *x = static_cast<float>(mouseX);
+    *y = static_cast<float>(mouseY);
 }
 
 void GLFWInputBackend::DisableCursor()
@@ -595,4 +739,30 @@ void GLFWInputBackend::HideCursor()
 void GLFWInputBackend::RestoreCursor()
 {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void GLFWInputBackend::JoystickConnectionCallback(int jid, bool connect)
+{
+    if (!joystickConnected[jid] && connect)
+    {
+        joystickConnected[jid] = true;
+        joystickName[jid] = glfwGetGamepadName(jid);
+        LOG_INFO << joystickName[jid] << " Connected as Controller " << jid;
+
+        SetupJoystickAxesMap(joystickAxes[jid]);
+        SetupJoystickButtonStatesMap(joystickButtonPressStates[jid]);
+        SetupJoystickButtonStatesMap(joystickButtonHoldStates[jid]);
+        SetupJoystickButtonStatesMap(joystickButtonReleaseStates[jid]);
+    }
+    else if (joystickConnected[jid] && !connect)
+    {
+        joystickConnected[jid] = false;
+        LOG_INFO << joystickName[jid] << " at " << jid << " Disconnected";
+        joystickName[jid] = "";
+
+        joystickAxes[jid].clear();
+        joystickButtonPressStates[jid].clear();
+        joystickButtonHoldStates[jid].clear();
+        joystickButtonReleaseStates[jid].clear();
+    }
 }

@@ -33,8 +33,8 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
 
         auto position = object->transform->GetLocalTranslation();
 
-        float horizontal = presentedInputBackend->GetAxis("CameraHorizontal");
-        float vertical = presentedInputBackend->GetAxis("CameraVertical");
+        float horizontal = presentedInputBackend->GetAxis("ArrowHorizontal");
+        float vertical = presentedInputBackend->GetAxis("ArrowVertical");
 
         position.x += horizontal * deltaTime;
         position.y += vertical * deltaTime;
@@ -60,6 +60,9 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         auto scale = object->transform->GetLocalScale();
 
         float wheel = presentedInputBackend->GetAxis("Wheel");
+        float zoomIn = presentedInputBackend->GetAxis("ZoomIn");
+        float zoomOut = presentedInputBackend->GetAxis("ZoomOut");
+        wheel += (zoomIn - zoomOut) * 0.1f;
 
         scale *= 1 + wheel * deltaTime * 100.0f;
 

@@ -381,7 +381,7 @@ void InputAxis::BindCallbackFunctions()
 
         getRawAxis = [this, joystickAxisCode]()
         {
-            return inputBackend->GetRawAxis(joystickAxisCode, joyNum) * (invert ? -1 : 1);
+            return inputBackend->GetRawAxis(joystickAxisCode, joyNum) * (invert ? -1.0f : 1.0f);
         };
     }
     else if (type == Movement)
