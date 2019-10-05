@@ -21,41 +21,9 @@ void ObjectMovement::Start()
 
 void ObjectMovement::Update(float deltaTime, float totalTime)
 {
-    if (presentedInputBackend->GetButtonDown("Exit"))
-    {
-        App->Exit();
-    }
-    if (movementType == 0)
-    {
-        auto quaternion = object->transform->GetLocalRotation();
-        quaternion = quaternion * glm::angleAxis(deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        object->transform->SetLocalRotation(quaternion);
-
-        auto position = object->transform->GetLocalTranslation();
-
-        float horizontal = presentedInputBackend->GetAxis("ArrowHorizontal");
-        float vertical = presentedInputBackend->GetAxis("ArrowVertical");
-
-        position.x += horizontal * deltaTime;
-        position.y += vertical * deltaTime;
-
-        object->transform->SetLocalTranslation(position);
-    }
-    else
-    {
         auto quaternion = object->transform->GetLocalRotation();
         quaternion = quaternion * glm::angleAxis(deltaTime * glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         object->transform->SetLocalRotation(quaternion);
-
-        auto position = object->transform->GetLocalTranslation();
-
-        float horizontal = presentedInputBackend->GetAxis("Horizontal");
-        float vertical = presentedInputBackend->GetAxis("Vertical");
-
-        position.x += horizontal * deltaTime;
-        position.y += vertical * deltaTime;
-
-        object->transform->SetLocalTranslation(position);
 
         auto scale = object->transform->GetLocalScale();
 
@@ -67,5 +35,4 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         scale *= 1 + wheel * deltaTime * 100.0f;
 
         object->transform->SetLocalScale(scale);
-    }
 }

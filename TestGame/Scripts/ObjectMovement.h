@@ -28,8 +28,6 @@ public:
      * @param totalTime The total time from the beginning of the application
      */
     void Update(float deltaTime, float totalTime) final;
-
-    int movementType = 0;
 };
 
 #endif //GAMEENGINE_OBJECTMOVEMENT_H

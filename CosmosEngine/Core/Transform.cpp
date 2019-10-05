@@ -54,7 +54,7 @@ void Transform::SetParent(Transform* newParent)
     parent = newParent;
     if (parent != nullptr)
     {
-        const glm::mat4x4 newLocal = globalWorldMatrix * glm::inverse(parent->GetGlobalWorldMatrix());
+        const glm::mat4x4 newLocal = glm::inverse(parent->GetGlobalWorldMatrix()) * globalWorldMatrix;
         glm::decompose(newLocal, localScale, localRotation, localTranslation, skew, perspective);
         UpdateWorldMat();
         parent->children.push_back(this);
@@ -239,6 +239,7 @@ void Transform::UpdateWorldMat()
     const glm::mat4x4 s = glm::scale(glm::mat4x4(1.0f), localScale);
 
     const glm::mat4x4 w = t * r * s;
+
     localWorldMatrix = w;
     itLocalWorldMatrix = glm::inverse(glm::transpose(w));
 
@@ -246,7 +247,7 @@ void Transform::UpdateWorldMat()
 
     if (parent != nullptr)
     {
-        globalWorldMatrix = globalWorldMatrix * parent->GetGlobalWorldMatrix();
+        globalWorldMatrix = parent->GetGlobalWorldMatrix() * globalWorldMatrix;
     }
 
     itGlobalWorldMatrix = glm::inverse(glm::transpose(globalWorldMatrix));

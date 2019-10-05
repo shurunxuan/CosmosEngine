@@ -101,12 +101,10 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
                                          JoystickRX, -1);
     presentedInputBackend->RegisterInput("CameraHorizontal", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement,
                                          MouseX, -1);
-    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRY,
+    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, true, Axis, JoystickRY,
                                          -1);
-    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, true, Movement, MouseY,
+    presentedInputBackend->RegisterInput("CameraVertical", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement, MouseY,
                                          -1);
-    presentedInputBackend->RegisterInput("CameraHorizontal", "h", "f", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("CameraVertical", "t", "g", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("ArrowHorizontal", "joystick right", "joystick left", "right", "left", 10.0f,
                                          0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("ArrowVertical", "joystick up", "joystick down", "up", "down", 10.0f, 0.1f,
@@ -180,19 +178,19 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     meshRenderer->SetMaterial(material);
     meshRenderer->SetMesh(mesh);
 
-    ObjectMovement* movement = testObject->AddComponent<ObjectMovement>();
+    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
 
-    movement->movementType = 0;
 
     Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
     testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
 
     ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
 
-    movement_1->movementType = 1;
+    auto mainCamera = CurrentActiveScene()->mainCamera;
 
-
-    CurrentActiveScene()->mainCamera->AddComponent<CameraMovement>();
+    mainCamera->transform->SetLocalTranslation(0.0f, 5.0f, -5.0f);
+    mainCamera->transform->SetLocalRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+    mainCamera->AddComponent<CameraMovement>();
 
     LOG_INFO << "Scene Structure:";
     boost::container::list<Object*> allObjects = CurrentActiveScene()->GetAllObjects();
