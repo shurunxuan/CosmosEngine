@@ -351,6 +351,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    glfwInputBackend->CursorWheelCallback(yoffset);
 }
 
 GLFWInputBackend::GLFWInputBackend()
@@ -364,6 +365,8 @@ GLFWInputBackend::GLFWInputBackend()
     lastMouseY = std::numeric_limits<double>::quiet_NaN();
     mouseDeltaX = 0.0;
     mouseDeltaY = 0.0;
+    mouseDeltaWheel = 0.0;
+    mouseWheelUpdated = false;
 }
 
 GLFWInputBackend::~GLFWInputBackend()
@@ -401,7 +404,7 @@ void GLFWInputBackend::AsyncUpdate(float deltaTime)
 void GLFWInputBackend::SyncUpdate(float deltaTime)
 {
     InputBackend::SyncUpdate(deltaTime);
-    
+
     glfwPollEvents();
 
     for (auto& k : keyHoldStates)
@@ -435,6 +438,15 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
 
         lastMouseX = mouseX;
         lastMouseY = mouseY;
+    }
+
+    if (!mouseWheelUpdated)
+    {
+        mouseDeltaWheel = 0.0;
+    }
+    else
+    {
+        mouseWheelUpdated = false;
     }
 }
 
@@ -500,7 +512,7 @@ double GLFWInputBackend::GetMouseDeltaY()
 
 double GLFWInputBackend::GetMouseDeltaWheel()
 {
-    return 0;
+    return mouseDeltaWheel;
 }
 
 void GLFWInputBackend::CursorPositionCallback(double xPos, double yPos)
@@ -509,4 +521,10 @@ void GLFWInputBackend::CursorPositionCallback(double xPos, double yPos)
     mouseY = yPos;
     if (std::isnan(lastMouseX)) lastMouseX = xPos;
     if (std::isnan(lastMouseY)) lastMouseY = yPos;
+}
+
+void GLFWInputBackend::CursorWheelCallback(double offset)
+{
+    mouseDeltaWheel = offset;
+    mouseWheelUpdated = true;
 }

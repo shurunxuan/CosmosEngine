@@ -69,6 +69,8 @@ public:
 
     void CursorPositionCallback(double xPos, double yPos);
 
+    void CursorWheelCallback(double offset);
+
 private:
 
     GLFWwindow* window;
@@ -80,6 +82,9 @@ private:
 
     double mouseDeltaX;
     double mouseDeltaY;
+
+    double mouseDeltaWheel;
+    bool mouseWheelUpdated;
 
     boost::unordered_map<KeyCode, bool> keyPressStates;
     boost::unordered_map<KeyCode, bool> keyHoldStates;

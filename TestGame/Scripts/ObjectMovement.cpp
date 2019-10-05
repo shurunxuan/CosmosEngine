@@ -45,5 +45,13 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         position.y += vertical * deltaTime;
 
         object->transform->SetLocalTranslation(position);
+
+        auto scale = object->transform->GetLocalScale();
+
+        float wheel = presentedInputBackend->GetAxis("Wheel");
+
+        scale *= 1 + wheel * deltaTime * 100.0f;
+
+        object->transform->SetLocalScale(scale);
     }
 }
