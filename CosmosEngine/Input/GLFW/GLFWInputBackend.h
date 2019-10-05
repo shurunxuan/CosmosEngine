@@ -12,6 +12,15 @@
 #include <boost/container/vector.hpp>
 #include <GLFW/glfw3.h>
 
+enum JoystickType
+{
+    XboxController,
+    DualShock4,
+    SwitchPro,
+    Generic,
+    Disconnected
+};
+
 class ENGINE_LOCAL GLFWInputBackend : public InputBackend
 {
 public:
@@ -102,7 +111,8 @@ private:
     boost::container::vector<bool> mouseButtonHoldStates;
     boost::container::vector<bool> mouseButtonReleaseStates;
 
-
+    boost::container::vector<bool> joystickConnected;
+    boost::container::vector<JoystickType> joystickType;
 };
 
 extern ENGINE_LOCAL GLFWInputBackend* glfwInputBackend;

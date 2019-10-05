@@ -339,6 +339,35 @@ void SetupKeyStatesMap(boost::unordered_map<KeyCode, bool>& map)
     map.insert(std::make_pair(ErrorKey, false));
 }
 
+JoystickType IdentifyJoystickTypeFromName(const boost::container::string& name)
+{
+    if (name == "Xbox Controller")
+        return JoystickType::XboxController;
+    if (name == "Wireless Controller")
+        return JoystickType::DualShock4;
+    if (name == "Pro Controller")
+        return JoystickType::SwitchPro;
+    return JoystickType::Generic;
+}
+
+boost::container::string GetJoystickNameFromType(JoystickType type)
+{
+    switch (type)
+    {
+        case XboxController:
+            return "Microsoft Xbox Controller";
+        case DualShock4:
+            return "Sony DualShock 4 Controller";
+        case SwitchPro:
+            return "Nintendo Switch Pro Controller";
+        case Generic:
+            return "Generic Game Controller";
+        case Disconnected:
+            return "Disconnected Controller";
+    }
+    return "Unknown Controller";
+}
+
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
     glfwInputBackend->CursorPositionCallback(xpos, ypos);
@@ -367,6 +396,8 @@ GLFWInputBackend::GLFWInputBackend()
     mouseDeltaY = 0.0;
     mouseDeltaWheel = 0.0;
     mouseWheelUpdated = false;
+    joystickConnected.resize(GLFW_JOYSTICK_LAST, false);
+    joystickType.resize(GLFW_JOYSTICK_LAST, Disconnected);
 }
 
 GLFWInputBackend::~GLFWInputBackend()
@@ -447,6 +478,22 @@ void GLFWInputBackend::SyncUpdate(float deltaTime)
     else
     {
         mouseWheelUpdated = false;
+    }
+
+    for (int i = GLFW_JOYSTICK_1; i < GLFW_JOYSTICK_LAST; ++i)
+    {
+        if (!joystickConnected[i] && glfwJoystickPresent(i) == GLFW_TRUE)
+        {
+            joystickConnected[i] = true;
+            joystickType[i] = IdentifyJoystickTypeFromName(glfwGetJoystickName(i));
+            LOG_INFO << GetJoystickNameFromType(joystickType[i]) << " Connected as Controller " << i;
+        }
+        else if (joystickConnected[i] && glfwJoystickPresent(i) == GLFW_FALSE)
+        {
+            joystickConnected[i] = false;
+            LOG_INFO << GetJoystickNameFromType(joystickType[i]) << " at " << i << " Disconnected";
+            joystickType[i] = Disconnected;
+        }
     }
 }
 
