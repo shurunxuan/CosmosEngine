@@ -55,6 +55,8 @@ public:
      */
     Scene* CurrentActiveScene();
 
+    void Exit();
+
 private:
 
     RenderingBackend* renderingBackend;

@@ -99,6 +99,8 @@ public:
 
     GLFWwindow* GetWindow();
 
+    void ExitSignal();
+
 protected:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
@@ -108,7 +110,9 @@ protected:
 
     int height;
 
-    bool framebufferResized = false;
+    bool framebufferResized;
+
+    bool exitSignal;
 
 };
 

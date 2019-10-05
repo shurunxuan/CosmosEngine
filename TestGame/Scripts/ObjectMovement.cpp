@@ -5,6 +5,7 @@
 #include "ObjectMovement.h"
 #include <CosmosEngine/Core/Object.h>
 #include <CosmosEngine/Input/InputBackend.h>
+#include <CosmosEngine/App/App.h>
 
 ObjectMovement::ObjectMovement(Object* owner) : Component(owner)
 {
@@ -22,7 +23,7 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
 {
     if (presentedInputBackend->GetButtonDown("Exit"))
     {
-        exit(0);
+        App->Exit();
     }
     if (movementType == 0)
     {

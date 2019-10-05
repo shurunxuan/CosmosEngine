@@ -96,4 +96,9 @@ Scene* CEApp::CurrentActiveScene()
     return currentScene;
 }
 
+void CEApp::Exit()
+{
+    renderingBackend->ExitSignal();
+}
+
 

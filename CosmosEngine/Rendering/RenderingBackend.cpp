@@ -13,6 +13,8 @@ RenderingBackend* presentedRenderingBackend = nullptr;
 RenderingBackend::RenderingBackend()
 {
     window = nullptr;
+    framebufferResized = false;
+    exitSignal = false;
 }
 
 RenderingBackend::~RenderingBackend()
@@ -68,10 +70,15 @@ void RenderingBackend::Update(float deltaTime, float totalTime)
 
 bool RenderingBackend::ShouldTerminate()
 {
-    return glfwWindowShouldClose(window);
+    return exitSignal || glfwWindowShouldClose(window);
 }
 
 GLFWwindow* RenderingBackend::GetWindow()
 {
     return window;
+}
+
+void RenderingBackend::ExitSignal()
+{
+    exitSignal = true;
 }
