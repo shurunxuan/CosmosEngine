@@ -20,6 +20,10 @@ void ObjectMovement::Start()
 
 void ObjectMovement::Update(float deltaTime, float totalTime)
 {
+    if (presentedInputBackend->GetButtonDown("Exit"))
+    {
+        exit(0);
+    }
     if (movementType == 0)
     {
         auto quaternion = object->transform->GetLocalRotation();
@@ -27,7 +31,13 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         object->transform->SetLocalRotation(quaternion);
 
         auto position = object->transform->GetLocalTranslation();
-        position.y = -0.5f;
+
+        float horizontal = presentedInputBackend->GetAxis("CameraHorizontal");
+        float vertical = presentedInputBackend->GetAxis("CameraVertical");
+
+        position.x += horizontal * deltaTime;
+        position.y += vertical * deltaTime;
+
         object->transform->SetLocalTranslation(position);
     }
     else
@@ -38,8 +48,8 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
 
         auto position = object->transform->GetLocalTranslation();
 
-        float horizontal = presentedInputBackend->GetAxis("CameraHorizontal");
-        float vertical = presentedInputBackend->GetAxis("CameraVertical");
+        float horizontal = presentedInputBackend->GetAxis("Horizontal");
+        float vertical = presentedInputBackend->GetAxis("Vertical");
 
         position.x += horizontal * deltaTime;
         position.y += vertical * deltaTime;

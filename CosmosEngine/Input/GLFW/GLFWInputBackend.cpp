@@ -528,3 +528,24 @@ void GLFWInputBackend::CursorWheelCallback(double offset)
     mouseDeltaWheel = offset;
     mouseWheelUpdated = true;
 }
+
+void GLFWInputBackend::GetMousePosition(float* x, float* y)
+{
+    *x = mouseX;
+    *y = mouseY;
+}
+
+void GLFWInputBackend::DisableCursor()
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void GLFWInputBackend::HideCursor()
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+}
+
+void GLFWInputBackend::RestoreCursor()
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}

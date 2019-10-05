@@ -71,6 +71,14 @@ public:
 
     void CursorWheelCallback(double offset);
 
+    void GetMousePosition(float* x, float* y) final;
+
+    void DisableCursor() final;
+
+    void HideCursor() final;
+
+    void RestoreCursor() final;
+
 private:
 
     GLFWwindow* window;

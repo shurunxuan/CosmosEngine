@@ -555,11 +555,6 @@ float InputBackend::GetRawAxis(const boost::container::string& name)
     return result;
 }
 
-void InputBackend::GetMousePosition(float* x, float* y) const
-{
-
-}
-
 void InputBackend::SyncUpdate(float deltaTime)
 {
     for (auto& input : inputs)

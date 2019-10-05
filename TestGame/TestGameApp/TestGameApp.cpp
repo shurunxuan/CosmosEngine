@@ -112,9 +112,10 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     presentedInputBackend->RegisterInput("TestMouseRight", "mouse 1", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("Wheel", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement, MouseWheel,
                                          -1);
+    presentedInputBackend->RegisterInput("Exit", "escape", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
 
 
-
+    presentedInputBackend->DisableCursor();
 
 
 

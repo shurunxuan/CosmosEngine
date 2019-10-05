@@ -462,7 +462,13 @@ public:
      * @param[out] x The x position of the mouse pointer
      * @param[out] y The y position of the mouse pointer
      */
-    void GetMousePosition(float* x, float* y) const;
+    virtual void GetMousePosition(float* x, float* y) = 0;
+
+    virtual void DisableCursor() = 0;
+
+    virtual void HideCursor() = 0;
+
+    virtual void RestoreCursor() = 0;
 
     /**
      * @brief Register a new input into the input system
