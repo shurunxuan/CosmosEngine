@@ -446,7 +446,7 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 void joystickCallback(int jid, int event)
 {
-    glfwInputBackend->JoystickConnectionCallback(jid, event == GLFW_CONNECTED);
+    glfwInputBackend->JoystickConnectionCallback(jid, event == GLFW_CONNECTED && glfwJoystickIsGamepad(jid));
 }
 
 GLFWInputBackend::GLFWInputBackend()
