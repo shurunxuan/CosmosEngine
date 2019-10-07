@@ -484,7 +484,14 @@ void GLFWInputBackend::StartUp(void* userData)
     mouseButtonReleaseStates.resize(6, false);
 
     if (glfwRawMouseMotionSupported())
+    {
+        LOG_INFO << "Host supports raw mouse input, enabling.";
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
+    else
+    {
+        LOG_INFO << "Host doesn't support raw mouse input.";
+    }
 
     glfwSetCursorPosCallback(window, cursorPosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
