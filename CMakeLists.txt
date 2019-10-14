@@ -38,7 +38,8 @@ find_package(assimp CONFIG REQUIRED)
 find_package(Bullet REQUIRED)
 
 link_directories(${ASSIMP_LIBRARY_DIRS})
-link_directories(${BULLET_INCLUDE_DIRS})
+
+include_directories(${BULLET_INCLUDE_DIRS})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
