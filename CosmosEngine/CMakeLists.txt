@@ -3,25 +3,6 @@ set(ENGINE_NAME ${PROJECT_NAME})
 
 project(${PROJECT_NAME})
 
-# Fix boost 1.71 find_package error
-set(Boost_NO_BOOST_CMAKE 1)
-
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
-find_package(assimp CONFIG REQUIRED)
-find_package(bullet REQUIRED)
-
-link_directories(${ASSIMP_LIBRARY_DIRS})
-
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
-else ()
-    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARIES})
-endif ()
-
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIR})
 
 add_compile_definitions(ENGINE_EXPORTS)
 
