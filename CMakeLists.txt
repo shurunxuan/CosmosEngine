@@ -35,7 +35,7 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
 find_package(assimp CONFIG REQUIRED)
-find_package(bullet REQUIRED)
+find_package(Bullet REQUIRED)
 
 link_directories(${ASSIMP_LIBRARY_DIRS})
 
