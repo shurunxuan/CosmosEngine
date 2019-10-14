@@ -7,6 +7,7 @@
 Component::Component(Object* owner)
         : isActive(true), object(owner), id(boost::uuids::random_generator()())
 {
+    started = false;
 }
 
 Component::~Component()

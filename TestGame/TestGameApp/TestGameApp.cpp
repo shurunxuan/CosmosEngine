@@ -4,9 +4,16 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+
 #include <CosmosEngine/Core/MeshRenderer.h>
+#include <CosmosEngine/Core/Rigidbody.h>
+#include <CosmosEngine/Core/BoxCollider.h>
 #include "../Scripts/ObjectMovement.h"
 #include "../Scripts/CameraMovement.h"
+#include "../Scripts/TestForce.h"
 
 struct Vertex
 {
@@ -41,32 +48,38 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV)
         fR = fC;
         fG = fX;
         fB = 0;
-    } else if (1 <= fHPrime && fHPrime < 2)
+    }
+    else if (1 <= fHPrime && fHPrime < 2)
     {
         fR = fX;
         fG = fC;
         fB = 0;
-    } else if (2 <= fHPrime && fHPrime < 3)
+    }
+    else if (2 <= fHPrime && fHPrime < 3)
     {
         fR = 0;
         fG = fC;
         fB = fX;
-    } else if (3 <= fHPrime && fHPrime < 4)
+    }
+    else if (3 <= fHPrime && fHPrime < 4)
     {
         fR = 0;
         fG = fX;
         fB = fC;
-    } else if (4 <= fHPrime && fHPrime < 5)
+    }
+    else if (4 <= fHPrime && fHPrime < 5)
     {
         fR = fX;
         fG = 0;
         fB = fC;
-    } else if (5 <= fHPrime && fHPrime < 6)
+    }
+    else if (5 <= fHPrime && fHPrime < 6)
     {
         fR = fC;
         fG = 0;
         fB = fX;
-    } else
+    }
+    else
     {
         fR = 0;
         fG = 0;
@@ -109,8 +122,6 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
                                          0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("ArrowVertical", "joystick up", "joystick down", "up", "down", 10.0f, 0.1f,
                                          10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("TestMouseLeft", "mouse 0", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("TestMouseRight", "mouse 1", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("Wheel", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement, MouseWheel,
                                          -1);
     presentedInputBackend->RegisterInput("ZoomIn", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRT, -1);
@@ -118,73 +129,12 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     presentedInputBackend->RegisterInput("Exit", "escape", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("Exit", "joystick b", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX,
                                          -1);
-
+    presentedInputBackend->RegisterInput("MouseControl", "left control", "", "", "", 10.0f, 0.1f, 10.0f, false, Button,
+                                         MouseX, -1);
+    presentedInputBackend->RegisterInput("ApplyForce", "mouse 0", "", "joystick a", "", 10.0f, 0.1f, 10.0f, false,
+                                         Button, MouseX, -1);
 
     presentedInputBackend->DisableCursor();
-
-
-
-    boost::container::vector<Vertex> vertices_1;
-
-    Vertex orig = {};
-    orig.color = {1.0f, 1.0f, 1.0f};
-
-    boost::container::vector<uint16_t> indices_1;
-
-    float radius = 0.5f;
-    int precision = 1000;
-
-    vertices_1.reserve(precision + 1);
-    indices_1.reserve(vertices_1.capacity() * 6);
-
-    vertices_1.push_back(orig);
-
-    for (int i = 0; i < precision; ++i)
-    {
-        indices_1.push_back(0);
-        indices_1.push_back(i % precision + 1);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(0);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(i % precision + 1);
-
-        float h = 360.0f / precision * i;
-        float s = 1.0f;
-        float v = 1.0f;
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 0.0f;
-        HSVtoRGB(r, g, b, h, s, v);
-
-        float theta = float(i) / precision * 3.14159265f * 2;
-
-        Vertex newVert = {};
-        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
-        newVert.color = {r, g, b};
-        vertices_1.push_back(newVert);
-    }
-
-    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
-    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
-
-    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
-    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
-    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
-
-    boost::shared_ptr<Material> material = boost::make_shared<Material>();
-    material->LoadVertexShader("Shaders/shader.vert");
-    material->LoadPixelShader("Shaders/shader.frag");
-
-    meshRenderer->SetMaterial(material);
-    meshRenderer->SetMesh(mesh);
-
-    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
-
-
-    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
-    testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
-
-    ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
 
     auto mainCamera = CurrentActiveScene()->mainCamera;
 
@@ -192,42 +142,173 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     mainCamera->transform->SetLocalRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
     mainCamera->AddComponent<CameraMovement>();
 
-    LOG_INFO << "Scene Structure:";
-    boost::container::list<Object*> allObjects = CurrentActiveScene()->GetAllObjects();
+    Object* ground = CurrentActiveScene()->LoadModelFile("Assets/Models/cube.obj");
+    ground->name = "ground";
+    ground->transform->SetLocalScale(10.0f, 1.0f, 10.0f);
 
-    std::stack<Object*> objectStack;
-    std::stack<int> objectLevel;
+    BoxCollider* groundCollider = ground->AddComponent<BoxCollider>();
+    Rigidbody* groundBody = ground->AddComponent<Rigidbody>();
+    groundBody->SetMass(0.0f);
 
-    for (Object* obj : boost::adaptors::reverse(allObjects))
+    Object* walls[4];
+    for (int i = 0; i < 4; ++i)
     {
-        if (obj->transform->GetParent() == nullptr)
-        {
-            objectStack.push(obj);
-            objectLevel.push(0);
-        }
+        walls[i] = CurrentActiveScene()->LoadModelFile("Assets/Models/cube.obj");
+        walls[i]->name = "wall";
+        walls[i]->transform->SetLocalScale(10.0f, 1.0f, 3.0f);
+    }
+    walls[0]->transform->SetLocalTranslation(0.0f, 1.5f, -5.0f);
+    walls[1]->transform->SetLocalTranslation(5.0f, 1.5f, 0.0f);
+    walls[2]->transform->SetLocalTranslation(0.0f, 1.5f, 5.0f);
+    walls[3]->transform->SetLocalTranslation(-5.0f, 1.5f, 0.0f);
+
+    glm::quat baseRot = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::quat additionalRot = glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    walls[0]->transform->SetLocalRotation(baseRot);
+    walls[1]->transform->SetLocalRotation(baseRot * additionalRot);
+    walls[2]->transform->SetLocalRotation(baseRot * additionalRot * additionalRot);
+    walls[3]->transform->SetLocalRotation(baseRot * additionalRot * additionalRot * additionalRot);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        BoxCollider* collider = walls[i]->AddComponent<BoxCollider>();
+        Rigidbody* body = walls[i]->AddComponent<Rigidbody>();
+        body->SetMass(0.0f);
     }
 
-    while (!objectStack.empty())
-    {
-        // Get the object
-        Object* currentObject = objectStack.top();
-        int currentLevel = objectLevel.top();
-        // Process DFS
-        objectStack.pop();
-        objectLevel.pop();
-        boost::container::list<Transform*> children = currentObject->transform->GetChildren();
-        for (Transform* child : boost::adaptors::reverse(children))
-        {
-            objectStack.push(child->object);
-            objectLevel.push(currentLevel + 1);
-        }
+//    boost::random::mt19937 gen;
+//    boost::random::uniform_real_distribution<float> dist(0.5f, 10.0f);
 
-        // Output Info
-        boost::container::string tabs = "\t";
-        for (int i = 0; i < currentLevel; ++i)
-            tabs += "\t";
-        LOG_INFO << tabs << currentObject->name << "\t{" << currentObject->GetInstanceID() << "}";
-    }
+    int cubeNumR = 5;
+    int cubeNumC = 5;
+    int cubeNumH = 20;
+
+    for (int i = 0; i < cubeNumR; ++i)
+        for (int j = 0; j < cubeNumC; ++j)
+            for (int k = 0; k < cubeNumH; ++k)
+            {
+                Object* cube = CurrentActiveScene()->LoadModelFile("Assets/Models/cube.obj");
+                cube->name = "cube";
+                cube->transform->SetLocalTranslation(float(i - cubeNumR / 2) * 0.4f, float(k + 1) + 0.5f,
+                                                     float(j - cubeNumC / 2) * 0.4f);
+                cube->transform->SetLocalRotation(glm::angleAxis(glm::radians(-30.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+                cube->transform->SetLocalScale(0.3f, 0.3f, 0.3f);
+
+                BoxCollider* cubeCollider = cube->AddComponent<BoxCollider>();
+                Rigidbody* cubeBody = cube->AddComponent<Rigidbody>();
+                cubeBody->SetMass(1.0f);
+
+                //if (i == 0 && j == 0 && k == 0)
+                {
+                    cube->AddComponent<TestForce>();
+                }
+            }
+
+
+//    boost::container::vector<Vertex> vertices_1;
+//
+//    Vertex orig = {};
+//    orig.color = {1.0f, 1.0f, 1.0f};
+//
+//    boost::container::vector<uint16_t> indices_1;
+//
+//    float radius = 0.5f;
+//    int precision = 1000;
+//
+//    vertices_1.reserve(precision + 1);
+//    indices_1.reserve(vertices_1.capacity() * 6);
+//
+//    vertices_1.push_back(orig);
+//
+//    for (int i = 0; i < precision; ++i)
+//    {
+//        indices_1.push_back(0);
+//        indices_1.push_back(i % precision + 1);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(0);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(i % precision + 1);
+//
+//        float h = 360.0f / precision * i;
+//        float s = 1.0f;
+//        float v = 1.0f;
+//        float r = 0.0f;
+//        float g = 0.0f;
+//        float b = 0.0f;
+//        HSVtoRGB(r, g, b, h, s, v);
+//
+//        float theta = float(i) / precision * 3.14159265f * 2;
+//
+//        Vertex newVert = {};
+//        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
+//        newVert.color = {r, g, b};
+//        vertices_1.push_back(newVert);
+//    }
+//
+//    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
+//    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
+//
+//    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
+//    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
+//    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
+//
+//    boost::shared_ptr<Material> material = boost::make_shared<Material>();
+//    material->LoadVertexShader("Shaders/shader.vert");
+//    material->LoadPixelShader("Shaders/shader.frag");
+//
+//    meshRenderer->SetMaterial(material);
+//    meshRenderer->SetMesh(mesh);
+//
+//    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
+//
+//
+//    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
+//    testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
+//
+//    ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
+
+
+
+
+
+
+
+//    LOG_INFO << "Scene Structure:";
+//    boost::container::list<Object*> allObjects = CurrentActiveScene()->GetAllObjects();
+//
+//    std::stack<Object*> objectStack;
+//    std::stack<int> objectLevel;
+//
+//    for (Object* obj : boost::adaptors::reverse(allObjects))
+//    {
+//        if (obj->transform->GetParent() == nullptr)
+//        {
+//            objectStack.push(obj);
+//            objectLevel.push(0);
+//        }
+//    }
+//
+//    while (!objectStack.empty())
+//    {
+//        // Get the object
+//        Object* currentObject = objectStack.top();
+//        int currentLevel = objectLevel.top();
+//        // Process DFS
+//        objectStack.pop();
+//        objectLevel.pop();
+//        boost::container::list<Transform*> children = currentObject->transform->GetChildren();
+//        for (Transform* child : boost::adaptors::reverse(children))
+//        {
+//            objectStack.push(child->object);
+//            objectLevel.push(currentLevel + 1);
+//        }
+//
+//        // Output Info
+//        boost::container::string tabs = "\t";
+//        for (int i = 0; i < currentLevel; ++i)
+//            tabs += "\t";
+//        LOG_INFO << tabs << currentObject->name << "\t{" << currentObject->GetInstanceID() << "}";
+//    }
 
     return true;
 }

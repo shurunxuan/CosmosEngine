@@ -57,12 +57,12 @@ glm::mat4 Camera::GetProjectionMatrix()
 
 float Camera::GetNearClip() const
 {
-    return 0.1f;
+    return zNear;
 }
 
 float Camera::GetFarClip() const
 {
-    return 1000.0f;
+    return zFar;
 }
 
 //DirectX::XMVECTOR Camera::ScreenToWorldPoint(float x, float y) const

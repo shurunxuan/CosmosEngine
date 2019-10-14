@@ -29,6 +29,16 @@ void CameraMovement::Update(float deltaTime, float totalTime)
         App->Exit();
     }
 
+    if (presentedInputBackend->GetButtonDown("MouseControl"))
+    {
+        presentedInputBackend->RestoreCursor();
+    }
+
+    if (presentedInputBackend->GetButtonUp("MouseControl"))
+    {
+        presentedInputBackend->DisableCursor();
+    }
+
     auto translation = object->transform->GetLocalTranslation();
 
     float horizontal = presentedInputBackend->GetAxis("Horizontal");

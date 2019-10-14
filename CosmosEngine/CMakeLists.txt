@@ -9,7 +9,8 @@ set(Boost_NO_BOOST_CMAKE 1)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
-find_package(assimp REQUIRED)
+find_package(assimp CONFIG REQUIRED)
+find_package(bullet REQUIRED)
 
 link_directories(${ASSIMP_LIBRARY_DIRS})
 
@@ -40,10 +41,15 @@ set(SOURCE_FILES
         Core/MeshRenderer.cpp
         Core/Mesh.cpp
         Core/Material.cpp
-        Core/Texture.cpp Rendering/CommandBuffer.cpp
+        Core/Texture.cpp
+        Rendering/CommandBuffer.cpp
         Rendering/Vulkan/VulkanCommandBuffer.cpp
         Input/InputBackend.cpp
-        Input/GLFW/GLFWInputBackend.cpp)
+        Input/GLFW/GLFWInputBackend.cpp
+        Physics/PhysicsSystem.cpp
+        Core/Collider.cpp
+        Core/BoxCollider.cpp
+        Core/Rigidbody.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -68,7 +74,11 @@ set(HEADER_FILES
         Rendering/CommandBuffer.h
         Rendering/Vulkan/VulkanCommandBuffer.h
         Input/InputBackend.h
-        Input/GLFW/GLFWInputBackend.h Input/GLFW/GLFWInputBackend.cpp)
+        Input/GLFW/GLFWInputBackend.h
+        Physics/PhysicsSystem.h
+        Core/Collider.h
+        Core/BoxCollider.h
+        Core/Rigidbody.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -155,6 +165,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         glm
         ${Boost_LIBRARIES}
         ${ASSIMP_LIBS_FIX}
+        ${BULLET_LIBRARIES}
         ${SPRIV_CROSS_LIBRARIES}
         )
 

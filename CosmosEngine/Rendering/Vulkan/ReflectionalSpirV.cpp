@@ -562,7 +562,7 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
         return false;
     }
 
-    LOG_INFO << "Shader file " << realShaderFileName << " loaded.";
+//    LOG_INFO << "Shader file " << realShaderFileName << " loaded.";
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -575,7 +575,7 @@ bool ReflectionalSpirV::LoadShaderFile(const boost::container::string& shaderFil
         throw std::runtime_error("Failed to create shader module!");
     }
 
-    LOG_INFO << "Created shader module.";
+//    LOG_INFO << "Created shader module.";
 
     return true;
 }

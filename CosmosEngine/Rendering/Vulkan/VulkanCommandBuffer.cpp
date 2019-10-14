@@ -53,7 +53,7 @@ void VulkanCommandBuffer::RecordCommandBuffer()
         throw std::runtime_error("Failed to allocate command buffers!");
     }
 
-    LOG_INFO << "Allocated command buffers.";
+//    LOG_INFO << "Allocated command buffers.";
 
     for (size_t i = 0; i < commandBuffers.size(); i++)
     {

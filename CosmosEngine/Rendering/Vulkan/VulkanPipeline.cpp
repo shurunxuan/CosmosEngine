@@ -153,7 +153,7 @@ void VulkanPipeline::CreateRenderingPipeline()
         throw std::runtime_error("Failed to create pipeline layout!");
     }
 
-    LOG_INFO << "Created pipeline layout.";
+//    LOG_INFO << "Created pipeline layout.";
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -180,7 +180,7 @@ void VulkanPipeline::CreateRenderingPipeline()
         throw std::runtime_error("Failed to create graphics pipeline!");
     }
 
-    LOG_INFO << "Created graphics pipeline.";
+//    LOG_INFO << "Created graphics pipeline.";
 
 
 }

@@ -115,8 +115,6 @@ public:
      * @brief Get the Near Clip of the camera
      *
      * @return float Near clip
-     *
-     * @todo Currently, this only returns 0.1f
      */
     float GetNearClip() const;
 
@@ -124,8 +122,6 @@ public:
      * @brief Get the Far Clip of the camera
      *
      * @return float Far clip
-     *
-     * @todo Currently, this only returns 1000.0f
      */
     float GetFarClip() const;
 

@@ -29,6 +29,7 @@ class Object;
 class ENGINE_API Component
 {
 public:
+    friend class Object;
     /**
      * @brief Construct a new Component object
      *
@@ -82,6 +83,8 @@ private:
      *
      */
     boost::uuids::uuid id;
+
+    bool started;
 };
 
 

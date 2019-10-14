@@ -330,10 +330,9 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         pipeline->SetMatrix4x4("proj", proj);
         pipeline->SetMatrix4x4("itModel", itModel);
 
-        meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
+        pipeline->SetInt("hasDiffuse", meshRenderer->GetMaterial()->HasTexture("diffuse"));
 
-        glm::vec4 color = {1.0f, 1.0f, 0.0f, 1.0f};
-        pipeline->SetFloat4("color", color);
+        meshRenderer->GetMaterial()->GetVertexShader()->CopyAllBufferData();
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
         frameCommandBuffers.push_back(reinterpret_cast<VulkanCommandBuffer*>(meshRenderer->GetCommandBuffer())->commandBuffers[imageIndex]);

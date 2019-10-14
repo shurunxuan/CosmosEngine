@@ -72,3 +72,9 @@ void Material::SetTexture(const boost::container::string& textureName, const boo
 
     pipeline->SetSamplerTexture(textureName + "Sampler", textureName + "Texture", *texture);
 }
+
+bool Material::HasTexture(const boost::container::string& textureName)
+{
+    auto result = textures.find(textureName);
+    return result != textures.end();
+}

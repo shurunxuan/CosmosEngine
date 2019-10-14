@@ -5,11 +5,11 @@ project(${PROJECT_NAME})
 set(SOURCE_FILES
         main.cpp
         TestGameApp/TestGameApp.cpp
-        Scripts/ObjectMovement.cpp Scripts/CameraMovement.cpp)
+        Scripts/ObjectMovement.cpp Scripts/CameraMovement.cpp Scripts/TestForce.cpp)
 
 set(HEADER_FILES
         TestGameApp/TestGameApp.h
-        Scripts/ObjectMovement.h Scripts/CameraMovement.h)
+        Scripts/ObjectMovement.h Scripts/CameraMovement.h Scripts/TestForce.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

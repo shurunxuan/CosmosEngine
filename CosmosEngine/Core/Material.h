@@ -43,6 +43,8 @@ public:
 
     void SetTexture(const boost::container::string& textureName, const boost::shared_ptr<Texture>& texture);
 
+    bool HasTexture(const boost::container::string& textureName);
+
 protected:
     /**
      * @brief Set other data needed by the shaders

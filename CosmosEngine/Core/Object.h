@@ -212,7 +212,6 @@ T* Object::AddComponent()
     T* newComponent = new T(this);
 
     components.push_back(newComponent);
-    newComponent->Start();
 
     return newComponent;
 }

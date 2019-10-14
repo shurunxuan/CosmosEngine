@@ -48,7 +48,7 @@ VertexToPixel main(VertexShaderInput input)
 	output.position = mul(viewPos, proj);
 	output.normal = normalize(mul(float4(input.normal, 0.0), itModel).xyz);
 	output.uv = input.uv;
-	output.fragColor = float3(1.0, 1.0, 0.0);
+	output.fragColor = float3(1.0, 1.0, 1.0);
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
 	return output;

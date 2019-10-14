@@ -8,6 +8,7 @@
 #include "../Export.h"
 #include "../Rendering/RenderingBackend.h"
 #include "../Input/InputBackend.h"
+#include "../Physics/PhysicsSystem.h"
 #include "../Core/Object.h"
 #include "../Core/Camera.h"
 #include "../Core/Scene.h"
@@ -40,9 +41,7 @@ public:
     virtual bool StartUp(unsigned int screenWidth, unsigned int screenHeight);
 
     /**
-     * @brief The game loop. Called in function DSEngine
-     *
-     * @todo Add/change return type or parameters as needed
+     * @brief The game loop.
      */
     void Loop();
 
@@ -61,6 +60,7 @@ private:
 
     RenderingBackend* renderingBackend;
     InputBackend* inputBackend;
+    PhysicsSystem* physicsSystem;
 
     boost::chrono::high_resolution_clock::time_point startTime;
     boost::chrono::high_resolution_clock::time_point currentTime;

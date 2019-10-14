@@ -9,7 +9,14 @@ void Object::Update(float deltaTime, float totalTime)
     for (Component* component : components)
     {
         if (component->isActive)
+        {
+            if (!component->started)
+            {
+                component->Start();
+                component->started = true;
+            }
             component->Update(deltaTime, totalTime);
+        }
     }
 }
 
