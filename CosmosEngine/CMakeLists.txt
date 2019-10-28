@@ -8,7 +8,7 @@ set(Boost_NO_BOOST_CMAKE 1)
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic REQUIRED)
+find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic random REQUIRED)
 find_package(assimp REQUIRED)
 
 link_directories(${ASSIMP_LIBRARY_DIRS})
@@ -43,7 +43,10 @@ set(SOURCE_FILES
         Core/Texture.cpp Rendering/CommandBuffer.cpp
         Rendering/Vulkan/VulkanCommandBuffer.cpp
         Input/InputBackend.cpp
-        Input/GLFW/GLFWInputBackend.cpp)
+        Input/GLFW/GLFWInputBackend.cpp
+        Threading/JobSystem.cpp
+        Threading/JobQueue.cpp
+        )
 
 set(HEADER_FILES
         Export.h
@@ -68,7 +71,10 @@ set(HEADER_FILES
         Rendering/CommandBuffer.h
         Rendering/Vulkan/VulkanCommandBuffer.h
         Input/InputBackend.h
-        Input/GLFW/GLFWInputBackend.h Input/GLFW/GLFWInputBackend.cpp)
+        Input/GLFW/GLFWInputBackend.h
+        Threading/JobSystem.h
+        Threading/JobQueue.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

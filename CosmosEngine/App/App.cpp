@@ -49,6 +49,10 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
              << BOOST_VERSION / 100 % 1000 << "."
              << BOOST_VERSION % 100;
 
+    jobSystem = new JobSystem();
+
+    jobSystem->StartUp();
+
     // TODO: Choose Rendering Backend
     renderingBackend = new VulkanBackend();
 
@@ -89,6 +93,7 @@ void CEApp::Shutdown()
 {
     delete currentScene;
     renderingBackend->Shutdown();
+    jobSystem->Shutdown();
 }
 
 Scene* CEApp::CurrentActiveScene()
