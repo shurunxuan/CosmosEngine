@@ -15,8 +15,8 @@ link_directories(${ASSIMP_LIBRARY_DIRS})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
-else ()
-    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARIES})
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(ASSIMP_LIBS_FIX assimp::assimp)
 endif ()
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -26,54 +26,55 @@ add_compile_definitions(ENGINE_EXPORTS)
 
 set(SOURCE_FILES
         App/App.cpp
-        Rendering/RenderingBackend.cpp
-        Rendering/ReflectionalShader.cpp
-        Rendering/Vulkan/VulkanBackend.cpp
-        Logging/Logging.cpp
-        Rendering/Vulkan/ReflectionalSpirV.cpp
-        Core/Object.cpp
-        Core/Component.cpp
-        Core/Transform.cpp
-        Core/Scene.cpp
         Core/Camera.cpp
-        Rendering/RenderingPipeline.cpp
-        Core/MeshRenderer.cpp
-        Core/Mesh.cpp
+        Core/Component.cpp
         Core/Material.cpp
-        Core/Texture.cpp Rendering/CommandBuffer.cpp
-        Rendering/Vulkan/VulkanCommandBuffer.cpp
-        Input/InputBackend.cpp
+        Core/Mesh.cpp
+        Core/MeshRenderer.cpp
+        Core/Object.cpp
+        Core/Scene.cpp
+        Core/Texture.cpp
+        Core/Transform.cpp
         Input/GLFW/GLFWInputBackend.cpp
-        Threading/JobSystem.cpp
+        Input/InputBackend.cpp
+        Logging/Logging.cpp
+        Rendering/CommandBuffer.cpp
+        Rendering/ReflectionalShader.cpp
+        Rendering/RenderingBackend.cpp
+        Rendering/RenderingPipeline.cpp
+        Rendering/Vulkan/ReflectionalSpirV.cpp
+        Rendering/Vulkan/VulkanBackend.cpp
+        Rendering/Vulkan/VulkanCommandBuffer.cpp
+        Rendering/Vulkan/VulkanPipeline.cpp
         Threading/JobQueue.cpp
+        Threading/JobSystem.cpp
         )
 
 set(HEADER_FILES
         Export.h
         App/App.h
-        Rendering/RenderingBackend.h
-        Rendering/ReflectionalShader.h
-        Rendering/Vulkan/VulkanBackend.h
-        Logging/Logging.h
-        Rendering/Vulkan/ReflectionalSpirV.h
-        Core/Object.h
-        Core/Component.h
-        Core/Transform.h
-        Core/Scene.h
         Core/Camera.h
-        Rendering/RenderingPipeline.h
-        Rendering/Vulkan/VulkanPipeline.h
-        Rendering/Vulkan/VulkanPipeline.cpp
-        Core/MeshRenderer.h
-        Core/Mesh.h
+        Core/Component.h
         Core/Material.h
+        Core/Mesh.h
+        Core/MeshRenderer.h
+        Core/Object.h
+        Core/Scene.h
         Core/Texture.h
-        Rendering/CommandBuffer.h
-        Rendering/Vulkan/VulkanCommandBuffer.h
-        Input/InputBackend.h
+        Core/Transform.h
         Input/GLFW/GLFWInputBackend.h
-        Threading/JobSystem.h
+        Input/InputBackend.h
+        Logging/Logging.h
+        Rendering/CommandBuffer.h
+        Rendering/ReflectionalShader.h
+        Rendering/RenderingBackend.h
+        Rendering/RenderingPipeline.h
+        Rendering/Vulkan/ReflectionalSpirV.h
+        Rendering/Vulkan/VulkanBackend.h
+        Rendering/Vulkan/VulkanCommandBuffer.h
+        Rendering/Vulkan/VulkanPipeline.h
         Threading/JobQueue.h
+        Threading/JobSystem.h
         )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
