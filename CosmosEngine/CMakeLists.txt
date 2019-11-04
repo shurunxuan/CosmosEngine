@@ -48,7 +48,7 @@ set(SOURCE_FILES
         Rendering/Vulkan/VulkanPipeline.cpp
         Threading/JobQueue.cpp
         Threading/JobSystem.cpp
-        )
+        Physics/SphereCollider.cpp Physics/PhysicsSystem.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -75,7 +75,7 @@ set(HEADER_FILES
         Rendering/Vulkan/VulkanPipeline.h
         Threading/JobQueue.h
         Threading/JobSystem.h
-        )
+        Physics/SphereCollider.h Physics/PhysicsSystem.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

@@ -4,7 +4,12 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/random/random_device.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/bind.hpp>
 #include <CosmosEngine/Core/MeshRenderer.h>
+#include <CosmosEngine/Physics/SphereCollider.h>
 #include "../Scripts/ObjectMovement.h"
 #include "../Scripts/CameraMovement.h"
 
@@ -164,32 +169,68 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
         vertices_1.push_back(newVert);
     }
 
-    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
-    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
+//    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
+//    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
+//
+//    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
+//    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
+//    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
+//
+//    boost::shared_ptr<Material> material = boost::make_shared<Material>();
+//    material->LoadVertexShader("Shaders/shader.vert");
+//    material->LoadPixelShader("Shaders/shader.frag");
+//
+//    meshRenderer->SetMaterial(material);
+//    meshRenderer->SetMesh(mesh);
+//
+//    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
 
-    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
-    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
-    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
+    boost::random::random_device rd;
+    boost::random::mt19937 gen(rd());
+    boost::random::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    auto rand = boost::bind(dis, gen);
 
-    boost::shared_ptr<Material> material = boost::make_shared<Material>();
-    material->LoadVertexShader("Shaders/shader.vert");
-    material->LoadPixelShader("Shaders/shader.frag");
+    Object* firstObject = nullptr;
+    boost::shared_ptr<Mesh> mesh = nullptr;
+    boost::shared_ptr<Material> material = nullptr;
 
-    meshRenderer->SetMaterial(material);
-    meshRenderer->SetMesh(mesh);
+    for (int i = 0; i < 200; ++i)
+    {
+        float size = rand() * 0.8f + 0.2f;
+        Object* testObject;
 
-    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
+//        if (firstObject == nullptr)
+//        {
+            testObject = CurrentActiveScene()->LoadModelFile("Assets/Models/Rock/sphere.obj");
+//            firstObject = testObject;
+//            auto renderer = testObject->transform->GetChildAt(0)->object->GetComponent<MeshRenderer>();
+//            mesh = renderer->GetMesh();
+//            material = renderer->GetMaterial();
+//        }
+//        else
+//        {
+//            testObject = CurrentActiveScene()->AddObject(firstObject->name);
+//            auto realObject = CurrentActiveScene()->AddObject(firstObject->transform->GetChildAt(0)->object->name);
+//            realObject->transform->SetParent(testObject->transform);
+//
+//            auto renderer = realObject->AddComponent<MeshRenderer>();
+//            renderer->SetMaterial(material);
+//            renderer->SetMesh(mesh);
+//        }
+
+        testObject->transform->SetLocalScale(size, size, size);
+        testObject->transform->SetLocalTranslation(rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f);
+
+        SphereCollider* collider = testObject->AddComponent<SphereCollider>();
+        collider->mass = size * 1.0f;
+        collider->radius = size * 0.5f;
+    }
 
 
-    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/Rock/sphere.obj");
-    //testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
-    testObject_1->transform->SetLocalTranslation(0.0f, 0.5f, 0.0f);
-
-    ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
 
     auto mainCamera = CurrentActiveScene()->mainCamera;
 
-    mainCamera->transform->SetLocalTranslation(0.0f, 5.0f, -5.0f);
+    mainCamera->transform->SetLocalTranslation(0.0f, 0.0f, -5.0f);
     mainCamera->transform->SetLocalRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
     mainCamera->AddComponent<CameraMovement>();
 

@@ -260,8 +260,6 @@ Object* Scene::AddObjectWithNode(const boost::container::string& modelFileName, 
         mesh->LoadIndexData((uint16_t*) (&*indices.begin()), indices.size());
         meshRendererComponent->SetMesh(mesh);
 
-        auto pipeline = meshRendererComponent->GetMaterial()->GetPipeline();
-
         // Load Textures
         aiMaterial* aMaterial = scene->mMaterials[aMesh->mMaterialIndex];
 

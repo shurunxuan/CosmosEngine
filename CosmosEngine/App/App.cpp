@@ -28,12 +28,14 @@ CEApp::CEApp()
     InitLogger();
     renderingBackend = nullptr;
     inputBackend = nullptr;
+    physicsSystem = nullptr;
 }
 
 CEApp::~CEApp()
 {
     delete renderingBackend;
     delete inputBackend;
+    delete physicsSystem;
     StopLogger();
 }
 
@@ -52,6 +54,10 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     jobSystem = new JobSystem();
 
     jobSystem->StartUp();
+
+    physicsSystem = new PhysicsSystem();
+
+    physicsSystem->StartUp();
 
     // TODO: Choose Rendering Backend
     renderingBackend = new VulkanBackend();
@@ -80,6 +86,7 @@ void CEApp::Loop()
         lastTime = currentTime;
 
         inputBackend->SyncUpdate(deltaTime.count());
+        physicsSystem->Update(deltaTime.count(), totalTime.count());
         App->CurrentActiveScene()->Update(deltaTime.count(), totalTime.count());
         renderingBackend->Update(deltaTime.count(), totalTime.count());
 
@@ -94,6 +101,7 @@ void CEApp::Shutdown()
     delete currentScene;
     renderingBackend->Shutdown();
     jobSystem->Shutdown();
+    physicsSystem->Shutdown();
 }
 
 Scene* CEApp::CurrentActiveScene()

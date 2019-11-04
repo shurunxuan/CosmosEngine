@@ -82,4 +82,6 @@ private:
     Job* AllocateJob();
 };
 
+ENGINE_EXTERNAL_VAR JobSystem* jobSystem;
+
 #endif //GAMEENGINE_JOBSYSTEM_H

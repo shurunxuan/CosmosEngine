@@ -6,6 +6,8 @@
 
 #include "../Logging/Logging.h"
 
+JobSystem* jobSystem = nullptr;
+
 Job::Job()
 {
     parent = nullptr;
@@ -15,6 +17,8 @@ Job::Job()
 
 JobSystem::JobSystem()
 {
+    jobSystem = this;
+
     concurrentThreadsSupported = boost::thread::hardware_concurrency();
     if (concurrentThreadsSupported < 4) concurrentThreadsSupported = 4;
 
@@ -118,6 +122,7 @@ Job* JobSystem::CreateJob(JobFunction function)
     job->function = std::move(function);
     job->parent = nullptr;
     job->unfinishedJobs = 1;
+	memset(job->data, 0, sizeof(job->data));
 
     return job;
 }
@@ -130,6 +135,7 @@ Job* JobSystem::CreateJobAsChild(Job* parent, JobFunction function)
     job->function = std::move(function);
     job->parent = parent;
     job->unfinishedJobs = 1;
+	memset(job->data, 0, sizeof(job->data));
 
     return job;
 }
@@ -191,11 +197,11 @@ void JobSystem::Wait(Job* job)
 {
     while (job->unfinishedJobs.load() > 0)
     {
-        Job* job1 = GetJob();
-        if (job1)
-        {
-            Execute(job1);
-        }
+        //Job* job1 = GetJob();
+        //if (job1)
+        //{
+        //    Execute(job1);
+        //}
     }
 }
 
@@ -203,7 +209,7 @@ void JobSystem::Finish(Job* job)
 {
     int32_t unfinishedJobs = --job->unfinishedJobs;
 
-    if ((unfinishedJobs == 0) && (job->parent))
+    if ((unfinishedJobs <= 0) && (job->parent))
     {
         Finish(job->parent);
     }

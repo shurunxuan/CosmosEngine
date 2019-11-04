@@ -12,6 +12,7 @@
 #include "../Core/Object.h"
 #include "../Core/Camera.h"
 #include "../Core/Scene.h"
+#include "../Physics/PhysicsSystem.h"
 #include <boost/chrono.hpp>
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
@@ -62,6 +63,7 @@ private:
 
     RenderingBackend* renderingBackend;
     InputBackend* inputBackend;
+    PhysicsSystem* physicsSystem;
     JobSystem* jobSystem;
 
     boost::chrono::high_resolution_clock::time_point startTime;
