@@ -31,6 +31,22 @@
       ],
       "variables": [],
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe"
+    },
+    {
+      "name": "ReleaseWithDebugInfo",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\build\\${name}",
+      "installRoot": "${projectDir}\\install\\${name}",
+      "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "cmakeToolchain": "${env.VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "variables": []
     }
   ]
 }

@@ -23,6 +23,7 @@ Job* JobQueue::Pop()
 {
     bool b_overflow = false;
     int b = back.load(boost::memory_order_acquire);
+    --b;
     if (b < 0)
     {
         b = MAX_JOB_COUNT - 1;
