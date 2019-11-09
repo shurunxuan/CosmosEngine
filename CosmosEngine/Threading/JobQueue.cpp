@@ -21,20 +21,14 @@ JobQueue::~JobQueue()
 
 Job* JobQueue::Pop()
 {
-    bool b_overflow = false;
-    int b = back.load(boost::memory_order_acquire);
+    int64_t b = back.load(boost::memory_order_acquire);
     --b;
-    if (b < 0)
-    {
-        b = MAX_JOB_COUNT - 1;
-        b_overflow = true;
-    }
     back.store(b, boost::memory_order_release);
-    int f = front.load(boost::memory_order_acquire);
+    int64_t f = front.load(boost::memory_order_acquire);
 
-    if (f <= b || (f != b && b_overflow))
+    if (f <= b)
     {
-        Job* job = jobRingBuffer[b];
+        Job* job = jobRingBuffer[b % MAX_JOB_COUNT];
 
         // if there's still more than one item left in the queue
         if (f != b)
@@ -43,9 +37,8 @@ Job* JobQueue::Pop()
         }
 
         // if this is the last item in the queue
-        int f_desired = ((f + 1) == MAX_JOB_COUNT ? 0 : (f + 1));
         // we test if we won the race against a concurrent steal operation
-        if (!front.compare_exchange_weak(f, f_desired, boost::memory_order_acq_rel))
+        if (!front.compare_exchange_weak(f, f + 1, boost::memory_order_acq_rel))
         {
             // we lost, job stolen and return nullptr
             job = nullptr;
@@ -53,7 +46,7 @@ Job* JobQueue::Pop()
 
         // no matter we won (the last job stolen) or lost (the last job poped)
         // the queue is empty, so we set back = top
-        back.store(f_desired, boost::memory_order_release);
+        back.store(f + 1, boost::memory_order_release);
         return job;
     }
     else
@@ -65,19 +58,19 @@ Job* JobQueue::Pop()
 
 void JobQueue::Push(Job* job)
 {
-    int b = back.load(boost::memory_order_acquire);
+    int64_t b = back.load(boost::memory_order_acquire);
 
-    jobRingBuffer[b] = job; // store
+    jobRingBuffer[b % MAX_JOB_COUNT] = job; // store
 
     ++b;
-    if (b == MAX_JOB_COUNT) b = 0;
+
     back.store(b, boost::memory_order_release);  //store
 }
 
 Job* JobQueue::Steal()
 {
-    int f = front.load(boost::memory_order_acquire); // load
-    int b = back.load(boost::memory_order_acquire); // load
+    int64_t f = front.load(boost::memory_order_acquire); // load
+    int64_t b = back.load(boost::memory_order_acquire); // load
 
     if (f == b)
     {
@@ -85,9 +78,8 @@ Job* JobQueue::Steal()
     }
     else
     {
-        Job* job = jobRingBuffer[f];
-        int f_desired = ((f + 1) == MAX_JOB_COUNT ? 0 : (f + 1));
-        if (!front.compare_exchange_weak(f, f_desired, boost::memory_order_acq_rel))
+        Job* job = jobRingBuffer[f % MAX_JOB_COUNT];
+        if (!front.compare_exchange_weak(f, f + 1, boost::memory_order_acq_rel))
         {
             // a concurrent steal or pop operation removed an element from the deque in the meantime.
             return nullptr;

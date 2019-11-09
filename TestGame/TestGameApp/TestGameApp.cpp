@@ -129,45 +129,45 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
 
 
-    boost::container::vector<Vertex> vertices_1;
-
-    Vertex orig = {};
-    orig.color = {1.0f, 1.0f, 1.0f};
-
-    boost::container::vector<uint16_t> indices_1;
-
-    float radius = 0.5f;
-    int precision = 1000;
-
-    vertices_1.reserve(precision + 1);
-    indices_1.reserve(vertices_1.capacity() * 6);
-
-    vertices_1.push_back(orig);
-
-    for (int i = 0; i < precision; ++i)
-    {
-        indices_1.push_back(0);
-        indices_1.push_back(i % precision + 1);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(0);
-        indices_1.push_back((i + 1) % precision + 1);
-        indices_1.push_back(i % precision + 1);
-
-        float h = 360.0f / precision * i;
-        float s = 1.0f;
-        float v = 1.0f;
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 0.0f;
-        HSVtoRGB(r, g, b, h, s, v);
-
-        float theta = float(i) / precision * 3.14159265f * 2;
-
-        Vertex newVert = {};
-        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
-        newVert.color = {r, g, b};
-        vertices_1.push_back(newVert);
-    }
+//    boost::container::vector<Vertex> vertices_1;
+//
+//    Vertex orig = {};
+//    orig.color = {1.0f, 1.0f, 1.0f};
+//
+//    boost::container::vector<uint16_t> indices_1;
+//
+//    float radius = 0.5f;
+//    int precision = 1000;
+//
+//    vertices_1.reserve(precision + 1);
+//    indices_1.reserve(vertices_1.capacity() * 6);
+//
+//    vertices_1.push_back(orig);
+//
+//    for (int i = 0; i < precision; ++i)
+//    {
+//        indices_1.push_back(0);
+//        indices_1.push_back(i % precision + 1);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(0);
+//        indices_1.push_back((i + 1) % precision + 1);
+//        indices_1.push_back(i % precision + 1);
+//
+//        float h = 360.0f / precision * i;
+//        float s = 1.0f;
+//        float v = 1.0f;
+//        float r = 0.0f;
+//        float g = 0.0f;
+//        float b = 0.0f;
+//        HSVtoRGB(r, g, b, h, s, v);
+//
+//        float theta = float(i) / precision * 3.14159265f * 2;
+//
+//        Vertex newVert = {};
+//        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
+//        newVert.color = {r, g, b};
+//        vertices_1.push_back(newVert);
+//    }
 
 //    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
 //    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
@@ -194,7 +194,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     boost::shared_ptr<Mesh> mesh = nullptr;
     boost::shared_ptr<Material> material = nullptr;
 
-    for (int i = 0; i < 200; ++i)
+    for (int i = 0; i < 300; ++i)
     {
         float size = rand() * 0.8f + 0.2f;
         Object* testObject;

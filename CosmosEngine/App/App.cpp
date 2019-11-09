@@ -85,6 +85,7 @@ void CEApp::Loop()
     {
         lastTime = currentTime;
 
+        jobSystem->Update();
         inputBackend->SyncUpdate(deltaTime.count());
         physicsSystem->Update(deltaTime.count(), totalTime.count());
         App->CurrentActiveScene()->Update(deltaTime.count(), totalTime.count());

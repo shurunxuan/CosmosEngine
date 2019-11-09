@@ -60,7 +60,7 @@ void JobSystem::StartUp()
         queueVec.push_back(new JobQueue);
     }
 
-    auto mainThreadID = boost::this_thread::get_id();
+    mainThreadID = boost::this_thread::get_id();
 
     queueMap[mainThreadID] = queueVec[0];
 
@@ -102,6 +102,16 @@ void JobSystem::StartUp()
     }
 
     LOG_INFO << "Job System start up completed with " << workerThreads.size() << " additional worker threads";
+}
+
+void JobSystem::Update()
+{
+    // Clear the job queues
+    for (auto& q : queueVec)
+    {
+        q->back.store(0, boost::memory_order_relaxed);
+        q->front.store(0, boost::memory_order_relaxed);
+    }
 }
 
 void JobSystem::Shutdown()
@@ -197,11 +207,11 @@ void JobSystem::Wait(Job* job)
 {
     while (job->unfinishedJobs.load() > 0)
     {
-        //Job* job1 = GetJob();
-        //if (job1)
-        //{
-        //    Execute(job1);
-        //}
+//        Job* job1 = GetJob();
+//        if (job1)
+//        {
+//            Execute(job1);
+//        }
     }
 }
 

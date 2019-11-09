@@ -12,8 +12,8 @@ struct Job;
 struct JobQueue
 {
     Job** jobRingBuffer;
-    boost::atomic<int> front;
-    boost::atomic<int> back;
+    boost::atomic_int64_t front;
+    boost::atomic_int64_t back;
 
     JobQueue();
 

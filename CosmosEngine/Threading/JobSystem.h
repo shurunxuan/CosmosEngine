@@ -43,6 +43,8 @@ public:
 
     void StartUp();
 
+    void Update();
+
     void Shutdown();
 
     Job* CreateJob(JobFunction function);
