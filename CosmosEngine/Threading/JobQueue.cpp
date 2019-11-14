@@ -21,10 +21,10 @@ JobQueue::~JobQueue()
 
 bool JobQueue::Pop(Job** job)
 {
-    int64_t b = back.load(std::memory_order_relaxed) - 1;
-    back.store(b, std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    int64_t f = front.load(std::memory_order_relaxed);
+    int64_t b = back.load(boost::memory_order_relaxed) - 1;
+    back.store(b, boost::memory_order_relaxed);
+    boost::atomic_thread_fence(boost::memory_order_seq_cst);
+    int64_t f = front.load(boost::memory_order_relaxed);
 
     bool result = false;
     if (f <= b)
@@ -35,19 +35,19 @@ bool JobQueue::Pop(Job** job)
         if (f == b)
         {
             if (!front.compare_exchange_strong(f, f + 1,
-                                               std::memory_order_seq_cst,
-                                               std::memory_order_relaxed))
+                                               boost::memory_order_seq_cst,
+                                               boost::memory_order_relaxed))
             {
                 // failed race
                 result = false;
             }
-            back.store(b + 1, std::memory_order_relaxed);
+            back.store(b + 1, boost::memory_order_relaxed);
         }
     }
     else
     {
         // empty queue
-        back.store(b + 1, std::memory_order_relaxed);
+        back.store(b + 1, boost::memory_order_relaxed);
         result = false;
     }
     return result;
@@ -55,8 +55,8 @@ bool JobQueue::Pop(Job** job)
 
 bool JobQueue::Push(Job* job)
 {
-    int64_t b = back.load(std::memory_order_relaxed);
-    int64_t f = front.load(std::memory_order_acquire);
+    int64_t b = back.load(boost::memory_order_relaxed);
+    int64_t f = front.load(boost::memory_order_acquire);
 
     if (b - f > MAX_JOB_COUNT - 1)
     {
@@ -65,16 +65,16 @@ bool JobQueue::Push(Job* job)
     }
 
     jobRingBuffer[b % MAX_JOB_COUNT] = job;
-    std::atomic_thread_fence(std::memory_order_release);
-    back.store(b + 1, std::memory_order_relaxed);  //store
+    boost::atomic_thread_fence(boost::memory_order_release);
+    back.store(b + 1, boost::memory_order_relaxed);  //store
     return true;
 }
 
 bool JobQueue::Steal(Job** job)
 {
-    int64_t f = front.load(std::memory_order_acquire); // load
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    int64_t b = back.load(std::memory_order_acquire); // load
+    int64_t f = front.load(boost::memory_order_acquire); // load
+    boost::atomic_thread_fence(boost::memory_order_seq_cst);
+    int64_t b = back.load(boost::memory_order_acquire); // load
 
     if (f >= b)
     {
@@ -84,8 +84,8 @@ bool JobQueue::Steal(Job** job)
     *job = jobRingBuffer[f % MAX_JOB_COUNT];
 
     if (!front.compare_exchange_strong(f, f + 1,
-                                       std::memory_order_seq_cst,
-                                       std::memory_order_relaxed))
+                                       boost::memory_order_seq_cst,
+                                       boost::memory_order_relaxed))
     {
         // failed race
         return false;

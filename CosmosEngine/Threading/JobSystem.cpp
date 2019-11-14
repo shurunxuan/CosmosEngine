@@ -18,8 +18,11 @@ Job::Job()
 JobSystem::JobSystem()
 {
     jobSystem = this;
-
+#ifdef __APPLE__
+    concurrentThreadsSupported = boost::thread::physical_concurrency();
+#else
     concurrentThreadsSupported = boost::thread::hardware_concurrency();
+#endif
     if (concurrentThreadsSupported < 4) concurrentThreadsSupported = 4;
 
     workerThreads.reserve(concurrentThreadsSupported);
@@ -109,11 +112,11 @@ void JobSystem::Update()
     // Clear the job queues
     for (auto& q : queueVec)
     {
-        q->back.store(0, std::memory_order_seq_cst);
-        q->front.store(0, std::memory_order_seq_cst);
+        q->back.store(0, boost::memory_order_seq_cst);
+        q->front.store(0, boost::memory_order_seq_cst);
     }
 
-    allocatedJobs.store(0, std::memory_order_seq_cst);
+    allocatedJobs.store(0, boost::memory_order_seq_cst);
 }
 
 void JobSystem::Shutdown()
