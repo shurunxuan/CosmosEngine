@@ -9,7 +9,7 @@
 #include "JobQueue.h"
 
 #include <boost/function.hpp>
-#include <boost/atomic.hpp>
+#include <atomic>
 #include <boost/thread.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/map.hpp>
@@ -30,7 +30,7 @@ public:
 
     JobFunction function;
     Job* parent;
-    boost::atomic<int32_t> unfinishedJobs; // atomic
+    std::atomic<int32_t> unfinishedJobs; // atomic
     char data[128];
 };
 
@@ -76,10 +76,10 @@ private:
     boost::random::mt19937* gen; //Standard mersenne_twister_engine seeded with rd()
     boost::random::uniform_int_distribution<>* dis;
 
-    boost::atomic<bool> active;
+    std::atomic<bool> active;
 
     Job* jobRingBuffer;
-    boost::atomic<uint32_t> allocatedJobs;
+    std::atomic<uint64_t> allocatedJobs;
 
     Job* AllocateJob();
 };

@@ -5,25 +5,25 @@
 #ifndef GAMEENGINE_JOBQUEUE_H
 #define GAMEENGINE_JOBQUEUE_H
 
-#include <boost/atomic.hpp>
+#include <atomic>
 
 struct Job;
 
 struct JobQueue
 {
     Job** jobRingBuffer;
-    boost::atomic_int64_t front;
-    boost::atomic_int64_t back;
+    std::atomic_int64_t front;
+    std::atomic_int64_t back;
 
     JobQueue();
 
     ~JobQueue();
 
-    Job* Pop();
+    bool Pop(Job** job);
 
-    void Push(Job* job);
+    bool Push(Job* job);
 
-    Job* Steal();
+    bool Steal(Job** job);
 
     bool Empty();
 };

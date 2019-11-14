@@ -109,9 +109,11 @@ void JobSystem::Update()
     // Clear the job queues
     for (auto& q : queueVec)
     {
-        q->back.store(0, boost::memory_order_relaxed);
-        q->front.store(0, boost::memory_order_relaxed);
+        q->back.store(0, std::memory_order_seq_cst);
+        q->front.store(0, std::memory_order_seq_cst);
     }
+
+    allocatedJobs.store(0, std::memory_order_seq_cst);
 }
 
 void JobSystem::Shutdown()
@@ -132,7 +134,7 @@ Job* JobSystem::CreateJob(JobFunction function)
     job->function = std::move(function);
     job->parent = nullptr;
     job->unfinishedJobs = 1;
-	memset(job->data, 0, sizeof(job->data));
+    //memset(job->data, 0, sizeof(job->data));
 
     return job;
 }
@@ -145,7 +147,7 @@ Job* JobSystem::CreateJobAsChild(Job* parent, JobFunction function)
     job->function = std::move(function);
     job->parent = parent;
     job->unfinishedJobs = 1;
-	memset(job->data, 0, sizeof(job->data));
+    //memset(job->data, 0, sizeof(job->data));
 
     return job;
 }
@@ -157,8 +159,9 @@ Job* JobSystem::GetJob()
 
     if (threadQueue != nullptr)
     {
-        Job* job = threadQueue->Pop();
-        if (job != nullptr) return job;
+        Job* job;
+        bool result = threadQueue->Pop(&job);
+        if (result) return job;
     }
 
     boost::thread::id otherThreadID = GetRandomThreadID();
@@ -176,8 +179,9 @@ Job* JobSystem::GetJob()
         boost::this_thread::yield();
         return nullptr;
     }
-    Job* stolenJob = stealQueue->Steal();
-    if (stolenJob == nullptr)
+    Job* stolenJob;
+    bool result = stealQueue->Steal(&stolenJob);
+    if (!result)
     {
         // we couldn't steal a job from the other queue either, so we just yield our time slice for now
         boost::this_thread::yield();
@@ -193,7 +197,7 @@ void JobSystem::Run(Job* job)
     while (threadQueue == nullptr) threadQueue = queueMap[boost::this_thread::get_id()];
     //WorkStealingQueue* threadQueue = queueMap[GetRandomThreadID()];
     //while (threadQueue == nullptr) threadQueue = queueMap[GetRandomThreadID()];
-    threadQueue->Push(job);
+    while (!threadQueue->Push(job));
     queueNotEmpty.notify_all();
 }
 
@@ -207,11 +211,11 @@ void JobSystem::Wait(Job* job)
 {
     while (job->unfinishedJobs.load() > 0)
     {
-//        Job* job1 = GetJob();
-//        if (job1)
-//        {
-//            Execute(job1);
-//        }
+        Job* job1 = GetJob();
+        if (job1)
+        {
+            Execute(job1);
+        }
     }
 }
 
@@ -241,6 +245,6 @@ boost::thread::id JobSystem::GetRandomThreadID()
 
 Job* JobSystem::AllocateJob()
 {
-    const uint32_t index = allocatedJobs++;
+    const uint64_t index = allocatedJobs++;
     return &jobRingBuffer[index % MAX_JOB_COUNT];
 }
