@@ -17,6 +17,8 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARY_DIRS}/libassimp.dylib)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(ASSIMP_LIBS_FIX assimp::assimp)
+else ()
+    set(ASSIMP_LIBS_FIX ${ASSIMP_LIBRARIES})
 endif ()
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -48,7 +50,9 @@ set(SOURCE_FILES
         Rendering/Vulkan/VulkanPipeline.cpp
         Threading/JobQueue.cpp
         Threading/JobSystem.cpp
-        Physics/SphereCollider.cpp Physics/PhysicsSystem.cpp)
+        Physics/SphereCollider.cpp
+        Physics/PhysicsSystem.cpp
+        )
 
 set(HEADER_FILES
         Export.h
@@ -75,7 +79,9 @@ set(HEADER_FILES
         Rendering/Vulkan/VulkanPipeline.h
         Threading/JobQueue.h
         Threading/JobSystem.h
-        Physics/SphereCollider.h Physics/PhysicsSystem.h)
+        Physics/SphereCollider.h
+        Physics/PhysicsSystem.h
+        )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
