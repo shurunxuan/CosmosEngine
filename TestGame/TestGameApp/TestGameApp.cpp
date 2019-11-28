@@ -128,80 +128,84 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     presentedInputBackend->DisableCursor();
 
 
+    boost::container::vector<Vertex> vertices_1;
 
-//    boost::container::vector<Vertex> vertices_1;
-//
-//    Vertex orig = {};
-//    orig.color = {1.0f, 1.0f, 1.0f};
-//
-//    boost::container::vector<uint16_t> indices_1;
-//
-//    float radius = 0.5f;
-//    int precision = 1000;
-//
-//    vertices_1.reserve(precision + 1);
-//    indices_1.reserve(vertices_1.capacity() * 6);
-//
-//    vertices_1.push_back(orig);
-//
-//    for (int i = 0; i < precision; ++i)
-//    {
-//        indices_1.push_back(0);
-//        indices_1.push_back(i % precision + 1);
-//        indices_1.push_back((i + 1) % precision + 1);
-//        indices_1.push_back(0);
-//        indices_1.push_back((i + 1) % precision + 1);
-//        indices_1.push_back(i % precision + 1);
-//
-//        float h = 360.0f / precision * i;
-//        float s = 1.0f;
-//        float v = 1.0f;
-//        float r = 0.0f;
-//        float g = 0.0f;
-//        float b = 0.0f;
-//        HSVtoRGB(r, g, b, h, s, v);
-//
-//        float theta = float(i) / precision * 3.14159265f * 2;
-//
-//        Vertex newVert = {};
-//        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
-//        newVert.color = {r, g, b};
-//        vertices_1.push_back(newVert);
-//    }
+    Vertex orig = {};
+    orig.color = {1.0f, 1.0f, 1.0f};
 
-//    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
-//    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
-//
-//    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
-//    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
-//    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
-//
-//    boost::shared_ptr<Material> material = boost::make_shared<Material>();
-//    material->LoadVertexShader("Shaders/shader.vert");
-//    material->LoadPixelShader("Shaders/shader.frag");
-//
-//    meshRenderer->SetMaterial(material);
-//    meshRenderer->SetMesh(mesh);
-//
-//    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
+    boost::container::vector<uint16_t> indices_1;
 
-    boost::random::random_device rd;
-    boost::random::mt19937 gen(rd());
-    boost::random::uniform_real_distribution<float> dis(0.0f, 1.0f);
-    auto rand = boost::bind(dis, gen);
+    float radius = 0.5f;
+    int precision = 1000;
 
-    Object* firstObject = nullptr;
-    boost::shared_ptr<Mesh> mesh = nullptr;
-    boost::shared_ptr<Material> material = nullptr;
+    vertices_1.reserve(precision + 1);
+    indices_1.reserve(vertices_1.capacity() * 6);
 
-    for (int i = 0; i < 300; ++i)
+    vertices_1.push_back(orig);
+
+    for (int i = 0; i < precision; ++i)
     {
-        float size = rand() * 0.8f + 0.2f;
-        Object* testObject;
+        indices_1.push_back(0);
+        indices_1.push_back(i % precision + 1);
+        indices_1.push_back((i + 1) % precision + 1);
+        indices_1.push_back(0);
+        indices_1.push_back((i + 1) % precision + 1);
+        indices_1.push_back(i % precision + 1);
 
+        float h = 360.0f / precision * i;
+        float s = 1.0f;
+        float v = 1.0f;
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 0.0f;
+        HSVtoRGB(r, g, b, h, s, v);
+
+        float theta = float(i) / precision * 3.14159265f * 2;
+
+        Vertex newVert = {};
+        newVert.pos = {cosf(theta) * radius, 0.0f, sinf(theta) * radius};
+        newVert.color = {r, g, b};
+        vertices_1.push_back(newVert);
+    }
+
+    Object* testObject = CurrentActiveScene()->AddObject("TestObject");
+    MeshRenderer* meshRenderer = testObject->AddComponent<MeshRenderer>();
+
+    boost::shared_ptr<Mesh> mesh = boost::make_shared<Mesh>();
+    mesh->LoadVertexData((void*) (&*vertices_1.begin()), sizeof(Vertex), vertices_1.size());
+    mesh->LoadIndexData((uint16_t*) (&*indices_1.begin()), indices_1.size());
+
+    boost::shared_ptr<Material> material = boost::make_shared<Material>();
+    material->LoadVertexShader("Shaders/shader.vert");
+    material->LoadPixelShader("Shaders/shader.frag");
+
+    meshRenderer->SetMaterial(material);
+    meshRenderer->SetMesh(mesh);
+
+    testObject->transform->SetLocalScale(5.0f, 5.0f, 5.0f);
+
+    Object* testObject_1 = CurrentActiveScene()->LoadModelFile("Assets/Models/pokemon/Models/025_00_0/0.obj");
+    testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
+
+    ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
+
+//    boost::random::random_device rd;
+//    boost::random::mt19937 gen(rd());
+//    boost::random::uniform_real_distribution<float> dis(0.0f, 1.0f);
+//    auto rand = boost::bind(dis, gen);
+//
+//    Object* firstObject = nullptr;
+//    boost::shared_ptr<Mesh> mesh = nullptr;
+//    boost::shared_ptr<Material> material = nullptr;
+//
+//    for (int i = 0; i < 300; ++i)
+//    {
+//        float size = rand() * 0.8f + 0.2f;
+//        Object* testObject;
+//
 //        if (firstObject == nullptr)
 //        {
-            testObject = CurrentActiveScene()->LoadModelFile("Assets/Models/Rock/sphere.obj");
+//            testObject = CurrentActiveScene()->LoadModelFile("Assets/Models/Rock/sphere.obj");
 //            firstObject = testObject;
 //            auto renderer = testObject->transform->GetChildAt(0)->object->GetComponent<MeshRenderer>();
 //            mesh = renderer->GetMesh();
@@ -217,20 +221,20 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 //            renderer->SetMaterial(material);
 //            renderer->SetMesh(mesh);
 //        }
-
-        testObject->transform->SetLocalScale(size, size, size);
-        testObject->transform->SetLocalTranslation(rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f);
-
-        SphereCollider* collider = testObject->AddComponent<SphereCollider>();
-        collider->mass = size * 1.0f;
-        collider->radius = size * 0.5f;
-    }
+//
+//        testObject->transform->SetLocalScale(size, size, size);
+//        testObject->transform->SetLocalTranslation(rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f, rand() * 20.0f - 10.0f);
+//
+//        SphereCollider* collider = testObject->AddComponent<SphereCollider>();
+//        collider->mass = size * 1.0f;
+//        collider->radius = size * 0.5f;
+//    }
 
 
 
     auto mainCamera = CurrentActiveScene()->mainCamera;
 
-    mainCamera->transform->SetLocalTranslation(0.0f, 0.0f, -5.0f);
+    mainCamera->transform->SetLocalTranslation(0.0f, 5.0f, -5.0f);
     mainCamera->transform->SetLocalRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
     mainCamera->AddComponent<CameraMovement>();
 
