@@ -24,6 +24,8 @@ endif ()
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
+include_directories(${FFMPEG_INCLUDE_DIRS})
+
 add_compile_definitions(ENGINE_EXPORTS)
 
 set(SOURCE_FILES
@@ -52,7 +54,7 @@ set(SOURCE_FILES
         Threading/JobSystem.cpp
         Physics/SphereCollider.cpp
         Physics/PhysicsSystem.cpp
-        )
+        Audio/Decoder/Decoder.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -81,7 +83,7 @@ set(HEADER_FILES
         Threading/JobSystem.h
         Physics/SphereCollider.h
         Physics/PhysicsSystem.h
-        )
+        Audio/Decoder/Decoder.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -169,6 +171,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         ${Boost_LIBRARIES}
         ${ASSIMP_LIBS_FIX}
         ${SPRIV_CROSS_LIBRARIES}
+        ${FFMPEG_LIBRARIES}
         )
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")

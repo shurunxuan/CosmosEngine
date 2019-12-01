@@ -20,6 +20,13 @@ else ()
     add_compile_definitions(BOOST_LOG_DYN_LINK)
 endif ()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    set(DEPRECATION_FLAG "-wr1478")
+else()
+    set(DEPRECATION_FLAG "-Wno-deprecated-declarations")
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DEPRECATION_FLAG}")
+
 find_package(Vulkan REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 find_package(Git REQUIRED)
@@ -173,6 +180,33 @@ if (EXISTS ${STB_COLLECTION_SRC_PATH})
 else ()
     message(FATAL_ERROR "-- Can't find stb collection header files. Make sure the submodules are cloned.")
 endif ()
+
+# FFmpeg
+set(FFMPEG_COMPONENTS
+        avcodec
+        avdevice
+        avfilter
+        avformat
+        avresample
+        avutil
+        postproc
+        swresample
+        swscale
+    )
+foreach(FFMPEG_COMPONENT ${FFMPEG_COMPONENTS})
+    find_path(${FFMPEG_COMPONENT}_INCLUDE_DIR
+            NAMES lib${FFMPEG_COMPONENT}/${FFMPEG_COMPONENT}*.h lib${FFMPEG_COMPONENT}/version.h)
+    if (${FFMPEG_COMPONENT}_INCLUDE_DIR)
+        list(APPEND FFMPEG_INCLUDE_DIRS ${${FFMPEG_COMPONENT}_INCLUDE_DIR})
+
+        find_library(${FFMPEG_COMPONENT}_LIBRARY ${FFMPEG_COMPONENT})
+
+        if (${FFMPEG_COMPONENT}_LIBRARY)
+            list(APPEND FFMPEG_LIBRARIES ${${FFMPEG_COMPONENT}_LIBRARY})
+            message("-- Found ffmpeg component ${FFMPEG_COMPONENT}: ${${FFMPEG_COMPONENT}_LIBRARY}")
+        endif ()
+    endif()
+endforeach()
 
 # Engine and Game
 add_subdirectory(CosmosEngine)
