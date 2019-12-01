@@ -4,6 +4,9 @@
 
 #ifndef GAMEENGINE_DECODER_H
 #define GAMEENGINE_DECODER_H
+
+#include "../Export.h"
+
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -15,7 +18,7 @@ extern "C"
 /**
  * @brief The FFMpeg Framework of the DS Engine
  */
-class Decoder
+class ENGINE_LOCAL Decoder
 {
 public:
     /**

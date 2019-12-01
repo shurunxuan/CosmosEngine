@@ -54,7 +54,7 @@ set(SOURCE_FILES
         Threading/JobSystem.cpp
         Physics/SphereCollider.cpp
         Physics/PhysicsSystem.cpp
-        Audio/Decoder/Decoder.cpp)
+        Audio/Decoder.cpp Audio/AudioBackend.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -83,7 +83,7 @@ set(HEADER_FILES
         Threading/JobSystem.h
         Physics/SphereCollider.h
         Physics/PhysicsSystem.h
-        Audio/Decoder/Decoder.h)
+        Audio/Decoder.h Audio/AudioBackend.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 

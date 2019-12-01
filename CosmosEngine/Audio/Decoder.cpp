@@ -3,7 +3,7 @@
 //
 
 #include "Decoder.h"
-#include "../../Logging/Logging.h"
+#include "../Logging/Logging.h"
 
 #define MAX_BUFFER_COUNT 16
 #define MAX_AUDIO_FRAME_SIZE 48000
