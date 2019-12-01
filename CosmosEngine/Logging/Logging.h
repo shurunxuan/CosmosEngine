@@ -30,7 +30,7 @@
 
 #define LOG_LOGGER(logger, sev) BOOST_LOG_SEV(logger, sev) \
   << boost::log::add_value<int>("Line", __LINE__)      \
-  << boost::log::add_value("File", boost::filesystem::path(__FILE__).string())\
+  << boost::log::add_value("File", boost::filesystem::relative(boost::filesystem::canonical(__FILE__, __SOLUTION_DIR__), __SOLUTION_DIR__).string())\
   << boost::log::add_value("Function", BOOST_CURRENT_FUNCTION)
 
 #define LOG(sev) LOG_LOGGER(global_logger::get(), boost::log::trivial::sev)
