@@ -83,9 +83,66 @@ set(HEADER_FILES
         Threading/JobSystem.h
         Physics/SphereCollider.h
         Physics/PhysicsSystem.h
-        Audio/Decoder.h Audio/AudioBackend.h)
+        Audio/Decoder.h Audio/AudioBackend.h Audio/DefaultAudioBackend.h)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(SYSTEM_SPECIFIC_SOURCE_FILES Audio/XAudio2/XAudio2Backend.cpp)
+    set(SYSTEM_SPECIFIC_HEADER_FILES Audio/XAudio2/XAudio2Backend.h)
+
+    set(SYSTEM_SPECIFIC_LIBRARIES
+            bcrypt)
+    set(SYSTEM_SPECIFIC_INCLUDE_DIRS)
+
+    set(SYSTEM_SPECIFIC_COMPILE_OPTIONS)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    # Objective-C Frameworks
+    set(OBJC_FRAMEWORKS
+            Foundation
+            AudioToolbox
+            CoreAudio
+            AVFoundation
+            )
+
+    foreach (FRAMEWORK ${OBJC_FRAMEWORKS})
+        set(OBJC_FRAMEWORK_STRING "${OBJC_FRAMEWORK_STRING} ${FRAMEWORK}")
+        list(APPEND OBJC_LINK_FRAMEWORKS "-framework ${FRAMEWORK}")
+    endforeach ()
+    message("-- Using Objective-C Framework:${OBJC_FRAMEWORK_STRING}")
+
+    set(SYSTEM_SPECIFIC_SOURCE_FILES
+            Audio/CoreAudio/CoreAudioBackend.cpp
+            Audio/CoreAudio/CoreAudioBackendBridge.m
+            Logging/LoggingObjC.cpp
+            )
+    set(SYSTEM_SPECIFIC_HEADER_FILES
+            Audio/CoreAudio/CoreAudioBackend.h
+            Audio/CoreAudio/CoreAudioBackendBridge.h
+            Logging/LoggingObjC.h
+            )
+
+    set(SYSTEM_SPECIFIC_LIBRARIES
+            ${OBJC_LINK_FRAMEWORKS})
+    set(SYSTEM_SPECIFIC_INCLUDE_DIRS)
+
+    set(SYSTEM_SPECIFIC_COMPILE_OPTIONS
+            "-fobjc-arc")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_SPECIFIC_SOURCE_FILES Audio/OpenAL/OpenALBackend.cpp)
+    set(SYSTEM_SPECIFIC_HEADER_FILES Audio/OpenAL/OpenALBackend.h)
+
+    set(SYSTEM_SPECIFIC_LIBRARIES)
+    set(SYSTEM_SPECIFIC_INCLUDE_DIRS)
+
+    set(SYSTEM_SPECIFIC_COMPILE_OPTIONS)
+endif()
+
+include_directories(${SYSTEM_SPECIFIC_INCLUDE_DIRS})
+
+add_library(${PROJECT_NAME} SHARED
+        ${SOURCE_FILES}
+        ${HEADER_FILES}
+        ${SYSTEM_SPECIFIC_SOURCE_FILES}
+        ${SYSTEM_SPECIFIC_HEADER_FILES})
 
 # Shaders (SPIR-V)
 
@@ -172,8 +229,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         ${ASSIMP_LIBS_FIX}
         ${SPRIV_CROSS_LIBRARIES}
         ${FFMPEG_LIBRARIES}
-        )
+        ${SYSTEM_SPECIFIC_LIBRARIES}
+)
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
-endif ()
+target_compile_options(${PROJECT_NAME} PUBLIC ${SYSTEM_SPECIFIC_COMPILE_OPTIONS})

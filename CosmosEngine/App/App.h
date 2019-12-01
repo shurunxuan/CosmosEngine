@@ -13,6 +13,7 @@
 #include "../Core/Camera.h"
 #include "../Core/Scene.h"
 #include "../Physics/PhysicsSystem.h"
+#include "../Audio/AudioBackend.h"
 #include <boost/chrono.hpp>
 
 int ENGINE_API CosmosEngine(int argc, char** argv);
@@ -63,6 +64,7 @@ private:
 
     RenderingBackend* renderingBackend;
     InputBackend* inputBackend;
+    AudioBackend* audioBackend;
     PhysicsSystem* physicsSystem;
     JobSystem* jobSystem;
 

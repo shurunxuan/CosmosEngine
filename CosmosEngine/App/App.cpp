@@ -6,6 +6,7 @@
 
 #include "../Rendering/Vulkan/VulkanBackend.h"
 #include "../Input/GLFW/GLFWInputBackend.h"
+#include "../Audio/DefaultAudioBackend.h"
 #include "../Logging/Logging.h"
 
 #include <boost/version.hpp>
@@ -59,6 +60,10 @@ bool CEApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
 
     physicsSystem->StartUp();
 
+    audioBackend = new DefaultAudioBackend();
+
+    audioBackend->StartUp();
+
     // TODO: Choose Rendering Backend
     renderingBackend = new VulkanBackend();
 
@@ -85,11 +90,15 @@ void CEApp::Loop()
     {
         lastTime = currentTime;
 
+        float dt = deltaTime.count();
+        float tt = totalTime.count();
+
         jobSystem->Update();
-        inputBackend->SyncUpdate(deltaTime.count());
-        physicsSystem->Update(deltaTime.count(), totalTime.count());
-        App->CurrentActiveScene()->Update(deltaTime.count(), totalTime.count());
-        renderingBackend->Update(deltaTime.count(), totalTime.count());
+        inputBackend->SyncUpdate(dt);
+        physicsSystem->Update(dt, tt);
+        App->CurrentActiveScene()->Update(dt, tt);
+        audioBackend->Update(dt, tt);
+        renderingBackend->Update(dt, tt);
 
         currentTime = boost::chrono::high_resolution_clock::now();
         deltaTime = currentTime - lastTime;
@@ -101,6 +110,7 @@ void CEApp::Shutdown()
 {
     delete currentScene;
     renderingBackend->Shutdown();
+    audioBackend->Shutdown();
     jobSystem->Shutdown();
     physicsSystem->Shutdown();
 }

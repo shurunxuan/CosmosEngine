@@ -205,10 +205,21 @@ foreach(FFMPEG_COMPONENT ${FFMPEG_COMPONENTS})
 
         if (${FFMPEG_COMPONENT}_LIBRARY)
             list(APPEND FFMPEG_LIBRARIES ${${FFMPEG_COMPONENT}_LIBRARY})
-            message("-- Found ffmpeg component ${FFMPEG_COMPONENT}: ${${FFMPEG_COMPONENT}_LIBRARY}")
+            list(APPEND FFMPEG_COMPONENTS_FOUND ${FFMPEG_COMPONENT})
         endif ()
     endif()
 endforeach()
+
+list(LENGTH FFMPEG_COMPONENTS_FOUND FFMPEG_COMPONENTS_FOUND_COUNT)
+if (${FFMPEG_COMPONENTS_FOUND_COUNT} GREATER 0)
+    foreach (COMPONENT ${FFMPEG_COMPONENTS_FOUND})
+        set (COMPONENT_STRING "${COMPONENT_STRING} ${COMPONENT}")
+    endforeach ()
+    message("-- Found FFmpeg components:${COMPONENT_STRING}")
+else()
+    message(FATAL "No FFmpeg components found!")
+endif ()
+
 
 # Engine and Game
 add_subdirectory(CosmosEngine)

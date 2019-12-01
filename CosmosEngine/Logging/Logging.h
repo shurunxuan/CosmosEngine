@@ -31,16 +31,18 @@
 #define LOG_LOGGER(logger, sev) BOOST_LOG_SEV(logger, sev) \
   << boost::log::add_value<int>("Line", __LINE__)      \
   << boost::log::add_value("File", boost::filesystem::relative(boost::filesystem::absolute(__FILE__, __BINARY_DIR__), __SOLUTION_DIR__).string())\
-  << boost::log::add_value("Function", BOOST_CURRENT_FUNCTION)
+//  << boost::log::add_value("Function", BOOST_CURRENT_FUNCTION)
 
 #define LOG(sev) LOG_LOGGER(global_logger::get(), boost::log::trivial::sev)
 
+#ifndef __OBJC__
 #define LOG_TRACE LOG(trace)
 #define LOG_DEBUG LOG(debug)
 #define LOG_INFO LOG(info)
 #define LOG_WARNING LOG(warning)
 #define LOG_ERROR LOG(error)
 #define LOG_FATAL LOG(fatal)
+#endif
 
 /**
  * @brief Define the global logger
