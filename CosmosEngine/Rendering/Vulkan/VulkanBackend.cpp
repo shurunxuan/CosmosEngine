@@ -290,7 +290,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 
     for (auto& meshRenderer : presentedMeshRenderers)
     {
-        VulkanPipeline* vkPipeline= reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
+        VulkanPipeline* vkPipeline = reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
         if (vkPipeline->recreated)
         {
             meshRenderer->GetCommandBuffer()->RecreateCommandBuffer();
@@ -299,7 +299,7 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
 
     for (auto& meshRenderer : presentedMeshRenderers)
     {
-        VulkanPipeline* vkPipeline= reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
+        VulkanPipeline* vkPipeline = reinterpret_cast<VulkanPipeline*>(meshRenderer->GetMaterial()->GetPipeline());
         vkPipeline->recreated = false;
     }
 
@@ -336,7 +336,8 @@ void VulkanBackend::Render(float deltaTime, float totalTime)
         pipeline->SetFloat4("color", color);
         meshRenderer->GetMaterial()->GetPixelShader()->CopyAllBufferData();
 
-        frameCommandBuffers.push_back(reinterpret_cast<VulkanCommandBuffer*>(meshRenderer->GetCommandBuffer())->commandBuffers[imageIndex]);
+        frameCommandBuffers.push_back(
+                reinterpret_cast<VulkanCommandBuffer*>(meshRenderer->GetCommandBuffer())->commandBuffers[imageIndex]);
     }
 
     // Record new command buffer

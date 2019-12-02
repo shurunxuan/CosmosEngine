@@ -1,5 +1,5 @@
-#include <CosmosEngine/Logging/Logging.h>
 #include "TestGameApp.h"
+#include <CosmosEngine/Logging/Logging.h>
 #include <boost/container/list.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -47,32 +47,38 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV)
         fR = fC;
         fG = fX;
         fB = 0;
-    } else if (1 <= fHPrime && fHPrime < 2)
+    }
+    else if (1 <= fHPrime && fHPrime < 2)
     {
         fR = fX;
         fG = fC;
         fB = 0;
-    } else if (2 <= fHPrime && fHPrime < 3)
+    }
+    else if (2 <= fHPrime && fHPrime < 3)
     {
         fR = 0;
         fG = fC;
         fB = fX;
-    } else if (3 <= fHPrime && fHPrime < 4)
+    }
+    else if (3 <= fHPrime && fHPrime < 4)
     {
         fR = 0;
         fG = fX;
         fB = fC;
-    } else if (4 <= fHPrime && fHPrime < 5)
+    }
+    else if (4 <= fHPrime && fHPrime < 5)
     {
         fR = fX;
         fG = 0;
         fB = fC;
-    } else if (5 <= fHPrime && fHPrime < 6)
+    }
+    else if (5 <= fHPrime && fHPrime < 6)
     {
         fR = fC;
         fG = 0;
         fB = fX;
-    } else
+    }
+    else
     {
         fR = 0;
         fG = 0;
@@ -115,8 +121,10 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
                                          0.1f, 10.0f, false, Button, MouseX, -1);
     presentedInputBackend->RegisterInput("ArrowVertical", "joystick up", "joystick down", "up", "down", 10.0f, 0.1f,
                                          10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("TestMouseLeft", "mouse 0", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
-    presentedInputBackend->RegisterInput("TestMouseRight", "mouse 1", "", "", "", 10.0f, 0.1f, 10.0f, false, Button, MouseX, -1);
+    presentedInputBackend->RegisterInput("TestMouseLeft", "mouse 0", "", "", "", 10.0f, 0.1f, 10.0f, false, Button,
+                                         MouseX, -1);
+    presentedInputBackend->RegisterInput("TestMouseRight", "mouse 1", "", "", "", 10.0f, 0.1f, 10.0f, false, Button,
+                                         MouseX, -1);
     presentedInputBackend->RegisterInput("Wheel", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Movement, MouseWheel,
                                          -1);
     presentedInputBackend->RegisterInput("ZoomIn", "", "", "", "", 10.0f, 0.1f, 10.0f, false, Axis, JoystickRT, -1);

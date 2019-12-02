@@ -9,6 +9,7 @@
 
 #include "XAudio2/XAudio2Backend.h"
 #include "XAudio2/XAudio2Player.h"
+
 typedef XAudio2Backend DefaultAudioBackend;
 typedef XAudio2Player DefaultAudioPlayer;
 

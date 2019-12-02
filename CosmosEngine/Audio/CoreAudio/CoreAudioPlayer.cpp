@@ -17,10 +17,11 @@ CoreAudioPlayer::~CoreAudioPlayer()
 
 }
 
-void CoreAudioPlayer::Init(int sampleRate, int channels)
+void CoreAudioPlayer::Init(int sampleRate, int channels, int bytesPerSample)
 {
     this->sampleRate = sampleRate;
     this->channels = channels;
+    this->bytesPerSample = bytesPerSample;
     AVAudioEngine* engine = ((CoreAudioBackend*)presentedAudioBackend)->GetEngine();
     AVAudioMixerNode* mainMixerNode = ((CoreAudioBackend*)presentedAudioBackend)->GetMainMixerNode();
     CreatePlayerNode(&playerNode);
@@ -54,11 +55,17 @@ void CoreAudioPlayer::ClearBuffer()
     bufferCount = 0;
 }
 
-void CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize)
+int CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize, bool finalBuffer)
 {
     SetupAudioBuffer(buffer, bufferSize, playerNode, format,
             CoreAudioPlayer::SubAtomicInt, this);
     ++bufferCount;
+    return bufferCount;
+}
+
+int CoreAudioPlayer::GetAddedBufferCount()
+{
+    return 16;
 }
 
 void CoreAudioPlayer::SubAtomicInt(void* obj)

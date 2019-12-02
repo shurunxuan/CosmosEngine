@@ -21,7 +21,7 @@ int GetFrameworkKeyCode(KeyCode keyCode)
             return GLFW_KEY_TAB;
         case Return:
             return GLFW_KEY_ENTER;
-        case Escape:
+        case Esc:
             return GLFW_KEY_ESCAPE;
         case Space:
             return GLFW_KEY_SPACE;
@@ -235,7 +235,7 @@ void SetupKeyStatesMap(boost::unordered_map<KeyCode, bool>& map)
     map.insert(std::make_pair(Delete, false));
     map.insert(std::make_pair(Tab, false));
     map.insert(std::make_pair(Return, false));
-    map.insert(std::make_pair(Escape, false));
+    map.insert(std::make_pair(Esc, false));
     map.insert(std::make_pair(Space, false));
     map.insert(std::make_pair(Keypad0, false));
     map.insert(std::make_pair(Keypad1, false));

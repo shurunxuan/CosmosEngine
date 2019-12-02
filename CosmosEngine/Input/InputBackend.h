@@ -86,7 +86,7 @@ enum KeyCode
     Delete,
     Tab,
     Return,
-    Escape,
+    Esc,
     Space,
     Keypad0,
     Keypad1,

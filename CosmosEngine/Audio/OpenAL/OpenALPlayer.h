@@ -24,9 +24,11 @@ public:
 
     void ClearBuffer() final;
 
-    void AddBuffer(unsigned char* buffer, int bufferSize) final;
+    int AddBuffer(unsigned char* buffer, int bufferSize bool finalBuffer) final;
 
-    void Init(int sampleRate, int channels) final;
+    void Init(int sampleRate, int channels, int bytesPerSample,) final;
+
+    int GetAddedBufferCount() final;
 
     void DeInit() final;
 

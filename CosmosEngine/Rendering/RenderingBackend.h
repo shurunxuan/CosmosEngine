@@ -10,6 +10,11 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
+
+#ifdef APIENTRY
+#undef APIENTRY
+#endif
+
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
 
@@ -36,9 +41,13 @@ enum SamplerMipmapMode
 };
 
 class MeshRenderer;
+
 class Material;
+
 class CommandBuffer;
+
 class ReflectionalShader;
+
 class RenderingPipeline;
 
 class ENGINE_API RenderingBackend

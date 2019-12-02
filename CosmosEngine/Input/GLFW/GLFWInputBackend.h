@@ -12,6 +12,10 @@
 #include <boost/container/vector.hpp>
 #include <GLFW/glfw3.h>
 
+#ifdef APIENTRY
+#undef APIENTRY
+#endif
+
 class ENGINE_LOCAL GLFWInputBackend : public InputBackend
 {
 public:

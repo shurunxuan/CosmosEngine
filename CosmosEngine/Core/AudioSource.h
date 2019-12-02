@@ -7,6 +7,7 @@
 
 #include "../Export.h"
 #include "../Audio/DefaultAudioBackend.h"
+#include "../Audio/Decoder.h"
 #include "Component.h"
 #include <boost/thread.hpp>
 #include <boost/container/string.hpp>
@@ -44,11 +45,13 @@ public:
      *
      */
     void Play();
+
     /**
      * @brief Stop the audio playback completely
      *
      */
     void Stop();
+
     /**
      * @brief Pause the audio playback
      *
@@ -61,12 +64,14 @@ public:
      * @return true if the audio is playing
      */
     bool Playing() const;
+
     /**
      * @brief Indicates if the audio is completely stopped
      *
      * @return true if the audio is completely stopped
      */
     bool Stopped() const;
+
     /**
      * @brief Indicates if the audio is paused
      *

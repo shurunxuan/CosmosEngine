@@ -53,7 +53,7 @@ KeyCode GetKeyCodeFromName(const boost::container::string& keyName)
     if (keyName == "delete") return Delete;
     if (keyName == "tab") return Tab;
     if (keyName == "return") return Return;
-    if (keyName == "escape") return Escape;
+    if (keyName == "escape") return Esc;
     if (keyName == "space") return Space;
     if (keyName == "keypad 0") return Keypad0;
     if (keyName == "keypad 1") return Keypad1;

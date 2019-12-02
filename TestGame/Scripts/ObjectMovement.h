@@ -29,6 +29,7 @@ public:
      * @param totalTime The total time from the beginning of the application
      */
     void Update(float deltaTime, float totalTime) final;
+
     AudioSource* audioSource;
 
 private:

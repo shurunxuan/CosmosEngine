@@ -6,9 +6,9 @@
 #include "../Logging/Logging.h"
 
 AudioSource::AudioSource(Object* owner) :
-    Component(owner), player(nullptr), isPlaying(false),
-    stopped(true), fileOpened(false), channels(0),
-    sampleRate(0), bytesPerSample(0), Loop(false)
+        Component(owner), player(nullptr), isPlaying(false),
+        stopped(true), fileOpened(false), channels(0),
+        sampleRate(0), bytesPerSample(0), Loop(false)
 {
 
 }
@@ -19,6 +19,7 @@ AudioSource::~AudioSource()
     {
         // Stop the source voice
         player->StopAudio();
+        player->ClearBuffer();
 
         playbackThread.interrupt();
         playbackThread.join();
@@ -52,7 +53,7 @@ void AudioSource::LoadAudioFile(const boost::container::string& filename)
     // Initialize the resampler, and get the parameters required
     ffmpeg.InitSoftwareResampler(&channels, &sampleRate, &bytesPerSample);
 
-    player->Init(sampleRate, channels);
+    player->Init(sampleRate, channels, bytesPerSample);
 }
 
 void AudioSource::Play()
@@ -123,7 +124,7 @@ void AudioSource::PlaySync()
     player->StartAudio();
 
     LOG_INFO << "Starting audio file \"" << filename << "\" playback at " <<
-    std::hex << std::showbase << boost::this_thread::get_id() << std::noshowbase << std::dec;
+             std::hex << std::showbase << boost::this_thread::get_id() << std::noshowbase << std::dec;
 
     bool stoppedByStreamEnd = true;
 
@@ -135,10 +136,14 @@ void AudioSource::PlaySync()
             int bufferSize;
             // If the source voice is going to be starved, decode & send buffer with FFmpeg
             //int i = ffmpeg.SendBuffer(sourceVoice);
-
-            int i = ffmpeg.GetBuffer(&buffer, &bufferSize);
-            player->AddBuffer(buffer, bufferSize);
-
+            int i = 0;
+            int bufferCount = player->GetAddedBufferCount();
+            while (bufferCount < MAX_BUFFER_COUNT)
+            {
+                i = ffmpeg.GetBuffer(&buffer, &bufferSize);
+                bufferCount = player->AddBuffer(buffer, bufferSize, i != 0);
+                if (i != 0) break;
+            }
             boost::this_thread::interruption_point();
 
             // Waiting for the source voice buffer to end

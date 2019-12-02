@@ -6,24 +6,24 @@
 #include "../Logging/Logging.h"
 #include "AudioBackend.h"
 
-#define MAX_BUFFER_COUNT 16
 #define MAX_AUDIO_FRAME_SIZE 48000
+
 Decoder::Decoder()
-    : formatContext(nullptr),
-      audioStream(nullptr),
-      codec(nullptr),
-      codecContext(nullptr),
-      outputFormat(AV_SAMPLE_FMT_NONE),
-      frame(nullptr),
-      lastFrame(nullptr),
-      swr(nullptr),
-      packet(),
-      swrBufferLength(MAX_AUDIO_FRAME_SIZE),
-      bufferIndex(0),
-      eof(false)
+        : formatContext(nullptr),
+          audioStream(nullptr),
+          codec(nullptr),
+          codecContext(nullptr),
+          outputFormat(AV_SAMPLE_FMT_NONE),
+          frame(nullptr),
+          lastFrame(nullptr),
+          swr(nullptr),
+          packet(),
+          swrBufferLength(MAX_AUDIO_FRAME_SIZE),
+          bufferIndex(0),
+          eof(false)
 {
     swrBuffer = new unsigned char[MAX_AUDIO_FRAME_SIZE];
-    buffer = new unsigned char * [MAX_BUFFER_COUNT];
+    buffer = new unsigned char* [MAX_BUFFER_COUNT];
     for (int i = 0; i < MAX_BUFFER_COUNT; ++i)
         buffer[i] = new unsigned char[MAX_AUDIO_FRAME_SIZE];
 }
@@ -69,19 +69,22 @@ int Decoder::OpenFile(const char* filename)
 
     // Get the stream info
     ret = avformat_find_stream_info(formatContext, nullptr);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         LOG_ERROR << "avformat_find_stream_info error: " << AVERROR(ret);
         return ret;
     }
 
     // Find the first audio stream
     for (unsigned int i = 0; i < formatContext->nb_streams; i++)
-        if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+        if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+        {
             audioStream = formatContext->streams[i];
             break;
         }
 
-    if (audioStream == nullptr) {
+    if (audioStream == nullptr)
+    {
         LOG_ERROR << "Didn't find an audio stream.";
         return -1;
     }
@@ -89,14 +92,16 @@ int Decoder::OpenFile(const char* filename)
     // Get the decoder
     codec = avcodec_find_decoder(audioStream->codecpar->codec_id);
 
-    if (codec == nullptr) {
+    if (codec == nullptr)
+    {
         LOG_ERROR << "avcodec_find_decoder codec not found. codec_id=" << audioStream->codecpar->codec_id;
         return -1;
     }
 
     // Allocate the codec context
     codecContext = avcodec_alloc_context3(codec);
-    if (codecContext == nullptr) {
+    if (codecContext == nullptr)
+    {
         LOG_ERROR << "avcodec_alloc_context3 error.";
         return -1;
     }
@@ -107,7 +112,8 @@ int Decoder::OpenFile(const char* filename)
 
     // Open the codec
     ret = avcodec_open2(codecContext, codec, nullptr);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         LOG_ERROR << "avcodec_open2 error: " << AVERROR(ret);
         return -1;
     }
@@ -126,7 +132,8 @@ int Decoder::ReadFrame()
         // Unreferencing audio packet
         av_packet_unref(&packet);
         // Read frame
-        if ((ret = av_read_frame(formatContext, &packet)) < 0) {
+        if ((ret = av_read_frame(formatContext, &packet)) < 0)
+        {
             if (AVERROR(ret) == AVERROR(AVERROR_EOF))
             {
                 // End of file
@@ -146,7 +153,8 @@ int Decoder::ReadFrame()
     } while (packet.stream_index != audioStream->index);
 
     // Send packet to decoder
-    if ((ret = avcodec_send_packet(codecContext, &packet)) < 0) {
+    if ((ret = avcodec_send_packet(codecContext, &packet)) < 0)
+    {
         LOG_ERROR << "avcodec_send_packet error: " << AVERROR(ret);
     }
 
@@ -158,8 +166,10 @@ int Decoder::ReadFrame()
     frame = av_frame_alloc();
 
     // Get the decoded frame from decoder
-    if ((ret = avcodec_receive_frame(codecContext, frame)) < 0) {
-        if (ret != AVERROR(EAGAIN)) {
+    if ((ret = avcodec_receive_frame(codecContext, frame)) < 0)
+    {
+        if (ret != AVERROR(EAGAIN))
+        {
             LOG_ERROR << "avcodec_receive_frame error: " << AVERROR(ret);
             return ret;
         }
@@ -188,7 +198,8 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
     // Allocate new software resampler
     swr = swr_alloc();
 
-    if (swr == nullptr) {
+    if (swr == nullptr)
+    {
         std::cerr << "swr_alloc error" << std::endl;
         return;
     }
@@ -200,7 +211,7 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         // 32 bit signed int -> float
         if (outputFormat == AV_SAMPLE_FMT_S32)
             outputFormat = AV_SAMPLE_FMT_FLT;
-        // 64 bit signed int -> double
+            // 64 bit signed int -> double
         else if (outputFormat == AV_SAMPLE_FMT_S64)
             outputFormat = AV_SAMPLE_FMT_DBL;
         else
@@ -215,7 +226,7 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         // float -> 32 bit signed int
         if (outputFormat == AV_SAMPLE_FMT_FLT)
             outputFormat = AV_SAMPLE_FMT_S32;
-        // double -> 64 bit signed int
+            // double -> 64 bit signed int
         else if (outputFormat == AV_SAMPLE_FMT_DBL)
             outputFormat = AV_SAMPLE_FMT_S64;
         if (presentedAudioBackend->Force32Bit())
@@ -243,7 +254,8 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
     av_opt_set_sample_fmt(swr, "out_sample_fmt", outputFormat, 0);
     ret = swr_init(swr);
 
-    if (ret < 0) {
+    if (ret < 0)
+    {
         std::cerr << "swr_init error: " << AVERROR(ret) << std::endl;
         return;
     }
@@ -259,11 +271,13 @@ int Decoder::ResampleFrame()
     // First resample, lastFrame is null, do nothing
     if (lastFrame == nullptr) return -1;
     // Resample the frame
-    int ret = swr_convert(swr, &swrBuffer, lastFrame->nb_samples, const_cast<const uint8_t * *>(lastFrame->data), lastFrame->nb_samples);
+    int ret = swr_convert(swr, &swrBuffer, lastFrame->nb_samples, const_cast<const uint8_t**>(lastFrame->data),
+                          lastFrame->nb_samples);
     // We got the resampled frame buffer thus we don't need the frame anymore.
     av_frame_free(&lastFrame);
 
-    if (ret < 0) {
+    if (ret < 0)
+    {
         LOG_ERROR << "swr_convert error: " << AVERROR(ret);
     }
     return ret;

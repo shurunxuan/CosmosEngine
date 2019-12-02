@@ -9,7 +9,7 @@ AudioBackend* presentedAudioBackend = nullptr;
 
 AudioBackend::AudioBackend()
 {
-
+    presentedAudioBackend = this;
 }
 
 AudioBackend::~AudioBackend()

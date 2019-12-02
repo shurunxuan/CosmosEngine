@@ -23,9 +23,11 @@ public:
 
     virtual void ClearBuffer() = 0;
 
-    virtual void AddBuffer(unsigned char* buffer, int bufferSize) = 0;
+    virtual int AddBuffer(unsigned char* buffer, int bufferSize, bool finalBuffer) = 0;
 
-    virtual void Init(int sampleRate, int channels) = 0;
+    virtual int GetAddedBufferCount() = 0;
+
+    virtual void Init(int sampleRate, int channels, int bytesPerSample) = 0;
 
     virtual void DeInit() = 0;
 
@@ -38,6 +40,8 @@ protected:
     int sampleRate;
 
     int channels;
+
+    int bytesPerSample;
 };
 
 #endif //GAMEENGINE_AUDIOPLAYER_H

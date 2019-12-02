@@ -7,8 +7,9 @@
 #include "../../Logging/Logging.h"
 
 CoreAudioBackend::CoreAudioBackend()
+    : AudioBackend()
 {
-    presentedAudioBackend = this;
+
 }
 
 CoreAudioBackend::~CoreAudioBackend()

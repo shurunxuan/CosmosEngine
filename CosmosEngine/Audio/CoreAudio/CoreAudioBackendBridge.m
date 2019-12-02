@@ -46,8 +46,7 @@ void AttachNodeToEngine(AVAudioNode* node, AVAudioEngine* engine)
 
 void CreateFormat(AVAudioFormat** format, int sampleRate, int channels)
 {
-    *format = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
-               sampleRate:sampleRate channels:(AVAudioChannelCount) channels interleaved:false];
+    *format = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sampleRate channels:(AVAudioChannelCount) channels interleaved:false];
 }
 
 void ConnectNodeToNodeWithFormat(AVAudioEngine* engine,
@@ -72,24 +71,26 @@ void StopPlayerNode(AVAudioPlayerNode* node)
 }
 
 void SetupAudioBuffer(unsigned char* buffer, int bufferSize,
-        AVAudioPlayerNode* playerNode, AVAudioFormat* format, void(*Callback)(void*), void* callbackData)
+                      AVAudioPlayerNode* playerNode, AVAudioFormat* format, void(* Callback)(void*), void* callbackData)
 {
     const size_t sizeConv = sizeof(float) / sizeof(unsigned char);
     const size_t fBufferSize = bufferSize / sizeConv;
     const int channels = [format channelCount];
     AVAudioPCMBuffer* avAudioBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format
-                                                                    frameCapacity:(AVAudioFrameCount) (fBufferSize / channels)];
+                                                                    frameCapacity:(AVAudioFrameCount)(
+                                                                            fBufferSize / channels)];
 
-    avAudioBuffer.frameLength = (AVAudioFrameCount) (fBufferSize / channels);
+    avAudioBuffer.frameLength = (AVAudioFrameCount)(fBufferSize / channels);
 
-    float* fBuffer = (float*)buffer;
+    float* fBuffer = (float*) buffer;
 
     for (int i = 0; i < fBufferSize; ++i)
     {
         avAudioBuffer.floatChannelData[i % channels][i / channels] = fBuffer[i];
     }
 
-    [playerNode scheduleBuffer:avAudioBuffer completionHandler:^{
+    [playerNode scheduleBuffer:avAudioBuffer completionHandler:^
+    {
         Callback(callbackData);
     }];
 }

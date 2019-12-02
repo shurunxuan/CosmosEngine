@@ -6,6 +6,15 @@
 #define GAMEENGINE_XAUDIO2PLAYER_H
 
 #include "../AudioPlayer.h"
+#include "XAudio2Callback.h"
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <Windows.h>
+#include <xaudio2.h>
+#include <x3daudio.h>
 
 class ENGINE_LOCAL XAudio2Player final
         : public AudioPlayer
@@ -24,15 +33,42 @@ public:
 
     void ClearBuffer() final;
 
-    void AddBuffer(unsigned char* buffer, int bufferSize) final;
+    int AddBuffer(unsigned char* buffer, int bufferSize, bool finalBuffer) final;
 
-    void Init(int sampleRate, int channels) final;
+    int GetAddedBufferCount() final;
+
+    void Init(int sampleRate, int channels, int bytesPerSample) final;
 
     void DeInit() final;
 
     void WaitForBufferEnd() final;
 
-    void WaitForStreamEnd(float timeout) final;
+    bool WaitForStreamEnd(float timeout) final;
+
+private:
+    /**
+	 * @brief The XAudio2 Source Voice
+	 *
+	 */
+    IXAudio2SourceVoice* sourceVoice;
+
+    /**
+     * @brief The Callback that will be used by the source voice
+     *
+     */
+    XAudio2Callback callback;
+
+    /**
+     * @brief The X3DAudio Emitter struct
+     *
+     */
+    X3DAUDIO_EMITTER x3dEmitter;
+
+    /**
+     * @brief The X3DAudio DSP Settings
+     *
+     */
+    X3DAUDIO_DSP_SETTINGS dspSettings;
 };
 
 #endif //GAMEENGINE_XAUDIO2PLAYER_H

@@ -7,6 +7,8 @@
 
 #include "../Export.h"
 
+#define MAX_BUFFER_COUNT 16
+
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -27,6 +29,7 @@ public:
      * Should initialize all pointers as nullptr
      */
     Decoder();
+
     /**
      * @brief Destroy the DSFFFmpeg object
      *
@@ -95,6 +98,7 @@ public:
      * @param[out] bytesPerSample Bytes per sample
      */
     void InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPerSample);
+
     /**
      * @brief Resample the frame
      *
@@ -194,4 +198,5 @@ private:
      */
     bool eof;
 };
+
 #endif //GAMEENGINE_DECODER_H

@@ -5,6 +5,7 @@
 #include "OpenALBackend.h"
 
 OpenALBackend::OpenALBackend()
+        : AudioBackend()
 {
 
 }

@@ -15,9 +15,11 @@ OpenALPlayer::~OpenALPlayer()
 
 }
 
-void OpenALPlayer::Init(int sampleRate, int channels)
+void OpenALPlayer::Init(int sampleRate, int channels, int bytesPerSample)
 {
-
+    this->sampleRate = sampleRate;
+    this->channels = channels;
+    this->bytesPerSample = bytesPerSample;
 }
 
 void OpenALPlayer::DeInit()
@@ -45,9 +47,14 @@ void OpenALPlayer::ClearBuffer()
 
 }
 
-void OpenALPlayer::AddBuffer(unsigned char* buffer, int bufferSize)
+int OpenALPlayer::AddBuffer(unsigned char* buffer, int bufferSize, bool finalBuffer)
 {
+    return 16;
+}
 
+int OpenALPlayer::GetAddedBufferCount()
+{
+    return 16;
 }
 
 void OpenALPlayer::WaitForBufferEnd()
