@@ -10,6 +10,7 @@ CoreAudioPlayer::CoreAudioPlayer()
     : AudioPlayer()
 {
     bufferEnd = true;
+    bufferCount = 0;
 }
 
 CoreAudioPlayer::~CoreAudioPlayer()
@@ -65,7 +66,7 @@ int CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize, bool final
 
 int CoreAudioPlayer::GetAddedBufferCount()
 {
-    return 16;
+    return bufferCount;
 }
 
 void CoreAudioPlayer::SubAtomicInt(void* obj)
