@@ -28,3 +28,8 @@ void XAudio2Backend::DeInit()
 {
 
 }
+
+constexpr bool XAudio2Backend::IsFloat()
+{
+    return false;
+}

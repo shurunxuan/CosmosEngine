@@ -4,6 +4,7 @@
 
 #include "Decoder.h"
 #include "../Logging/Logging.h"
+#include "AudioBackend.h"
 
 #define MAX_BUFFER_COUNT 16
 #define MAX_AUDIO_FRAME_SIZE 48000
@@ -195,14 +196,25 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
     // The XAudio2, however, requires signed int.
     // If the file uses floating number, resample it as signed int with the same size.
     AVSampleFormat outputFormat = av_get_packed_sample_fmt(AVSampleFormat(frame->format));
-    // float -> 32 bit signed int
-    if (av_get_packed_sample_fmt(AVSampleFormat(frame->format)) == AV_SAMPLE_FMT_S32)
-        //outputFormat = AV_SAMPLE_FMT_S32;
-        outputFormat = AV_SAMPLE_FMT_FLT;
+
+    if (presentedAudioBackend->IsFloat())
+    {
+        // 32 bit signed int -> float
+        if (outputFormat == AV_SAMPLE_FMT_S32)
+            outputFormat = AV_SAMPLE_FMT_FLT;
+        // 64 bit signed int -> double
+        else if (outputFormat == AV_SAMPLE_FMT_S64)
+            outputFormat = AV_SAMPLE_FMT_DBL;
+    }
+    else
+    {
+        // float -> 32 bit signed int
+        if (outputFormat == AV_SAMPLE_FMT_FLT)
+            outputFormat = AV_SAMPLE_FMT_S32;
         // double -> 64 bit signed int
-    else if (av_get_packed_sample_fmt(AVSampleFormat(frame->format)) == AV_SAMPLE_FMT_S64)
-        //outputFormat = AV_SAMPLE_FMT_S64;
-        outputFormat = AV_SAMPLE_FMT_DBL;
+        else if (outputFormat == AV_SAMPLE_FMT_DBL)
+            outputFormat = AV_SAMPLE_FMT_S64;
+    }
 
     // Set the input->output parameters
     // We are not actually resampling the frame

@@ -26,6 +26,8 @@ public:
     virtual void Calculate3DAudio(float deltaTime, float totalTime) = 0;
 
     virtual void DeInit() = 0;
+
+    virtual bool IsFloat() = 0;
 };
 
 ENGINE_EXTERNAL_VAR AudioBackend* presentedAudioBackend;

@@ -28,3 +28,8 @@ void OpenALBackend::DeInit()
 {
 
 }
+
+constexpr bool OpenALBackend::IsFloat()
+{
+    return true;
+}

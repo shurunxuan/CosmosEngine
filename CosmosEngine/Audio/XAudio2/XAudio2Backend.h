@@ -22,6 +22,8 @@ public:
     void Calculate3DAudio(float deltaTime, float totalTime) final;
 
     void DeInit() final;
+
+    constexpr bool IsFloat() final;
 };
 
 #endif //GAMEENGINE_XAUDIO2BACKEND_H

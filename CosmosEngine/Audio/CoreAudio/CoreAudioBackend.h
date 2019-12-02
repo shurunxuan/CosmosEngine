@@ -26,8 +26,15 @@ public:
 
     void DeInit() final;
 
+    bool IsFloat() final;
+
+    AVAudioEngine* GetEngine();
+    AVAudioMixerNode* GetMainMixerNode();
+
 private:
     AVAudioEngine* engine = nullptr;
+
+    AVAudioMixerNode* mainMixerNode = nullptr;
 };
 
 #endif //GAMEENGINE_COREAUDIOBACKEND_H

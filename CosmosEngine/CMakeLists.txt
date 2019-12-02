@@ -54,7 +54,7 @@ set(SOURCE_FILES
         Threading/JobSystem.cpp
         Physics/SphereCollider.cpp
         Physics/PhysicsSystem.cpp
-        Audio/Decoder.cpp Audio/AudioBackend.cpp)
+        Audio/Decoder.cpp Audio/AudioBackend.cpp Audio/AudioPlayer.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -83,11 +83,13 @@ set(HEADER_FILES
         Threading/JobSystem.h
         Physics/SphereCollider.h
         Physics/PhysicsSystem.h
-        Audio/Decoder.h Audio/AudioBackend.h Audio/DefaultAudioBackend.h)
+        Audio/Decoder.h Audio/AudioBackend.h Audio/DefaultAudioBackend.h Audio/AudioPlayer.h)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(SYSTEM_SPECIFIC_SOURCE_FILES Audio/XAudio2/XAudio2Backend.cpp)
-    set(SYSTEM_SPECIFIC_HEADER_FILES Audio/XAudio2/XAudio2Backend.h)
+    set(SYSTEM_SPECIFIC_SOURCE_FILES
+            Audio/XAudio2/XAudio2Backend.cpp)
+    set(SYSTEM_SPECIFIC_HEADER_FILES
+            Audio/XAudio2/XAudio2Backend.h)
 
     set(SYSTEM_SPECIFIC_LIBRARIES
             bcrypt)
@@ -113,12 +115,12 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
             Audio/CoreAudio/CoreAudioBackend.cpp
             Audio/CoreAudio/CoreAudioBackendBridge.m
             Logging/LoggingObjC.cpp
-            )
+            Audio/CoreAudio/CoreAudioPlayer.cpp)
     set(SYSTEM_SPECIFIC_HEADER_FILES
             Audio/CoreAudio/CoreAudioBackend.h
             Audio/CoreAudio/CoreAudioBackendBridge.h
             Logging/LoggingObjC.h
-            )
+            Audio/CoreAudio/CoreAudioPlayer.h)
 
     set(SYSTEM_SPECIFIC_LIBRARIES
             ${OBJC_LINK_FRAMEWORKS})
@@ -127,8 +129,10 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(SYSTEM_SPECIFIC_COMPILE_OPTIONS
             "-fobjc-arc")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set(SYSTEM_SPECIFIC_SOURCE_FILES Audio/OpenAL/OpenALBackend.cpp)
-    set(SYSTEM_SPECIFIC_HEADER_FILES Audio/OpenAL/OpenALBackend.h)
+    set(SYSTEM_SPECIFIC_SOURCE_FILES
+            Audio/OpenAL/OpenALBackend.cpp Audio/OpenAL/OpenALPlayer.cpp)
+    set(SYSTEM_SPECIFIC_HEADER_FILES
+            Audio/OpenAL/OpenALBackend.h Audio/OpenAL/OpenALPlayer.h Audio/XAudio2/XAudio2Player.h Audio/XAudio2/XAudio2Player.cpp)
 
     set(SYSTEM_SPECIFIC_LIBRARIES)
     set(SYSTEM_SPECIFIC_INCLUDE_DIRS)
