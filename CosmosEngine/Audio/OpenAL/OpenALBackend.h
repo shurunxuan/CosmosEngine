@@ -8,6 +8,9 @@
 #include "../AudioBackend.h"
 #include "../../Export.h"
 
+#include <AL/al.h>
+#include <AL/alc.h>
+
 class ENGINE_API OpenALBackend final
         : public AudioBackend
 {
@@ -25,7 +28,13 @@ public:
 
     bool IsFloat() final;
 
-    bool Force32Bit() final;
+    int ForceBitsPerSample() final;
+
+private:
+
+    ALCdevice* device;
+    ALCcontext* context;
+
 };
 
 #endif //GAMEENGINE_OPENALBACKEND_H

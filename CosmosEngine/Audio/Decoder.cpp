@@ -118,7 +118,7 @@ int Decoder::OpenFile(const char* filename)
         return -1;
     }
 
-    LOG_INFO << "File " << filename << " opened with decoder " << codec->long_name;
+    //LOG_INFO << "File " << filename << " opened with decoder " << codec->long_name;
     return 0;
 }
 
@@ -216,9 +216,13 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
             outputFormat = AV_SAMPLE_FMT_DBL;
         else
             outputFormat = AV_SAMPLE_FMT_FLT;
-        if (presentedAudioBackend->Force32Bit())
+        if (presentedAudioBackend->ForceBitsPerSample() == 32)
         {
             outputFormat = AV_SAMPLE_FMT_FLT;
+        }
+        else if (presentedAudioBackend->ForceBitsPerSample() == 64)
+        {
+            outputFormat = AV_SAMPLE_FMT_DBL;
         }
     }
     else
@@ -229,9 +233,21 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
             // double -> 64 bit signed int
         else if (outputFormat == AV_SAMPLE_FMT_DBL)
             outputFormat = AV_SAMPLE_FMT_S64;
-        if (presentedAudioBackend->Force32Bit())
+        if (presentedAudioBackend->ForceBitsPerSample() == 8)
+        {
+            outputFormat = AV_SAMPLE_FMT_U8;
+        }
+        else if (presentedAudioBackend->ForceBitsPerSample() == 16)
+        {
+            outputFormat = AV_SAMPLE_FMT_S16;
+        }
+        else if (presentedAudioBackend->ForceBitsPerSample() == 32)
         {
             outputFormat = AV_SAMPLE_FMT_S32;
+        }
+        else if (presentedAudioBackend->ForceBitsPerSample() == 64)
+        {
+            outputFormat = AV_SAMPLE_FMT_S64;
         }
     }
 

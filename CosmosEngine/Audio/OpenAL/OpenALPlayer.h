@@ -6,6 +6,9 @@
 #define GAMEENGINE_OPENALPLAYER_H
 
 #include "../AudioPlayer.h"
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <boost/atomic.hpp>
 
 class ENGINE_LOCAL OpenALPlayer final
         : public AudioPlayer
@@ -35,6 +38,18 @@ public:
     void WaitForBufferEnd() final;
 
     bool WaitForStreamEnd(float timeout) final;
+
+private:
+
+    ALuint source;
+
+    ALuint buffers[MAX_BUFFER_COUNT];
+
+    boost::atomic<int> bufferQueueSize;
+
+    int bufferIndex;
+
+    bool streamGoingToEnd;
 };
 
 #endif //GAMEENGINE_OPENALPLAYER_H

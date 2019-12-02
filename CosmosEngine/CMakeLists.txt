@@ -141,6 +141,8 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(SYSTEM_SPECIFIC_COMPILE_OPTIONS
             "-fobjc-arc")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    find_package(OpenAL REQUIRED)
+
     set(SYSTEM_SPECIFIC_SOURCE_FILES
             Audio/OpenAL/OpenALBackend.cpp
             Audio/OpenAL/OpenALPlayer.cpp)
@@ -148,8 +150,10 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
             Audio/OpenAL/OpenALBackend.h
             Audio/OpenAL/OpenALPlayer.h)
 
-    set(SYSTEM_SPECIFIC_LIBRARIES)
-    set(SYSTEM_SPECIFIC_INCLUDE_DIRS)
+    set(SYSTEM_SPECIFIC_LIBRARIES
+            ${OPENAL_LIBRARY})
+    set(SYSTEM_SPECIFIC_INCLUDE_DIRS
+            ${OPENAL_INCLUDE_DIR})
 
     set(SYSTEM_SPECIFIC_COMPILE_OPTIONS)
 endif ()

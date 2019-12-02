@@ -42,7 +42,7 @@ public:
 
     bool IsFloat() final;
 
-    bool Force32Bit() final;
+    int ForceBitsPerSample() final;
 
     /**
      * @brief Create the XAudio2 Engine

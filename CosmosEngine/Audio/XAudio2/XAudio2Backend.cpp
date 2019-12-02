@@ -46,9 +46,9 @@ bool XAudio2Backend::IsFloat()
     return false;
 }
 
-bool XAudio2Backend::Force32Bit()
+int XAudio2Backend::ForceBitsPerSample()
 {
-    return false;
+    return 0;
 }
 
 HRESULT XAudio2Backend::CreateXAudio2Engine()

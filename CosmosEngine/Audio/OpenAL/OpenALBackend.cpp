@@ -3,11 +3,13 @@
 //
 
 #include "OpenALBackend.h"
+#include "../../Logging/Logging.h"
 
 OpenALBackend::OpenALBackend()
         : AudioBackend()
 {
-
+    device = nullptr;
+    context = nullptr;
 }
 
 OpenALBackend::~OpenALBackend()
@@ -17,7 +19,23 @@ OpenALBackend::~OpenALBackend()
 
 bool OpenALBackend::Init()
 {
-    return false;
+    LOG_INFO << "Initializing OpenAL Backend";
+
+    device = alcOpenDevice(nullptr);
+    if (device == nullptr)
+    {
+        LOG_ERROR << "Failed to init OpenAL device.";
+        return false;
+    }
+
+    context = alcCreateContext(device, nullptr);
+    if (!alcMakeContextCurrent(context))
+    {
+        LOG_ERROR << "Failed to make default context";
+        return false;
+    }
+
+    return true;
 }
 
 void OpenALBackend::Calculate3DAudio(float deltaTime, float totalTime)
@@ -27,15 +45,19 @@ void OpenALBackend::Calculate3DAudio(float deltaTime, float totalTime)
 
 void OpenALBackend::DeInit()
 {
+    alcMakeContextCurrent(nullptr);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
 
+    LOG_INFO << "OpenAL Audio Backend Shutdown Complete";
 }
 
 bool OpenALBackend::IsFloat()
 {
-    return true;
+    return false;
 }
 
-bool OpenALBackend::Force32Bit()
+int OpenALBackend::ForceBitsPerSample()
 {
-    return false;
+    return 16;
 }

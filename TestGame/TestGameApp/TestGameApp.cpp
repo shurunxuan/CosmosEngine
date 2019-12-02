@@ -199,7 +199,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
 
     AudioSource* audioSource = testObject_1->AddComponent<AudioSource>();
-    audioSource->LoadAudioFile("Assets/KibounoTsubomi.flac");
+    audioSource->LoadAudioFile("Assets/KibounoTsubomi.m4a");
     //audioSource->LoadAudioFile("Assets/Audio/low_on.wav");
     //audioSource->Loop = true;
     //audioSource->Play();

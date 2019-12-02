@@ -52,7 +52,7 @@ bool CoreAudioBackend::IsFloat()
     return true;
 }
 
-bool CoreAudioBackend::Force32Bit()
+int CoreAudioBackend::ForceBitsPerSample()
 {
-    return true;
+    return 32;
 }
