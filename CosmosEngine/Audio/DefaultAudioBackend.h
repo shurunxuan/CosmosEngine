@@ -17,6 +17,7 @@ typedef XAudio2Player DefaultAudioPlayer;
 
 #include "CoreAudio/CoreAudioBackend.h"
 #include "CoreAudio/CoreAudioPlayer.h"
+
 typedef CoreAudioBackend DefaultAudioBackend;
 typedef CoreAudioPlayer DefaultAudioPlayer;
 
@@ -24,6 +25,7 @@ typedef CoreAudioPlayer DefaultAudioPlayer;
 
 #include "OpenAL/OpenALBackend.h"
 #include "OpenAL/OpenALPlayer.h"
+
 typedef OpenALBackend DefaultAudioBackend;
 typedef OpenALPlayer DefaultAudioPlayer;
 

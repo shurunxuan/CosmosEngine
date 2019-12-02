@@ -10,6 +10,7 @@ CoreAudioPlayer::CoreAudioPlayer()
     : AudioPlayer()
 {
     bufferEnd = true;
+    streamGoingToEnd = false;
     bufferCount = 0;
 }
 
@@ -23,6 +24,7 @@ void CoreAudioPlayer::Init(int sampleRate, int channels, int bytesPerSample)
     this->sampleRate = sampleRate;
     this->channels = channels;
     this->bytesPerSample = bytesPerSample;
+    streamGoingToEnd = false;
     AVAudioEngine* engine = ((CoreAudioBackend*)presentedAudioBackend)->GetEngine();
     AVAudioMixerNode* mainMixerNode = ((CoreAudioBackend*)presentedAudioBackend)->GetMainMixerNode();
     CreatePlayerNode(&playerNode);
@@ -54,6 +56,7 @@ void CoreAudioPlayer::StopAudio()
 void CoreAudioPlayer::ClearBuffer()
 {
     bufferCount = 0;
+    streamGoingToEnd = false;
 }
 
 int CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize, bool finalBuffer)
@@ -61,6 +64,7 @@ int CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize, bool final
     SetupAudioBuffer(buffer, bufferSize, playerNode, format,
             CoreAudioPlayer::SubAtomicInt, this);
     ++bufferCount;
+    streamGoingToEnd = finalBuffer;
     return bufferCount;
 }
 
@@ -92,6 +96,6 @@ bool CoreAudioPlayer::WaitForStreamEnd(float timeout)
     boost::unique_lock<boost::mutex> streamEndLock(streamEndMutex);
     bool result = streamEndConditionVariable.wait_for(streamEndLock,
             boost::chrono::duration<float>(timeout),
-                    [this]{return bufferCount == 0;});
+                    [this]{return bufferCount == 0 && streamGoingToEnd;});
     return result;
 }

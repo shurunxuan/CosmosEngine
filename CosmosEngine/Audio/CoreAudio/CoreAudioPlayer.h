@@ -58,6 +58,8 @@ private:
     boost::condition_variable streamEndConditionVariable;
 
     bool bufferEnd;
+
+    bool streamGoingToEnd;
 };
 
 #endif //GAMEENGINE_COREAUDIOPLAYER_H

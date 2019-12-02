@@ -175,7 +175,7 @@ void AudioSource::PlaySync()
         }
 
     }
-    catch (boost::thread_interrupted const& tie)
+    catch (boost::thread_interrupted const&)
     {
         LOG_WARNING << "Audio playback thread interrupted!";
 
