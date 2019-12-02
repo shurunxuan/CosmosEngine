@@ -54,7 +54,7 @@ set(SOURCE_FILES
         Threading/JobSystem.cpp
         Physics/SphereCollider.cpp
         Physics/PhysicsSystem.cpp
-        Audio/Decoder.cpp Audio/AudioBackend.cpp Audio/AudioPlayer.cpp)
+        Audio/Decoder.cpp Audio/AudioBackend.cpp Audio/AudioPlayer.cpp Core/AudioSource.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -83,7 +83,7 @@ set(HEADER_FILES
         Threading/JobSystem.h
         Physics/SphereCollider.h
         Physics/PhysicsSystem.h
-        Audio/Decoder.h Audio/AudioBackend.h Audio/DefaultAudioBackend.h Audio/AudioPlayer.h)
+        Audio/Decoder.h Audio/AudioBackend.h Audio/DefaultAudioBackend.h Audio/AudioPlayer.h Core/AudioSource.h)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(SYSTEM_SPECIFIC_SOURCE_FILES

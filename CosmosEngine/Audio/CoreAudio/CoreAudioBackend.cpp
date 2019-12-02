@@ -33,6 +33,7 @@ void CoreAudioBackend::Calculate3DAudio(float deltaTime, float totalTime)
 void CoreAudioBackend::DeInit()
 {
     StopEngine(engine);
+    LOG_INFO << "CoreAudio Audio Backend Shutdown Completed.";
 }
 
 AVAudioEngine* CoreAudioBackend::GetEngine()
@@ -46,6 +47,11 @@ AVAudioMixerNode* CoreAudioBackend::GetMainMixerNode()
 }
 
 bool CoreAudioBackend::IsFloat()
+{
+    return true;
+}
+
+bool CoreAudioBackend::Force32Bit()
 {
     return true;
 }

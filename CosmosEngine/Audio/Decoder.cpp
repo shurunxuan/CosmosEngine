@@ -205,6 +205,10 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         // 64 bit signed int -> double
         else if (outputFormat == AV_SAMPLE_FMT_S64)
             outputFormat = AV_SAMPLE_FMT_DBL;
+        if (presentedAudioBackend->Force32Bit())
+        {
+            outputFormat = AV_SAMPLE_FMT_FLT;
+        }
     }
     else
     {
@@ -214,6 +218,10 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         // double -> 64 bit signed int
         else if (outputFormat == AV_SAMPLE_FMT_DBL)
             outputFormat = AV_SAMPLE_FMT_S64;
+        if (presentedAudioBackend->Force32Bit())
+        {
+            outputFormat = AV_SAMPLE_FMT_S32;
+        }
     }
 
     // Set the input->output parameters

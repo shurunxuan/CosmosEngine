@@ -23,7 +23,9 @@ public:
 
     void DeInit() final;
 
-    constexpr bool IsFloat() final;
+    bool IsFloat() final;
+
+    bool Force32Bit() final;
 };
 
 #endif //GAMEENGINE_OPENALBACKEND_H

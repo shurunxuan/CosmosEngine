@@ -9,7 +9,7 @@
 CoreAudioPlayer::CoreAudioPlayer()
     : AudioPlayer()
 {
-
+    bufferEnd = true;
 }
 
 CoreAudioPlayer::~CoreAudioPlayer()
@@ -49,6 +49,11 @@ void CoreAudioPlayer::StopAudio()
     StopPlayerNode(playerNode);
 }
 
+void CoreAudioPlayer::ClearBuffer()
+{
+    bufferCount = 0;
+}
+
 void CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize)
 {
     SetupAudioBuffer(buffer, bufferSize, playerNode, format,
@@ -58,5 +63,27 @@ void CoreAudioPlayer::AddBuffer(unsigned char* buffer, int bufferSize)
 
 void CoreAudioPlayer::SubAtomicInt(void* obj)
 {
-    --(((CoreAudioPlayer*)obj)->bufferCount);
+    auto* player = (CoreAudioPlayer*)obj;
+    --(player->bufferCount);
+    player->streamEndConditionVariable.notify_all();
+    player->bufferEnd = true;
+    player->bufferEndConditionVariable.notify_all();
+}
+
+void CoreAudioPlayer::WaitForBufferEnd()
+{
+    boost::unique_lock<boost::mutex> bufferEndLock(bufferEndMutex);
+    bufferEndConditionVariable.wait(bufferEndLock, [this]{return bufferEnd;});
+    bufferEnd = false;
+    bufferEndLock.unlock();
+    bufferEndConditionVariable.notify_all();
+}
+
+bool CoreAudioPlayer::WaitForStreamEnd(float timeout)
+{
+    boost::unique_lock<boost::mutex> streamEndLock(streamEndMutex);
+    bool result = streamEndConditionVariable.wait_for(streamEndLock,
+            boost::chrono::duration<float>(timeout),
+                    [this]{return bufferCount == 0;});
+    return result;
 }

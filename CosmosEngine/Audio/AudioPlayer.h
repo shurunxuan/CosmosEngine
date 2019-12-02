@@ -7,8 +7,6 @@
 
 #include "../Export.h"
 #include "Decoder.h"
-#include <boost/thread.hpp>
-#include <boost/container/string.hpp>
 
 class ENGINE_LOCAL AudioPlayer
 {
@@ -23,13 +21,19 @@ public:
 
     virtual void StopAudio() = 0;
 
-    virtual void AddBuffer(unsigned char* buffer, int bufferSize) = 0;
+    virtual void ClearBuffer() = 0;
 
-protected:
+    virtual void AddBuffer(unsigned char* buffer, int bufferSize) = 0;
 
     virtual void Init(int sampleRate, int channels) = 0;
 
     virtual void DeInit() = 0;
+
+    virtual void WaitForBufferEnd() = 0;
+
+    virtual bool WaitForStreamEnd(float timeout) = 0;
+
+protected:
 
     int sampleRate;
 

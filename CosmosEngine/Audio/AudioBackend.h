@@ -28,6 +28,8 @@ public:
     virtual void DeInit() = 0;
 
     virtual bool IsFloat() = 0;
+
+    virtual bool Force32Bit() = 0;
 };
 
 ENGINE_EXTERNAL_VAR AudioBackend* presentedAudioBackend;

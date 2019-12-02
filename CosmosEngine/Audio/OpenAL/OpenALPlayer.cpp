@@ -40,7 +40,22 @@ void OpenALPlayer::StopAudio()
 
 }
 
+void OpenALPlayer::ClearBuffer()
+{
+
+}
+
 void OpenALPlayer::AddBuffer(unsigned char* buffer, int bufferSize)
 {
 
+}
+
+void OpenALPlayer::WaitForBufferEnd()
+{
+
+}
+
+bool OpenALPlayer::WaitForStreamEnd(float timeout)
+{
+    return true;
 }

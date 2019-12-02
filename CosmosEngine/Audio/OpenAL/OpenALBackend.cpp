@@ -29,7 +29,12 @@ void OpenALBackend::DeInit()
 
 }
 
-constexpr bool OpenALBackend::IsFloat()
+bool OpenALBackend::IsFloat()
 {
     return true;
+}
+
+bool OpenALBackend::Force32Bit()
+{
+    return false;
 }

@@ -76,16 +76,17 @@ void SetupAudioBuffer(unsigned char* buffer, int bufferSize,
 {
     const size_t sizeConv = sizeof(float) / sizeof(unsigned char);
     const size_t fBufferSize = bufferSize / sizeConv;
+    const int channels = [format channelCount];
     AVAudioPCMBuffer* avAudioBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format
-                                                                    frameCapacity:(AVAudioFrameCount) (fBufferSize / 2)];
+                                                                    frameCapacity:(AVAudioFrameCount) (fBufferSize / channels)];
 
-    avAudioBuffer.frameLength = (AVAudioFrameCount) (fBufferSize / 2);
+    avAudioBuffer.frameLength = (AVAudioFrameCount) (fBufferSize / channels);
 
     float* fBuffer = (float*)buffer;
 
     for (int i = 0; i < fBufferSize; ++i)
     {
-        avAudioBuffer.floatChannelData[i % 2][i / 2] = fBuffer[i];
+        avAudioBuffer.floatChannelData[i % channels][i / channels] = fBuffer[i];
     }
 
     [playerNode scheduleBuffer:avAudioBuffer completionHandler:^{

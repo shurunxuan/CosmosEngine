@@ -28,6 +28,8 @@ public:
 
     bool IsFloat() final;
 
+    bool Force32Bit() final;
+
     AVAudioEngine* GetEngine();
     AVAudioMixerNode* GetMainMixerNode();
 

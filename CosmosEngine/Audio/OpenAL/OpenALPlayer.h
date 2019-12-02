@@ -8,7 +8,7 @@
 #include "../AudioPlayer.h"
 
 class ENGINE_LOCAL OpenALPlayer final
-        : AudioPlayer
+        : public AudioPlayer
 {
 public:
 
@@ -22,13 +22,17 @@ public:
 
     void StopAudio() final;
 
-    void AddBuffer(unsigned char* buffer, int bufferSize) final;
+    void ClearBuffer() final;
 
-private:
+    void AddBuffer(unsigned char* buffer, int bufferSize) final;
 
     void Init(int sampleRate, int channels) final;
 
     void DeInit() final;
+
+    void WaitForBufferEnd() final;
+
+    bool WaitForStreamEnd(float timeout) final;
 };
 
 #endif //GAMEENGINE_OPENALPLAYER_H

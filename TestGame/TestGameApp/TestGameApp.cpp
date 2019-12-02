@@ -10,6 +10,7 @@
 #include <boost/bind.hpp>
 #include <CosmosEngine/Core/MeshRenderer.h>
 #include <CosmosEngine/Physics/SphereCollider.h>
+#include <CosmosEngine/Core/AudioSource.h>
 #include "../Scripts/ObjectMovement.h"
 #include "../Scripts/CameraMovement.h"
 
@@ -125,7 +126,7 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
                                          -1);
 
 
-    presentedInputBackend->DisableCursor();
+    //presentedInputBackend->DisableCursor();
 
 
     boost::container::vector<Vertex> vertices_1;
@@ -188,6 +189,14 @@ bool TestGameApp::StartUp(unsigned int screenWidth, unsigned int screenHeight)
     testObject_1->transform->SetLocalScale(0.02f, 0.02f, 0.02f);
 
     ObjectMovement* movement_1 = testObject_1->AddComponent<ObjectMovement>();
+
+    AudioSource* audioSource = testObject_1->AddComponent<AudioSource>();
+    //audioSource->LoadAudioFile("Assets/KibounoTsubomi.flac");
+    audioSource->LoadAudioFile("Assets/Audio/low_on.wav");
+    audioSource->Loop = true;
+    audioSource->Play();
+
+    movement_1->audioSource = audioSource;
 
 //    boost::random::random_device rd;
 //    boost::random::mt19937 gen(rd());

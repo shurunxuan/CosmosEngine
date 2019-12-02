@@ -40,7 +40,22 @@ void XAudio2Player::StopAudio()
 
 }
 
+void XAudio2Player::ClearBuffer()
+{
+
+}
+
 void XAudio2Player::AddBuffer(unsigned char* buffer, int bufferSize)
 {
 
+}
+
+void XAudio2Player::WaitForBufferEnd()
+{
+
+}
+
+bool XAudio2Player::WaitForStreamEnd(float timeout)
+{
+    return true;
 }

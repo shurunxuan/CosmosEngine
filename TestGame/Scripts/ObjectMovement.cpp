@@ -35,4 +35,41 @@ void ObjectMovement::Update(float deltaTime, float totalTime)
         scale *= 1 + wheel * deltaTime * 100.0f;
 
         object->transform->SetLocalScale(scale);
+
+        if (presentedInputBackend->GetButtonDown("TestMouseLeft"))
+        {
+            if (audioSource->Playing())
+            {
+                audioSource->Pause();
+                LOG_DEBUG << "Playing -> Paused";
+            }
+            else if (audioSource->Paused())
+            {
+                audioSource->Play();
+                LOG_DEBUG << "Paused -> Playing";
+            }
+            else if (audioSource->Stopped())
+            {
+                audioSource->Play();
+                LOG_DEBUG << "Stopped -> Playing";
+            }
+        }
+
+    if (presentedInputBackend->GetButtonDown("TestMouseRight"))
+    {
+        if (audioSource->Playing())
+        {
+            audioSource->Stop();
+            LOG_DEBUG << "Playing -> Stopped";
+        }
+        else if (audioSource->Paused())
+        {
+            audioSource->Stop();
+            LOG_DEBUG << "Paused -> Stopped";
+        }
+        else
+        {
+            LOG_DEBUG << "AudioSource Stopping.";
+        }
+    }
 }

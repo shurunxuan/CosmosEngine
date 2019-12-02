@@ -29,7 +29,12 @@ void XAudio2Backend::DeInit()
 
 }
 
-constexpr bool XAudio2Backend::IsFloat()
+bool XAudio2Backend::IsFloat()
+{
+    return false;
+}
+
+bool XAudio2Backend::Force32Bit()
 {
     return false;
 }

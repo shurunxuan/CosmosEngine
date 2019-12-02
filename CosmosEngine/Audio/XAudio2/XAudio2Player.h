@@ -8,7 +8,7 @@
 #include "../AudioPlayer.h"
 
 class ENGINE_LOCAL XAudio2Player final
-        : AudioPlayer
+        : public AudioPlayer
 {
 public:
 
@@ -22,13 +22,17 @@ public:
 
     void StopAudio() final;
 
-    void AddBuffer(unsigned char* buffer, int bufferSize) final;
+    void ClearBuffer() final;
 
-private:
+    void AddBuffer(unsigned char* buffer, int bufferSize) final;
 
     void Init(int sampleRate, int channels) final;
 
     void DeInit() final;
+
+    void WaitForBufferEnd() final;
+
+    void WaitForStreamEnd(float timeout) final;
 };
 
 #endif //GAMEENGINE_XAUDIO2PLAYER_H

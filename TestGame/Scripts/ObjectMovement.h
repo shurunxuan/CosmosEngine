@@ -6,6 +6,7 @@
 #define GAMEENGINE_OBJECTMOVEMENT_H
 
 #include <CosmosEngine/Core/Component.h>
+#include <CosmosEngine/Core/AudioSource.h>
 
 class ObjectMovement
         : public Component
@@ -28,6 +29,9 @@ public:
      * @param totalTime The total time from the beginning of the application
      */
     void Update(float deltaTime, float totalTime) final;
+    AudioSource* audioSource;
+
+private:
 };
 
 #endif //GAMEENGINE_OBJECTMOVEMENT_H
