@@ -13,6 +13,7 @@ Decoder::Decoder()
       audioStream(nullptr),
       codec(nullptr),
       codecContext(nullptr),
+      outputFormat(AV_SAMPLE_FMT_NONE),
       frame(nullptr),
       lastFrame(nullptr),
       swr(nullptr),
@@ -133,7 +134,7 @@ int Decoder::ReadFrame()
                 lastFrame = frame;
                 swrBufferLength =
                         lastFrame->nb_samples * lastFrame->channels *
-                        av_get_bytes_per_sample(av_get_packed_sample_fmt(AVSampleFormat(lastFrame->format)));
+                        av_get_bytes_per_sample(av_get_packed_sample_fmt(outputFormat));
             }
             else
             {
@@ -173,7 +174,7 @@ int Decoder::ReadFrame()
     {
         // Buffer length = samples in frame * channels * bytes per sample
         swrBufferLength = lastFrame->nb_samples * lastFrame->channels *
-                          av_get_bytes_per_sample(av_get_packed_sample_fmt(AVSampleFormat(lastFrame->format)));
+                          av_get_bytes_per_sample(av_get_packed_sample_fmt(outputFormat));
     }
     return ret;
 }
@@ -195,7 +196,7 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
     // Format fix: Audio files like MP3 use floating numbers to store data.
     // The XAudio2, however, requires signed int.
     // If the file uses floating number, resample it as signed int with the same size.
-    AVSampleFormat outputFormat = av_get_packed_sample_fmt(AVSampleFormat(frame->format));
+    outputFormat = av_get_packed_sample_fmt(AVSampleFormat(frame->format));
 
     if (presentedAudioBackend->IsFloat())
     {

@@ -143,6 +143,8 @@ private:
      *
      */
     AVCodecContext* codecContext;
+
+    AVSampleFormat outputFormat;
     /**
      * @brief Current frame
      *
