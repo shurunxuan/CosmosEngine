@@ -122,7 +122,8 @@ void AudioSource::PlaySync()
     // Start the source voice
     player->StartAudio();
 
-    LOG_INFO << "Starting audio file \"" << filename << "\" playback at 0x" << boost::this_thread::get_id();
+    LOG_INFO << "Starting audio file \"" << filename << "\" playback at " <<
+    std::hex << std::showbase << boost::this_thread::get_id() << std::noshowbase << std::dec;
 
     bool stoppedByStreamEnd = true;
 

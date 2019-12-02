@@ -193,9 +193,6 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         return;
     }
 
-    // Format fix: Audio files like MP3 use floating numbers to store data.
-    // The XAudio2, however, requires signed int.
-    // If the file uses floating number, resample it as signed int with the same size.
     outputFormat = av_get_packed_sample_fmt(AVSampleFormat(frame->format));
 
     if (presentedAudioBackend->IsFloat())
@@ -206,6 +203,8 @@ void Decoder::InitSoftwareResampler(int* channels, int* sampleRate, int* bytesPe
         // 64 bit signed int -> double
         else if (outputFormat == AV_SAMPLE_FMT_S64)
             outputFormat = AV_SAMPLE_FMT_DBL;
+        else
+            outputFormat = AV_SAMPLE_FMT_FLT;
         if (presentedAudioBackend->Force32Bit())
         {
             outputFormat = AV_SAMPLE_FMT_FLT;
