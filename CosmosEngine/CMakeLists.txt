@@ -10,6 +10,11 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic random REQUIRED)
 find_package(assimp REQUIRED)
+# spirv-cross
+foreach (SPRIV_CROSS_LIB ${SPRIV_CROSS_LIBRARIES})
+    string(REPLACE "-" "_" SPRIV_CROSS_LIB_UNDERSCORE ${SPRIV_CROSS_LIB})
+    find_package(${SPRIV_CROSS_LIB_UNDERSCORE} CONFIG REQUIRED)
+endforeach()
 
 link_directories(${ASSIMP_LIBRARY_DIRS})
 
@@ -241,7 +246,7 @@ add_custom_target(
         DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-add_dependencies(${PROJECT_NAME} Shaders SPIRV-Headers SPIRV-Cross)
+add_dependencies(${PROJECT_NAME} Shaders)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
         Vulkan::Vulkan

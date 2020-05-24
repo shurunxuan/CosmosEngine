@@ -7,10 +7,11 @@
 #include <boost/random/random_device.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <CosmosEngine/Core/MeshRenderer.h>
 #include <CosmosEngine/Physics/SphereCollider.h>
 #include <CosmosEngine/Core/AudioSource.h>
+#include <stack>
 #include "../Scripts/ObjectMovement.h"
 #include "../Scripts/CameraMovement.h"
 
@@ -38,8 +39,8 @@ struct Vertex
 void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV)
 {
     float fC = fV * fS; // Chroma
-    float fHPrime = fmod(fH / 60.0f, 6);
-    float fX = fC * (1 - float(fabs(fmod(fHPrime, 2) - 1)));
+    float fHPrime = fmod(fH / 60.0f, 6.0f);
+    float fX = fC * (1.0f - float(fabs(fmod(fHPrime, 2.0f) - 1.0f)));
     float fM = fV - fC;
 
     if (0 <= fHPrime && fHPrime < 1)

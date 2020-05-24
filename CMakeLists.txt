@@ -136,34 +136,34 @@ endif ()
 
 # SPRIV-Cross
 
-ExternalProject_Add(
-        SPIRV-Cross
-        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
-        UPDATE_COMMAND ${GIT_EXECUTABLE} pull
-        LOG_DOWNLOAD ON
-        CMAKE_CACHE_ARGS -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true
-        CMAKE_ARGS -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-)
+#ExternalProject_Add(
+#        SPIRV-Cross
+#        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+#        UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+#        LOG_DOWNLOAD ON
+#        CMAKE_CACHE_ARGS -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true
+#        CMAKE_ARGS -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+#)
 
 set(
         SPRIV_CROSS_LIBRARIES
-        spirv-cross-c
         spirv-cross-core
-        spirv-cross-cpp
         spirv-cross-glsl
         spirv-cross-hlsl
         spirv-cross-msl
         spirv-cross-reflect
         spirv-cross-util
+        spirv-cross-cpp
+        spirv-cross-c
 )
 
-ExternalProject_Add(
-        SPIRV-Headers
-        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
-        UPDATE_COMMAND ${GIT_EXECUTABLE} pull
-        LOG_DOWNLOAD ON
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-)
+#ExternalProject_Add(
+#        SPIRV-Headers
+#        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
+#        UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+#        LOG_DOWNLOAD ON
+#        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+#)
 
 # stb Collection
 set(STB_COLLECTION_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/stb)
