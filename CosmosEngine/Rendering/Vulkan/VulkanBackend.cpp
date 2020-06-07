@@ -717,9 +717,6 @@ int VulkanBackend::rateDeviceSuitability(VkPhysicalDevice device)
         case VK_PHYSICAL_DEVICE_TYPE_CPU:
             LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_CPU";
             break;
-        case VK_PHYSICAL_DEVICE_TYPE_RANGE_SIZE:
-            LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_RANGE_SIZE";
-            break;
         case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
             LOG_INFO << "\tType: VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM";
             break;
