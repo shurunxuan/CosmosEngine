@@ -8,8 +8,22 @@ set(Boost_NO_BOOST_CMAKE 1)
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Boost COMPONENTS log date_time log_setup filesystem thread regex chrono atomic random REQUIRED)
+find_package(Boost COMPONENTS
+        log
+        date_time
+        log_setup
+        filesystem
+        thread
+        regex
+        chrono
+        atomic
+        random
+        serialization
+        REQUIRED)
 find_package(assimp REQUIRED)
+find_package(cereal REQUIRED)
+find_package(rapidjson REQUIRED)
+
 # spirv-cross
 foreach (SPRIV_CROSS_LIB ${SPRIV_CROSS_LIBRARIES})
     string(REPLACE "-" "_" SPRIV_CROSS_LIB_UNDERSCORE ${SPRIV_CROSS_LIB})
@@ -30,6 +44,7 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
 include_directories(${FFMPEG_INCLUDE_DIRS})
+include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
 add_compile_definitions(ENGINE_EXPORTS)
 
@@ -62,7 +77,7 @@ set(SOURCE_FILES
         Audio/Decoder.cpp
         Audio/AudioBackend.cpp
         Audio/AudioPlayer.cpp
-        Core/AudioSource.cpp)
+        Core/AudioSource.cpp Serialization/Serialization.cpp)
 
 set(HEADER_FILES
         Export.h
@@ -95,7 +110,7 @@ set(HEADER_FILES
         Audio/AudioBackend.h
         Audio/DefaultAudioBackend.h
         Audio/AudioPlayer.h
-        Core/AudioSource.h)
+        Core/AudioSource.h Serialization/Serialization.h)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(SYSTEM_SPECIFIC_SOURCE_FILES
@@ -252,6 +267,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         Vulkan::Vulkan
         glfw
         glm
+        cereal
         ${Boost_LIBRARIES}
         ${ASSIMP_LIBS_FIX}
         ${SPRIV_CROSS_LIBRARIES}

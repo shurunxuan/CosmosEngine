@@ -7,6 +7,8 @@
 
 #include <CosmosEngine/Core/Component.h>
 
+#include <CosmosEngine/Serialization/Serialization.h>
+
 class CameraMovement
         : public Component
 {
@@ -28,6 +30,19 @@ public:
      * @param totalTime The total time from the beginning of the application
      */
     void Update(float deltaTime, float totalTime) final;
+
+private:
+    SERIALIZABLE_CLASS;
+
+    SERIALIZER
+    {
+        ADD_FIELD(horizontalSpeed);
+        ADD_FIELD(verticalSpeed);
+    };
+
+
+    float horizontalSpeed = 12.0f;
+    float verticalSpeed = 3.0f;
 };
 
 #endif //GAMEENGINE_CAMERAMOVEMENT_H

@@ -17,9 +17,42 @@ CameraMovement::~CameraMovement()
 
 }
 
+struct TestObject2
+{
+    float value = 11.2f;
+
+    SERIALIZABLE_CLASS;
+
+    SERIALIZER
+    {
+        ADD_FIELD(value);
+    };
+};
+
+struct TestObject
+{
+    float value = 12.3f;
+    TestObject2 object2;
+
+
+    SERIALIZABLE_CLASS;
+
+    SERIALIZER
+    {
+        ADD_FIELD(value);
+        ADD_FIELD(object2);
+    };
+};
+
+SERIALIZATION_VERSION(TestObject, 1);
+SERIALIZATION_VERSION(TestObject2, 1);
+
 void CameraMovement::Start()
 {
-
+    std::ofstream ofs("test.txt");
+    SerializerO ar(ofs);
+    TestObject object;
+    ar(SERIALIZED_FIELD(object));
 }
 
 void CameraMovement::Update(float deltaTime, float totalTime)
